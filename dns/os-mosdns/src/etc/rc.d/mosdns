@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# PROVIDE: mosdns
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+#
+# os-mosdns: MosDNS dynamic DNS forwarder (mosdns-pf build with pf_alias plugin).
+# Enable flag is managed by the plugin template in /etc/rc.conf.d/mosdns.
+
+. /etc/rc.subr
+
+name=mosdns
+rcvar=mosdns_enable
+
+pidfile=/var/run/mosdns.pid
+procname=/usr/local/bin/mosdns
+command=/usr/sbin/daemon
+command_args="-p ${pidfile} ${procname} start -c /usr/local/etc/mosdns/config.yaml"
+
+load_rc_config $name
+run_rc_command "$1"

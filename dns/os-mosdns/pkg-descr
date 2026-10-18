@@ -1,7 +1,12 @@
-MosDNS dynamic routing engine with pf-aliasd integration
+MosDNS dynamic DNS forwarder with pf table sync
 
-Runs mosdns (nxovaeng/mosdns-pf fork) as the local DNS engine and feeds
-resolved IP addresses into FreeBSD pf tables via the pf-aliasd daemon,
-driving domain-based policy routing on OPNsense.
+Native OPNsense MVC plugin (no Go controller). Manages mosdns
+(nxovaeng/mosdns-pf fork) as the local DNS engine and the pf-aliasd
+daemon, which feeds resolved A/AAAA records into FreeBSD pf tables
+with TTL expiry, driving domain-based policy routing.
+
+Both services are independently enablable. mosdns listens on
+127.0.0.1:5353 by default; split-horizon forwarding (direct / proxy
+via SOCKS5) is configured from the UI.
 
 WWW: https://github.com/nxovaeng/nxova-opn-repo

@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# PROVIDE: pf_aliasd
+# REQUIRE: NETWORKING pf
+# KEYWORD: shutdown
+#
+# os-mosdns: pf-aliasd - syncs DNS answers into pf tables via /dev/pf ioctl.
+# Enable flag, socket path and flush tables are managed by the plugin
+# template in /etc/rc.conf.d/pf_aliasd.
+
+. /etc/rc.subr
+
+name=pf_aliasd
+rcvar=pf_aliasd_enable
+
+pidfile=/var/run/pf_aliasd.pid
+procname=/usr/local/bin/pf-aliasd
+command=/usr/sbin/daemon
+
+load_rc_config $name
+
+: ${pf_aliasd_socket:=/var/run/pf-aliasd.sock}
+: ${pf_aliasd_tables:=}
+
+command_args="-p ${pidfile} ${procname} -socket ${pf_aliasd_socket} -tables ${pf_aliasd_tables}"
+
+run_rc_command "$1"

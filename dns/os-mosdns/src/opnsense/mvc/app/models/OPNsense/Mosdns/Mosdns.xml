@@ -1,6 +1,91 @@
 <model>
-    <mount>//OPNsense/Mosdns</mount>
+    <mount>//OPNsense/mosdns</mount>
     <version>1.0.0</version>
-    <description>MosDNS Dynamic Routing Engine &amp; Controller</description>
-    <items/>
+    <description>MosDNS dynamic DNS forwarder with pf table sync</description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <default>0</default>
+                <Required>Y</Required>
+            </enabled>
+            <listen_address type="TextField">
+                <default>0.0.0.0</default>
+                <Required>Y</Required>
+                <ValidationMessage>Please specify a listen address.</ValidationMessage>
+            </listen_address>
+            <listen_port type="PortField">
+                <default>5353</default>
+                <Required>Y</Required>
+            </listen_port>
+        </general>
+        <forward>
+            <remote_upstreams type="TextAreaField">
+                <default>tcp://1.1.1.1:53&#10;tcp://8.8.8.8:53&#10;https://1.1.1.1/dns-query</default>
+                <Required>Y</Required>
+                <ValidationMessage>Specify at least one remote (proxy) upstream, one per line.</ValidationMessage>
+            </remote_upstreams>
+            <remote_socks5 type="TextField">
+                <default></default>
+            </remote_socks5>
+            <local_upstreams type="TextAreaField">
+                <default>223.5.5.5&#10;119.29.29.29</default>
+                <Required>Y</Required>
+                <ValidationMessage>Specify at least one local (direct) upstream, one per line.</ValidationMessage>
+            </local_upstreams>
+            <direct_files type="TextAreaField">
+                <default>/usr/local/etc/mosdns/rule/cn.txt&#10;/usr/local/etc/mosdns/rule/custom-direct.txt</default>
+            </direct_files>
+            <proxy_files type="TextAreaField">
+                <default>/usr/local/etc/mosdns/rule/gfw.txt&#10;/usr/local/etc/mosdns/rule/custom-proxy.txt</default>
+            </proxy_files>
+            <block_files type="TextAreaField">
+                <default>/usr/local/etc/mosdns/rule/custom-block.txt</default>
+            </block_files>
+        </forward>
+        <pfalias>
+            <enabled type="BooleanField">
+                <default>1</default>
+                <Required>Y</Required>
+            </enabled>
+            <table type="TextField">
+                <default>GFW_Proxy</default>
+                <Required>Y</Required>
+                <ValidationMessage>Target pf table name (OPNsense External alias).</ValidationMessage>
+                <mask>/^[A-Za-z0-9_]{1,31}$/</mask>
+            </table>
+            <min_ttl type="IntegerField">
+                <default>60</default>
+                <Required>Y</Required>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>86400</MaximumValue>
+            </min_ttl>
+            <max_ttl type="IntegerField">
+                <default>86400</default>
+                <Required>Y</Required>
+                <MinimumValue>60</MinimumValue>
+                <MaximumValue>86400</MaximumValue>
+            </max_ttl>
+            <timeout type="TextField">
+                <default>100ms</default>
+            </timeout>
+            <sync type="BooleanField">
+                <default>1</default>
+                <Required>Y</Required>
+            </sync>
+        </pfalias>
+        <pfaliasd>
+            <enabled type="BooleanField">
+                <default>1</default>
+                <Required>Y</Required>
+            </enabled>
+            <socket_path type="TextField">
+                <default>/var/run/pf-aliasd.sock</default>
+                <Required>Y</Required>
+                <ValidationMessage>Unix socket path shared by pf-aliasd and the mosdns pf_alias plugin.</ValidationMessage>
+            </socket_path>
+            <flush_tables type="TextField">
+                <default></default>
+            </flush_tables>
+        </pfaliasd>
+    </items>
 </model>

@@ -37,14 +37,25 @@ type pfrTable struct {
 	_pad   [3]byte
 }
 
-// pfr_addr matches FreeBSD's struct pfr_addr
+// pfr_addr matches FreeBSD's struct pfr_addr.
+//
+// WARNING: this must be exactly 20 bytes (16 + 4*u_int8_t, no padding).
+// pfioctl() rejects DIOCRADDADDRS/DIOCRDELADDRS/DIOCRGETADDRS with ENODEV
+// ("operation not supported by device") when pfrio_esize !=
+// sizeof(struct pfr_addr). An earlier revision padded this to 24 bytes
+// and every ioctl failed with ENODEV.
 type pfrAddr struct {
 	addr  [16]byte // union of in_addr / in6_addr
 	af    uint8
 	net   uint8
 	not   uint8
 	fback uint8
-	_pad  [4]byte
+}
+
+func init() {
+	if unsafe.Sizeof(pfrAddr{}) != 20 {
+		panic("pfrAddr ABI mismatch: FreeBSD struct pfr_addr is 20 bytes")
+	}
 }
 
 // pfioc_table matches FreeBSD's struct pfioc_table
@@ -184,8 +195,8 @@ func (d *BSDDevice) FlushTable(table string) (int, error) {
 		return 0, ErrDeviceClosed
 	}
 
-	// Batch size for one GETADDRS/DELADDRS round trip. pfrAddr is 32 bytes,
-	// so one batch costs ~128 KiB of temporary buffer.
+	// Batch size for one GETADDRS/DELADDRS round trip. pfrAddr is 20 bytes,
+	// so one batch costs ~80 KiB of temporary buffer.
 	const batchSize = 4096
 
 	total := 0
