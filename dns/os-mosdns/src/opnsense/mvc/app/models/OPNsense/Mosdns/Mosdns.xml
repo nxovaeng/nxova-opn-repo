@@ -1,0 +1,6 @@
+<model>
+    <mount>//OPNsense/Mosdns</mount>
+    <version>1.0.0</version>
+    <description>MosDNS Dynamic Routing Engine &amp; Controller</description>
+    <items/>
+</model>

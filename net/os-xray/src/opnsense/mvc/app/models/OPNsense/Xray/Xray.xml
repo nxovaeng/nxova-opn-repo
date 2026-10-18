@@ -1,0 +1,6 @@
+<model>
+    <mount>//OPNsense/Xray</mount>
+    <version>1.0.0</version>
+    <description>Xray-core 7-layer Sniffing Engine &amp; Manager</description>
+    <items/>
+</model>

@@ -1,0 +1,9 @@
+<menu>
+    <Services>
+        <NetBox VisibleName="NetBox" cssClass="fa fa-cubes fa-fw">
+            <MosDNS VisibleName="MosDNS" Order="10">
+                <Dashboard VisibleName="MosDNS Controller" url="/ui/mosdns" Order="10"/>
+            </MosDNS>
+        </NetBox>
+    </Services>
+</menu>

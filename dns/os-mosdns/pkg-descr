@@ -1,0 +1,7 @@
+MosDNS dynamic routing engine with pf-aliasd integration
+
+Runs mosdns (nxovaeng/mosdns-pf fork) as the local DNS engine and feeds
+resolved IP addresses into FreeBSD pf tables via the pf-aliasd daemon,
+driving domain-based policy routing on OPNsense.
+
+WWW: https://github.com/nxovaeng/nxova-opn-repo

@@ -1,0 +1,6 @@
+NetBox suite - unified policy routing and dynamic split tunneling
+
+Meta plugin tying mosdns, tun2socks and xray together into one
+policy-routing control plane on OPNsense.
+
+WWW: https://github.com/nxovaeng/nxova-opn-repo

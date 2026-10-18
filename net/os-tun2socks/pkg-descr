@@ -1,0 +1,6 @@
+Tun2Socks high-performance bridge with web UI manager
+
+Bridges a TUN interface to a SOCKS5 upstream (hev-socks5-tunnel)
+for transparent proxying on OPNsense.
+
+WWW: https://github.com/nxovaeng/nxova-opn-repo

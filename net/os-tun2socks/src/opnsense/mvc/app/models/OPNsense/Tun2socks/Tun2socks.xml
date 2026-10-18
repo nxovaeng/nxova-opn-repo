@@ -1,0 +1,6 @@
+<model>
+    <mount>//OPNsense/Tun2socks</mount>
+    <version>1.0.0</version>
+    <description>Hev-Socks5-Tunnel Tun2Socks Bridge &amp; Manager</description>
+    <items/>
+</model>
