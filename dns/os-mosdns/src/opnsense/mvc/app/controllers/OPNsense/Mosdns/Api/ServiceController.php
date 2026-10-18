@@ -25,7 +25,7 @@ class ServiceController extends ApiMutableServiceControllerBase
     {
         $ret = parent::reconfigureAction();
         if (isset($ret['status']) && $ret['status'] == 'ok') {
-            (new Backend())->configdRun('mosdns pfaliasd.restart');
+            (new Backend())->configdRun('mosdns pfaliasd restart');
         }
         return $ret;
     }

@@ -138,7 +138,7 @@
     </div>
 </div>
 
-<div class="content-box">
+<div class="content-box" style="margin-top: 20px;">
     <div class="col-md-12">
         <button class="btn btn-primary" id="reconfigureAct" type="button">
             <b>{{ lang._('Apply') }}</b> <i id="reconfigureAct_progress"></i>
