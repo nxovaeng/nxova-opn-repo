@@ -1,0 +1,6 @@
+# os-mosdns: flush OPNsense UI caches after deinstall, so the menu entry
+# and compiled templates of the removed plugin do not linger.
+# Same cache set as system_cache_flush(), PHP-independent (see +POST_INSTALL.post).
+rm -f /var/lib/php/tmp/opnsense_menu_cache.xml
+rm -f /var/lib/php/tmp/mdl_cache_*.json
+rm -f /var/lib/php/cache/*.php

@@ -1,0 +1,9 @@
+# os-mosdns: flush OPNsense UI caches after install.
+# Mirrors system_cache_flush() in src/etc/inc/system.inc, but does not depend
+# on the PHP stack (which may be broken mid-install, e.g. by a model error).
+#  - menu cache: merged Menu.xml, TTL 3600s (MenuSystem::persist)
+#  - model caches: mdl_cache_*.json
+#  - compiled volt templates
+rm -f /var/lib/php/tmp/opnsense_menu_cache.xml
+rm -f /var/lib/php/tmp/mdl_cache_*.json
+rm -f /var/lib/php/cache/*.php
