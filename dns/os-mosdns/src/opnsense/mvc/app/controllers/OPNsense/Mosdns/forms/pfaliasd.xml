@@ -1,0 +1,20 @@
+<form>
+    <field>
+        <id>mosdns.pfaliasd.enabled</id>
+        <label>Enable pf-aliasd</label>
+        <type>checkbox</type>
+        <help>Run the pf-aliasd daemon (listens on the socket below, writes to pf tables).</help>
+    </field>
+    <field>
+        <id>mosdns.pfaliasd.socket_path</id>
+        <label>Socket path</label>
+        <type>text</type>
+        <help>Unix socket shared by pf-aliasd and the mosdns pf_alias plugin.</help>
+    </field>
+    <field>
+        <id>mosdns.pfaliasd.flush_tables</id>
+        <label>Flush tables on start</label>
+        <type>text</type>
+        <help>Comma separated pf tables to empty when pf-aliasd starts. Empty means keep.</help>
+    </field>
+</form>

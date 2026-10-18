@@ -51,7 +51,7 @@
                 <default>GFW_Proxy</default>
                 <Required>Y</Required>
                 <ValidationMessage>Target pf table name (OPNsense External alias).</ValidationMessage>
-                <mask>/^[A-Za-z0-9_]{1,31}$/</mask>
+                <Mask>/^[A-Za-z0-9_]{1,31}$/</Mask>
             </table>
             <min_ttl type="IntegerField">
                 <default>60</default>

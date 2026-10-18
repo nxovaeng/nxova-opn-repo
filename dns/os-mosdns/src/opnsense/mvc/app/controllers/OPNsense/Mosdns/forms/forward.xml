@@ -1,0 +1,38 @@
+<form>
+    <field>
+        <id>mosdns.forward.remote_upstreams</id>
+        <label>Remote upstreams</label>
+        <type>text</type>
+        <help>Upstreams for proxy domains, comma separated. tcp://, tls:// and https:// (DoH) are supported.</help>
+    </field>
+    <field>
+        <id>mosdns.forward.remote_socks5</id>
+        <label>SOCKS5 proxy</label>
+        <type>text</type>
+        <help>Optional SOCKS5 proxy (host:port) used for remote upstreams. Empty means direct.</help>
+    </field>
+    <field>
+        <id>mosdns.forward.local_upstreams</id>
+        <label>Local upstreams</label>
+        <type>text</type>
+        <help>Upstreams for direct (domestic) domains, comma separated.</help>
+    </field>
+    <field>
+        <id>mosdns.forward.direct_files</id>
+        <label>Direct domain files</label>
+        <type>text</type>
+        <help>Domain list files resolved via local upstreams, comma separated.</help>
+    </field>
+    <field>
+        <id>mosdns.forward.proxy_files</id>
+        <label>Proxy domain files</label>
+        <type>text</type>
+        <help>Domain list files resolved via remote upstreams, comma separated.</help>
+    </field>
+    <field>
+        <id>mosdns.forward.block_files</id>
+        <label>Block domain files</label>
+        <type>text</type>
+        <help>Domain list files to block (NXDOMAIN), comma separated.</help>
+    </field>
+</form>

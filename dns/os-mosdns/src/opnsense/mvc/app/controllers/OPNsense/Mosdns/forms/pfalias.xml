@@ -1,0 +1,38 @@
+<form>
+    <field>
+        <id>mosdns.pfalias.enabled</id>
+        <label>Enable pf sync</label>
+        <type>checkbox</type>
+        <help>Sync resolved proxy-domain addresses into a pf table via pf-aliasd.</help>
+    </field>
+    <field>
+        <id>mosdns.pfalias.table</id>
+        <label>pf table</label>
+        <type>text</type>
+        <help>Target pf table name (usually an OPNsense External alias), e.g. GFW_Proxy.</help>
+    </field>
+    <field>
+        <id>mosdns.pfalias.min_ttl</id>
+        <label>Min TTL</label>
+        <type>text</type>
+        <help>Minimum seconds a resolved address stays in the table.</help>
+    </field>
+    <field>
+        <id>mosdns.pfalias.max_ttl</id>
+        <label>Max TTL</label>
+        <type>text</type>
+        <help>Maximum seconds a resolved address stays in the table.</help>
+    </field>
+    <field>
+        <id>mosdns.pfalias.timeout</id>
+        <label>Socket timeout</label>
+        <type>text</type>
+        <help>Timeout for talking to the pf-aliasd socket, e.g. 100ms.</help>
+    </field>
+    <field>
+        <id>mosdns.pfalias.sync</id>
+        <label>Synchronous write</label>
+        <type>checkbox</type>
+        <help>Wait for the daemon ACK before answering the DNS query (kills first-packet race).</help>
+    </field>
+</form>

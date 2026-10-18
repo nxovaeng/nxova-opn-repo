@@ -1,0 +1,20 @@
+<form>
+    <field>
+        <id>mosdns.general.enabled</id>
+        <label>Enable</label>
+        <type>checkbox</type>
+        <help>Enable the MosDNS forwarder.</help>
+    </field>
+    <field>
+        <id>mosdns.general.listen_address</id>
+        <label>Listen address</label>
+        <type>text</type>
+        <help>Address to listen on, e.g. 0.0.0.0 for all interfaces.</help>
+    </field>
+    <field>
+        <id>mosdns.general.listen_port</id>
+        <label>Listen port</label>
+        <type>text</type>
+        <help>UDP/TCP port for DNS queries.</help>
+    </field>
+</form>
