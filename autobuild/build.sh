@@ -47,12 +47,13 @@ chmod +x "${PLUGINS_SRC}/dns/os-mosdns/src/usr/local/bin/"*
 
 echo "==> [3/5] make package"
 cd "${PLUGINS_SRC}/dns/os-mosdns"
-make package
-ls -la ./*.pkg
+# PLUGIN_DEVEL= strips the -devel suffix: we ship os-mosdns, not os-mosdns-devel
+make package PLUGIN_DEVEL=
+ls -la ./work/pkg/*.pkg
 
 echo "==> [4/5] pkg repo"
 mkdir -p "${PUBLISH_DIR}"
-cp ./*.pkg "${PUBLISH_DIR}/"
+cp ./work/pkg/*.pkg "${PUBLISH_DIR}/"
 if [ -f "${WORKSPACE_DIR}/autobuild/index.html" ]; then
     cp "${WORKSPACE_DIR}/autobuild/index.html" "${PUBLISH_DIR}/"
 fi
