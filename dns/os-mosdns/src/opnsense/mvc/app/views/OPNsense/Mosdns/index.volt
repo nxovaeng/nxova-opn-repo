@@ -61,24 +61,6 @@
     });
 </script>
 
-<div class="content-box">
-    <div class="col-md-12">
-        <div class="pull-right">
-            <button class="btn btn-primary" id="reconfigureAct" type="button">
-                <b>{{ lang._('Apply') }}</b> <i id="reconfigureAct_progress"></i>
-            </button>
-        </div>
-        <h4>{{ lang._('MosDNS') }}</h4>
-        <p class="text-muted">
-            {{ lang._('Dynamic DNS forwarder with pf table sync.') }}
-            <span id="serviceStatus"></span>
-        </p>
-    </div>
-    <div class="col-md-12">
-        <div id="responseMsg" class="alert hidden" role="alert"></div>
-    </div>
-</div>
-
 <ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
     <li class="active"><a data-toggle="tab" href="#general">{{ lang._('General') }}</a></li>
     <li><a data-toggle="tab" href="#forward">{{ lang._('Forwarding') }}</a></li>
@@ -87,27 +69,83 @@
 </ul>
 <div class="tab-content content-box tab-content">
     <div id="general" class="tab-pane fade in active">
-        <p class="text-muted">{{ lang._('Enable the MosDNS forwarder and set its listen address.') }}</p>
         {{ partial("layout_partials/base_form",['fields':generalForm,'id':'frm_GeneralSettings']) }}
-        <hr/>
-        <button class="btn btn-primary" id="saveGeneralAct" type="button"><b>{{ lang._('Save') }}</b></button>
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 25%;"/>
+                <col style="width: 40%;"/>
+                <col style="width: 35%;"/>
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td><button class="btn btn-primary" id="saveGeneralAct" type="button"><b>{{ lang._('Save') }}</b></button></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
     <div id="forward" class="tab-pane fade">
-        <p class="text-muted">{{ lang._('Remote upstreams are used for proxy domains (via optional SOCKS5), local upstreams for direct domains. Lists are comma separated.') }}</p>
         {{ partial("layout_partials/base_form",['fields':forwardForm,'id':'frm_ForwardSettings']) }}
-        <hr/>
-        <button class="btn btn-primary" id="saveForwardAct" type="button"><b>{{ lang._('Save') }}</b></button>
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 25%;"/>
+                <col style="width: 40%;"/>
+                <col style="width: 35%;"/>
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td><button class="btn btn-primary" id="saveForwardAct" type="button"><b>{{ lang._('Save') }}</b></button></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
     <div id="pfalias" class="tab-pane fade">
-        <p class="text-muted">{{ lang._('Resolved A/AAAA records are pushed to the pf table via pf-aliasd. Requires the mosdns-pf binary with the pf_alias plugin.') }}</p>
         {{ partial("layout_partials/base_form",['fields':pfaliasForm,'id':'frm_PfaliasSettings']) }}
-        <hr/>
-        <button class="btn btn-primary" id="savePfaliasAct" type="button"><b>{{ lang._('Save') }}</b></button>
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 25%;"/>
+                <col style="width: 40%;"/>
+                <col style="width: 35%;"/>
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td><button class="btn btn-primary" id="savePfaliasAct" type="button"><b>{{ lang._('Save') }}</b></button></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
     <div id="pfaliasd" class="tab-pane fade">
-        <p class="text-muted">{{ lang._('Receives DNS results over a Unix socket and writes them to pf tables with TTL expiry. Flush tables (comma separated) are emptied on daemon start.') }}</p>
         {{ partial("layout_partials/base_form",['fields':pfaliasdForm,'id':'frm_PfaliasdSettings']) }}
-        <hr/>
-        <button class="btn btn-primary" id="savePfaliasdAct" type="button"><b>{{ lang._('Save') }}</b></button>
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 25%;"/>
+                <col style="width: 40%;"/>
+                <col style="width: 35%;"/>
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td><button class="btn btn-primary" id="savePfaliasdAct" type="button"><b>{{ lang._('Save') }}</b></button></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="content-box">
+    <div class="col-md-12">
+        <button class="btn btn-primary" id="reconfigureAct" type="button">
+            <b>{{ lang._('Apply') }}</b> <i id="reconfigureAct_progress"></i>
+        </button>
+        <span id="serviceStatus" class="text-muted" style="margin-left: 10px;"></span>
+    </div>
+    <div class="col-md-12" style="margin-top: 10px;">
+        <div id="responseMsg" class="alert hidden" role="alert"></div>
     </div>
 </div>
