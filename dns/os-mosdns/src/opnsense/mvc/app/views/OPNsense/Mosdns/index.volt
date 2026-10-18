@@ -15,16 +15,16 @@
             $('.selectpicker').selectpicker('refresh');
         });
 
-        function saveSection(formid, btn) {
+        function saveSection(formid) {
             saveFormToEndpoint(url="/api/mosdns/settings/set", formid=formid,
                 callback_ok=function() {
                     $("#responseMsg").removeClass("hidden")
-                        .removeClass("alert-danger").addClass("alert-success")
+                        .removeClass("alert-danger alert-info").addClass("alert-success")
                         .html("{{ lang._('Settings saved. Press Apply to activate.') }}");
                 },
                 callback_fail=function() {
                     $("#responseMsg").removeClass("hidden")
-                        .removeClass("alert-success").addClass("alert-danger")
+                        .removeClass("alert-success alert-info").addClass("alert-danger")
                         .html("{{ lang._('Failed to save settings.') }}");
                 }
             );
@@ -39,83 +39,75 @@
             $("#reconfigureAct_progress").addClass("fa fa-spinner fa-pulse");
             ajaxCall(url="/api/mosdns/service/reconfigure", sendData={}, callback=function(data, status) {
                 $("#reconfigureAct_progress").removeClass("fa fa-spinner fa-pulse");
-                $("#responseMsg").removeClass("hidden alert-danger").addClass("alert-info")
-                    .html((data['response'] || status).toString().replace(/\n/g, "<br/>"));
+                var msg, cls;
+                if (data['status'] == 'ok') {
+                    msg = "{{ lang._('Configuration applied.') }}";
+                    cls = "alert-success";
+                } else {
+                    msg = (data['status_msg'] || "{{ lang._('Apply failed.') }}");
+                    cls = "alert-danger";
+                }
+                $("#responseMsg").removeClass("hidden alert-success alert-danger alert-info").addClass(cls).html(msg);
                 refreshStatus();
             });
         });
 
         function refreshStatus() {
             ajaxCall(url="/api/mosdns/service/status", sendData={}, callback=function(data, status) {
-                $("#serviceStatus").html((data['response'] || status).toString().replace(/\n/g, "<br/>"));
+                $("#serviceStatus").text("{{ lang._('Status') }}: " + (data['status'] || status));
             });
         }
-        $("#refreshStatusAct").click(function() { refreshStatus(); });
         refreshStatus();
     });
 </script>
 
 <div class="content-box">
     <div class="col-md-12">
-        <h4>{{ lang._('General') }}</h4>
-        <p class="text-muted">{{ lang._('Enable the MosDNS forwarder and set its listen address.') }}</p>
+        <div class="pull-right">
+            <button class="btn btn-primary" id="reconfigureAct" type="button">
+                <b>{{ lang._('Apply') }}</b> <i id="reconfigureAct_progress"></i>
+            </button>
+        </div>
+        <h4>{{ lang._('MosDNS') }}</h4>
+        <p class="text-muted">
+            {{ lang._('Dynamic DNS forwarder with pf table sync.') }}
+            <span id="serviceStatus"></span>
+        </p>
     </div>
     <div class="col-md-12">
-        {{ partial("layout_partials/base_form",['fields':generalForm,'id':'frm_GeneralSettings']) }}
+        <div id="responseMsg" class="alert hidden" role="alert"></div>
     </div>
-    <div class="col-md-12"><hr/>
+</div>
+
+<ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
+    <li class="active"><a data-toggle="tab" href="#general">{{ lang._('General') }}</a></li>
+    <li><a data-toggle="tab" href="#forward">{{ lang._('Forwarding') }}</a></li>
+    <li><a data-toggle="tab" href="#pfalias">{{ lang._('PF table sync') }}</a></li>
+    <li><a data-toggle="tab" href="#pfaliasd">{{ lang._('pf-aliasd') }}</a></li>
+</ul>
+<div class="tab-content content-box tab-content">
+    <div id="general" class="tab-pane fade in active">
+        <p class="text-muted">{{ lang._('Enable the MosDNS forwarder and set its listen address.') }}</p>
+        {{ partial("layout_partials/base_form",['fields':generalForm,'id':'frm_GeneralSettings']) }}
+        <hr/>
         <button class="btn btn-primary" id="saveGeneralAct" type="button"><b>{{ lang._('Save') }}</b></button>
     </div>
-</div>
-
-<div class="content-box">
-    <div class="col-md-12">
-        <h4>{{ lang._('Forwarding') }}</h4>
-        <p class="text-muted">{{ lang._('Remote upstreams are used for proxy domains (via optional SOCKS5), local upstreams for direct domains. Domain lists are matched against the files below, one file per line.') }}</p>
-    </div>
-    <div class="col-md-12">
+    <div id="forward" class="tab-pane fade">
+        <p class="text-muted">{{ lang._('Remote upstreams are used for proxy domains (via optional SOCKS5), local upstreams for direct domains. Lists are comma separated.') }}</p>
         {{ partial("layout_partials/base_form",['fields':forwardForm,'id':'frm_ForwardSettings']) }}
-    </div>
-    <div class="col-md-12"><hr/>
+        <hr/>
         <button class="btn btn-primary" id="saveForwardAct" type="button"><b>{{ lang._('Save') }}</b></button>
     </div>
-</div>
-
-<div class="content-box">
-    <div class="col-md-12">
-        <h4>{{ lang._('pf Table Sync (pf_alias plugin)') }}</h4>
+    <div id="pfalias" class="tab-pane fade">
         <p class="text-muted">{{ lang._('Resolved A/AAAA records are pushed to the pf table via pf-aliasd. Requires the mosdns-pf binary with the pf_alias plugin.') }}</p>
-    </div>
-    <div class="col-md-12">
         {{ partial("layout_partials/base_form",['fields':pfaliasForm,'id':'frm_PfaliasSettings']) }}
-    </div>
-    <div class="col-md-12"><hr/>
+        <hr/>
         <button class="btn btn-primary" id="savePfaliasAct" type="button"><b>{{ lang._('Save') }}</b></button>
     </div>
-</div>
-
-<div class="content-box">
-    <div class="col-md-12">
-        <h4>{{ lang._('pf-aliasd Daemon') }}</h4>
-        <p class="text-muted">{{ lang._('Receives DNS results over a Unix socket and writes them to pf tables with TTL expiry. flush_tables (comma separated) are emptied on daemon start.') }}</p>
-    </div>
-    <div class="col-md-12">
+    <div id="pfaliasd" class="tab-pane fade">
+        <p class="text-muted">{{ lang._('Receives DNS results over a Unix socket and writes them to pf tables with TTL expiry. Flush tables (comma separated) are emptied on daemon start.') }}</p>
         {{ partial("layout_partials/base_form",['fields':pfaliasdForm,'id':'frm_PfaliasdSettings']) }}
-    </div>
-    <div class="col-md-12"><hr/>
+        <hr/>
         <button class="btn btn-primary" id="savePfaliasdAct" type="button"><b>{{ lang._('Save') }}</b></button>
-    </div>
-</div>
-
-<div class="content-box">
-    <div class="col-md-12">
-        <button class="btn btn-primary" id="reconfigureAct" type="button">
-            <b>{{ lang._('Apply') }}</b> <i id="reconfigureAct_progress"></i>
-        </button>
-        <button class="btn btn-default" id="refreshStatusAct" type="button">{{ lang._('Refresh status') }}</button>
-    </div>
-    <div class="col-md-12" style="margin-top: 10px;">
-        <div id="responseMsg" class="alert hidden" role="alert"></div>
-        <pre id="serviceStatus" style="margin-top: 10px;"></pre>
     </div>
 </div>
