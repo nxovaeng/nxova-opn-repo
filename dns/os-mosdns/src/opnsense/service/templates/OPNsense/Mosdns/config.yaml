@@ -18,7 +18,7 @@ plugins:
       args:
         concurrent: 2
         upstreams:
-{% for addr in remote_upstreams.split('\n') if addr.strip() %}
+{% for addr in remote_upstreams.split(',') if addr.strip() %}
             - addr: {{ addr.strip() }}
               enable_pipeline: true
 {% if remote_socks5.strip() %}
@@ -29,28 +29,28 @@ plugins:
       type: forward
       args:
         upstreams:
-{% for addr in local_upstreams.split('\n') if addr.strip() %}
+{% for addr in local_upstreams.split(',') if addr.strip() %}
             - addr: {{ addr.strip() }}
 {% endfor %}
     - tag: direct_domain_set
       type: domain_set
       args:
         files:
-{% for f in direct_files.split('\n') if f.strip() %}
+{% for f in direct_files.split(',') if f.strip() %}
             - {{ f.strip() }}
 {% endfor %}
     - tag: proxy_domain_set
       type: domain_set
       args:
         files:
-{% for f in proxy_files.split('\n') if f.strip() %}
+{% for f in proxy_files.split(',') if f.strip() %}
             - {{ f.strip() }}
 {% endfor %}
     - tag: block_domain_set
       type: domain_set
       args:
         files:
-{% for f in block_files.split('\n') if f.strip() %}
+{% for f in block_files.split(',') if f.strip() %}
             - {{ f.strip() }}
 {% endfor %}
 {% if pfalias_enabled %}
