@@ -1,0 +1,70 @@
+name: Build os-mosdns package repo
+
+# push 到 main (插件/daemon/构建脚本有变化) 或手动触发
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dns/os-mosdns/**'
+      - 'daemon/pf-aliasd/**'
+      - 'autobuild/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout nxova-opn-repo
+        uses: actions/checkout@v4
+
+      - name: Checkout mosdns-pf
+        uses: actions/checkout@v4
+        with:
+          repository: nxovaeng/mosdns-pf
+          path: mosdns-pf-src
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: true
+
+      # 交叉编译 FreeBSD 二进制 (100% 源码编译)
+      - name: Cross-compile FreeBSD binaries
+        run: |
+          mkdir -p dist/bin
+          echo "==> pf-aliasd"
+          cd daemon/pf-aliasd
+          GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -trimpath \
+            -o ../../dist/bin/pf-aliasd ./cmd/pf-aliasd
+          cd ../..
+          echo "==> mosdns (mosdns-pf fork)"
+          cd mosdns-pf-src
+          GOOS=freebsd GOARCH=amd64 CGO_ENABLED=0 go build -trimpath \
+            -o ../dist/bin/mosdns .
+          cd ..
+          ls -la dist/bin
+          file dist/bin/* || true
+
+      # FreeBSD VM 里: make package + pkg repo
+      - name: Package and create repo in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "15.0"
+          usesh: true
+          prepare: |
+            pkg install -y git
+          run: |
+            sh autobuild/build.sh
+
+      # 发布到 gh-pages -> https://nxovaeng.github.io/nxova-opn-repo
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          force_orphan: true

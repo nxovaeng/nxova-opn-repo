@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>nxova-opn-repo pkg repo</title></head>
+<body>
+<h1>nxova-opn-repo - OPNsense 软件源</h1>
+<p>mosdns DNS 分流 (mosdns -&gt; pf 表 -&gt; 策略路由) 插件与配套守护进程。</p>
+<h2>在 OPNsense 上添加软件源</h2>
+<pre>cat &gt; /usr/local/etc/pkg/repos/nxova-opn.conf &lt;&lt;'EOF'
+nxova-opn: {
+  url: "https://nxovaeng.github.io/nxova-opn-repo",
+  enabled: yes
+}
+EOF
+pkg update -r nxova-opn
+pkg install -r nxova-opn os-mosdns</pre>
+<h2>包含内容</h2>
+<ul>
+  <li><b>os-mosdns</b> - MosDNS 原生 MVC 插件 (Services -&gt; MosDNS -&gt; Settings)</li>
+  <li><b>/usr/local/bin/mosdns</b> - mosdns-pf fork (含 pf_alias 插件)，随包安装</li>
+  <li><b>/usr/local/bin/pf-aliasd</b> - pf 表同步守护进程，随包安装</li>
+</ul>
+<p>安装后在 WebUI 里启用两个服务，旧 mosdns-controller 如在运行请先停掉。</p>
+</body>
+</html>
