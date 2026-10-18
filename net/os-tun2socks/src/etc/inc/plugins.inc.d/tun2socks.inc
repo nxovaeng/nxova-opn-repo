@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2026 OPN-Box Team
+ * Copyright (C) 2026 nxovaeng
  * All rights reserved.
  */
 
@@ -9,14 +9,14 @@ function tun2socks_services()
 {
     $services = array();
     $services[] = array(
-        'description' => gettext('Tun2Socks High-Performance Bridge'),
+        'description' => gettext('tun2socks (hev-socks5-tunnel) daemon'),
         'configd' => array(
-            'restart' => array('tun2socks tunnel.restart'),
-            'start' => array('tun2socks tunnel.start'),
-            'stop' => array('tun2socks tunnel.stop'),
+            'restart' => array('tun2socks restart'),
+            'start' => array('tun2socks start'),
+            'stop' => array('tun2socks stop'),
         ),
-        'name' => 'hev_socks5_tunnel',
-        'pidfile' => '/var/run/hev-socks5-tunnel.pid',
+        'name' => 'tun2socks',
+        'pidfile' => '/var/run/tun2socks.pid',
     );
     return $services;
 }

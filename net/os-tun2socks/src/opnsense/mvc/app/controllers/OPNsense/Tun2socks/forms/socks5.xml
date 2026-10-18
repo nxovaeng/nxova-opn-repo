@@ -1,0 +1,32 @@
+<form>
+    <field>
+        <id>tun2socks.socks5.address</id>
+        <label>Server address</label>
+        <type>text</type>
+        <help>Upstream SOCKS5 server address, usually a local xray-core inbound.</help>
+    </field>
+    <field>
+        <id>tun2socks.socks5.port</id>
+        <label>Server port</label>
+        <type>text</type>
+        <help>Upstream SOCKS5 server port.</help>
+    </field>
+    <field>
+        <id>tun2socks.socks5.udp_mode</id>
+        <label>UDP mode</label>
+        <type>dropdown</type>
+        <help>How UDP traffic is relayed to the upstream.</help>
+    </field>
+    <field>
+        <id>tun2socks.socks5.username</id>
+        <label>Username</label>
+        <type>text</type>
+        <help>Optional SOCKS5 authentication username.</help>
+    </field>
+    <field>
+        <id>tun2socks.socks5.password</id>
+        <label>Password</label>
+        <type>password</type>
+        <help>Optional SOCKS5 authentication password.</help>
+    </field>
+</form>

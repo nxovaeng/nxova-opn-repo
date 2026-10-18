@@ -1,14 +1,18 @@
 #!/bin/sh
 #
-# autobuild/build.sh - 在 FreeBSD VM 里构建 os-mosdns 完整包并生成 pkg repo
+# autobuild/build.sh - 在 FreeBSD VM 里构建插件包并生成 pkg repo
 #
-# 输入:  $WORKSPACE/dist/bin/{mosdns,pf-aliasd}  (ubuntu 上 GOOS=freebsd 交叉编译)
-# 流程:
-#   1. shallow clone opnsense/plugins (取 Mk/plugins.mk 基础设施)
-#   2. 把 dns/os-mosdns 拷进去，二进制注入 src/usr/local/bin/
-#   3. make package  -> os-mosdns-*.pkg (插件 UI + rc.d + template + 双二进制)
-#   4. pkg repo .     -> 生成仓库元数据
-#   5. 产物全部进 $PUBLISH_DIR, 由 workflow 发布到 gh-pages
+# 二进制来源:
+#   pf-aliasd        : $DIST_DIR/bin/pf-aliasd (ubuntu 上 Go 交叉编译, 自有代码常变)
+#   mosdns            : 从 nxovaeng/mosdns-pf release 下载 (调通后很少更新)
+#   hev-socks5-tunnel : 从 heiher/hev-socks5-tunnel 官方 release 下载
+# 插件:
+#   dns/os-mosdns     : mosdns + pf-aliasd (src/bin/)
+#   net/os-xray       : 无捆绑二进制 (PLUGIN_DEPENDS=xray-core 官方包)
+#   net/os-tun2socks  : hev-socks5-tunnel (src/bin/)
+#
+# plugins.mk 规则: src/<path> -> /usr/local/<path>, 所以 /usr/local/bin 的
+# 目标源路径是 src/bin (不是 src/usr/local/bin).
 #
 set -e
 
@@ -17,48 +21,72 @@ DIST_DIR="${DIST_DIR:-${WORKSPACE_DIR}/dist}"
 PUBLISH_DIR="${PUBLISH_DIR:-${WORKSPACE_DIR}/public}"
 PLUGINS_BRANCH="${PLUGINS_BRANCH:-master}"
 PLUGINS_SRC="/tmp/opnsense-plugins"
+MOSDNS_RELEASE="${MOSDNS_RELEASE:-v5.3.4-pf1}"
+HEV_VERSION="${HEV_VERSION:-2.19.0}"
 
 echo "=========================================================="
-echo " os-mosdns 完整包构建 (FreeBSD $(uname -r))"
-echo " 工作目录: ${WORKSPACE_DIR}"
-echo " 二进制目录: ${DIST_DIR}/bin"
-echo " 发布目录: ${PUBLISH_DIR}"
+echo " nxova-opn-repo 插件构建 (FreeBSD $(uname -r))"
 echo "=========================================================="
 
-for bin in mosdns pf-aliasd; do
-    if [ ! -x "${DIST_DIR}/bin/${bin}" ]; then
-        echo "缺二进制: ${DIST_DIR}/bin/${bin}" >&2
-        exit 1
-    fi
-done
+# --- 1. 准备二进制 -------------------------------------------------------
+mkdir -p "${DIST_DIR}/bin"
+if [ ! -x "${DIST_DIR}/bin/pf-aliasd" ]; then
+    echo "缺二进制: ${DIST_DIR}/bin/pf-aliasd (ubuntu job 应已交叉编译)" >&2
+    exit 1
+fi
 
-echo "==> [1/5] clone opnsense/plugins (${PLUGINS_BRANCH})"
+if [ ! -x "${DIST_DIR}/bin/mosdns" ]; then
+    echo "==> 下载 mosdns (${MOSDNS_RELEASE})"
+    fetch -o "${DIST_DIR}/bin/mosdns" \
+        "https://github.com/nxovaeng/mosdns-pf/releases/download/${MOSDNS_RELEASE}/mosdns-freebsd-amd64"
+    chmod +x "${DIST_DIR}/bin/mosdns"
+fi
+
+if [ ! -x "${DIST_DIR}/bin/hev-socks5-tunnel" ]; then
+    echo "==> 下载 hev-socks5-tunnel (${HEV_VERSION})"
+    fetch -o "${DIST_DIR}/bin/hev-socks5-tunnel" \
+        "https://github.com/heiher/hev-socks5-tunnel/releases/download/${HEV_VERSION}/hev-socks5-tunnel-freebsd-x86_64"
+    chmod +x "${DIST_DIR}/bin/hev-socks5-tunnel"
+fi
+ls -la "${DIST_DIR}/bin"
+
+# --- 2. clone opnsense/plugins -------------------------------------------
+echo "==> clone opnsense/plugins (${PLUGINS_BRANCH})"
 rm -rf "${PLUGINS_SRC}"
 git clone --depth 1 --branch "${PLUGINS_BRANCH}" \
     https://github.com/opnsense/plugins.git "${PLUGINS_SRC}"
 
-echo "==> [2/5] 载入插件并注入二进制"
-rm -rf "${PLUGINS_SRC}/dns/os-mosdns"
-cp -R "${WORKSPACE_DIR}/dns/os-mosdns" "${PLUGINS_SRC}/dns/os-mosdns"
-mkdir -p "${PLUGINS_SRC}/dns/os-mosdns/src/usr/local/bin"
-cp "${DIST_DIR}/bin/mosdns" "${DIST_DIR}/bin/pf-aliasd" \
-    "${PLUGINS_SRC}/dns/os-mosdns/src/usr/local/bin/"
-chmod +x "${PLUGINS_SRC}/dns/os-mosdns/src/usr/local/bin/"*
-
-echo "==> [3/5] make package"
-cd "${PLUGINS_SRC}/dns/os-mosdns"
-# PLUGIN_DEVEL= strips the -devel suffix: we ship os-mosdns, not os-mosdns-devel
-make package PLUGIN_DEVEL=
-ls -la ./work/pkg/*.pkg
-
-echo "==> [4/5] pkg repo"
+# --- 3. 逐个构建插件 ------------------------------------------------------
 mkdir -p "${PUBLISH_DIR}"
-cp ./work/pkg/*.pkg "${PUBLISH_DIR}/"
+build_plugin() {
+    _src="$1"   # 仓库内插件目录, 如 dns/os-mosdns
+    _bins="$2"  # 注入 src/bin 的二进制, 空格分隔, 如 "mosdns pf-aliasd"
+    echo "==> 构建 ${_src}"
+    rm -rf "${PLUGINS_SRC}/${_src}"
+    cp -R "${WORKSPACE_DIR}/${_src}" "${PLUGINS_SRC}/${_src}"
+    if [ -n "${_bins}" ]; then
+        mkdir -p "${PLUGINS_SRC}/${_src}/src/bin"
+        for _b in ${_bins}; do
+            cp "${DIST_DIR}/bin/${_b}" "${PLUGINS_SRC}/${_src}/src/bin/"
+        done
+        chmod +x "${PLUGINS_SRC}/${_src}/src/bin/"*
+    fi
+    cd "${PLUGINS_SRC}/${_src}"
+    make package PLUGIN_DEVEL=
+    cp ./work/pkg/*.pkg "${PUBLISH_DIR}/"
+    cd "${WORKSPACE_DIR}"
+}
+
+build_plugin "dns/os-mosdns" "mosdns pf-aliasd"
+build_plugin "net/os-xray" ""
+build_plugin "net/os-tun2socks" "hev-socks5-tunnel"
+
+# --- 4. pkg repo ----------------------------------------------------------
 if [ -f "${WORKSPACE_DIR}/autobuild/index.html" ]; then
     cp "${WORKSPACE_DIR}/autobuild/index.html" "${PUBLISH_DIR}/"
 fi
 cd "${PUBLISH_DIR}"
 pkg repo .
-echo "==> [5/5] 仓库内容:"
+echo "==> 仓库内容:"
 ls -la "${PUBLISH_DIR}"
 echo "构建完成"

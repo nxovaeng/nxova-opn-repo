@@ -1,3 +1,4 @@
 config.yaml:usr/local/etc/mosdns/config.yaml
 rc.conf.d.mosdns:etc/rc.conf.d/mosdns
 rc.conf.d.pf_aliasd:etc/rc.conf.d/pf_aliasd
+mode.json:usr/local/etc/mosdns/mode.json

@@ -1,0 +1,44 @@
+<form>
+    <field>
+        <id>xray.inbounds.inbound.enabled</id>
+        <label>Enabled</label>
+        <type>checkbox</type>
+    </field>
+    <field>
+        <id>xray.inbounds.inbound.tag</id>
+        <label>Tag</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>xray.inbounds.inbound.protocol</id>
+        <label>Protocol</label>
+        <type>dropdown</type>
+    </field>
+    <field>
+        <id>xray.inbounds.inbound.listen</id>
+        <label>Listen</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>xray.inbounds.inbound.port</id>
+        <label>Port</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>xray.inbounds.inbound.sniffing</id>
+        <label>Sniffing</label>
+        <type>checkbox</type>
+        <help>Enable protocol sniffing (http/tls/quic, route only).</help>
+    </field>
+    <field>
+        <id>xray.inbounds.inbound.username</id>
+        <label>Username</label>
+        <type>text</type>
+        <help>Empty = no auth.</help>
+    </field>
+    <field>
+        <id>xray.inbounds.inbound.password</id>
+        <label>Password</label>
+        <type>password</type>
+    </field>
+</form>

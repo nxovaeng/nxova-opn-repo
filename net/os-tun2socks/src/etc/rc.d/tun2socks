@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# PROVIDE: tun2socks
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+#
+# os-tun2socks: hev-socks5-tunnel tun2socks daemon.
+# Enable flag is managed by the plugin template in /etc/rc.conf.d/tun2socks.
+
+. /etc/rc.subr
+
+name=tun2socks
+rcvar=tun2socks_enable
+
+pidfile=/var/run/tun2socks.pid
+procname=/usr/local/bin/hev-socks5-tunnel
+command=/usr/sbin/daemon
+command_args="-p ${pidfile} ${procname} /usr/local/etc/hev-socks5-tunnel/config.yaml"
+
+load_rc_config $name
+run_rc_command "$1"

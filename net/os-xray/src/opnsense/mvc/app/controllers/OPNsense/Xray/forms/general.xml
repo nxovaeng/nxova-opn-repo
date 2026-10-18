@@ -1,0 +1,26 @@
+<form>
+    <field>
+        <id>xray.general.enabled</id>
+        <label>Enable</label>
+        <type>checkbox</type>
+        <help>Enable the xray-os proxy engine.</help>
+    </field>
+    <field>
+        <id>xray.general.log_level</id>
+        <label>Log level</label>
+        <type>dropdown</type>
+        <help>Xray log verbosity.</help>
+    </field>
+    <field>
+        <id>xray.general.domain_strategy</id>
+        <label>Domain strategy</label>
+        <type>dropdown</type>
+        <help>Routing domain resolution strategy.</help>
+    </field>
+    <field>
+        <id>xray.general.dns_servers</id>
+        <label>DNS servers</label>
+        <type>text</type>
+        <help>Comma separated. e.g. tcp://1.1.1.1:53,https://1.1.1.1/dns-query</help>
+    </field>
+</form>

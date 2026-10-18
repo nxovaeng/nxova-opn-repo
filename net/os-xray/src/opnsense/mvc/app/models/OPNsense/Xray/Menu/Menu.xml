@@ -1,9 +1,7 @@
 <menu>
     <Services>
-        <NetBox VisibleName="NetBox" cssClass="fa fa-cubes fa-fw">
-            <Xray VisibleName="Xray" Order="30">
-                <Dashboard VisibleName="Xray Manager" url="/ui/xray" Order="10"/>
-            </Xray>
-        </NetBox>
+        <Xray VisibleName="Xray" cssClass="fa fa-paper-plane fa-fw" Order="300">
+            <Settings VisibleName="Settings" url="/ui/xray" Order="10"/>
+        </Xray>
     </Services>
 </menu>

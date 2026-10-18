@@ -17,6 +17,26 @@
                 <default>5353</default>
                 <Required>Y</Required>
             </listen_port>
+            <mode type="OptionField">
+                <default>whitelist</default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <whitelist>Whitelist (default route via proxy)</whitelist>
+                    <blacklist>Blacklist (default route direct)</blacklist>
+                    <custom>Custom (mixed, with fallback)</custom>
+                </OptionValues>
+            </mode>
+            <custom_default_route type="OptionField">
+                <default>proxy</default>
+                <OptionValues>
+                    <direct>direct</direct>
+                    <proxy>proxy</proxy>
+                </OptionValues>
+            </custom_default_route>
+            <block_enabled type="BooleanField">
+                <default>1</default>
+                <Required>Y</Required>
+            </block_enabled>
         </general>
         <forward>
             <remote_upstreams type="TextField">

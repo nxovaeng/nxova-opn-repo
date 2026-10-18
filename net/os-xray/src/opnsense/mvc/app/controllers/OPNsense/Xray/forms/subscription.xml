@@ -1,0 +1,12 @@
+<form>
+    <field>
+        <id>xray.subscriptions.subscription.name</id>
+        <label>Name</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>xray.subscriptions.subscription.url</id>
+        <label>URL</label>
+        <type>text</type>
+    </field>
+</form>

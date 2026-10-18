@@ -17,4 +17,22 @@
         <type>text</type>
         <help>UDP/TCP port for DNS queries.</help>
     </field>
+    <field>
+        <id>mosdns.general.mode</id>
+        <label>Split mode</label>
+        <type>dropdown</type>
+        <help>Whitelist: non-direct domains go via proxy. Blacklist: only proxy-listed domains go via proxy. Custom: mixed with fallback below.</help>
+    </field>
+    <field>
+        <id>mosdns.general.custom_default_route</id>
+        <label>Custom fallback</label>
+        <type>dropdown</type>
+        <help>Custom mode only: where unmatched domains go.</help>
+    </field>
+    <field>
+        <id>mosdns.general.block_enabled</id>
+        <label>Enable block list</label>
+        <type>checkbox</type>
+        <help>Reject queries matching the block list first.</help>
+    </field>
 </form>

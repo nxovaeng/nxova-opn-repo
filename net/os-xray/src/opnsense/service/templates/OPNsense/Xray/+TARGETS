@@ -1,0 +1,2 @@
+model.json:usr/local/etc/xray-os/model.json
+rc.conf.d.xray_os:etc/rc.conf.d/xray_os

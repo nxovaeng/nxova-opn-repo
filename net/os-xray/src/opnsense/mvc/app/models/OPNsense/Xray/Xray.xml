@@ -1,6 +1,149 @@
 <model>
-    <mount>//OPNsense/Xray</mount>
+    <mount>//OPNsense/xray</mount>
     <version>1.0.0</version>
-    <description>Xray-core 7-layer Sniffing Engine &amp; Manager</description>
-    <items/>
+    <description>Xray-core routing engine manager (custom config, no conflict with official package)</description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <default>0</default>
+                <Required>Y</Required>
+            </enabled>
+            <active_node type="TextField">
+                <Mask>/^[a-f0-9\-]*$/</Mask>
+            </active_node>
+            <domain_strategy type="OptionField">
+                <default>AsIs</default>
+                <OptionValues>
+                    <AsIs>AsIs</AsIs>
+                    <IPIfNonMatch>IPIfNonMatch</IPIfNonMatch>
+                    <IPOnDemand>IPOnDemand</IPOnDemand>
+                </OptionValues>
+            </domain_strategy>
+            <log_level type="OptionField">
+                <default>warning</default>
+                <OptionValues>
+                    <debug>debug</debug>
+                    <info>info</info>
+                    <warning>warning</warning>
+                    <error>error</error>
+                    <none>none</none>
+                </OptionValues>
+            </log_level>
+            <dns_servers type="TextField">
+                <default>tcp://1.1.1.1:53,tcp://8.8.8.8:53,https://1.1.1.1/dns-query</default>
+            </dns_servers>
+        </general>
+        <nodes type="ArrayField">
+            <node>
+                <uuid type="UniqueIdField"/>
+                <enabled type="BooleanField">
+                    <default>1</default>
+                </enabled>
+                <tag type="TextField">
+                    <Required>Y</Required>
+                </tag>
+                <protocol type="OptionField">
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <vless>vless</vless>
+                        <vmess>vmess</vmess>
+                        <trojan>trojan</trojan>
+                        <shadowsocks>shadowsocks</shadowsocks>
+                    </OptionValues>
+                </protocol>
+                <address type="TextField">
+                    <Required>Y</Required>
+                </address>
+                <port type="PortField">
+                    <Required>Y</Required>
+                </port>
+                <network type="OptionField">
+                    <default>tcp</default>
+                    <OptionValues>
+                        <tcp>tcp</tcp>
+                        <ws>ws</ws>
+                        <xhttp>xhttp</xhttp>
+                        <grpc>grpc</grpc>
+                    </OptionValues>
+                </network>
+                <security type="OptionField">
+                    <default>none</default>
+                    <OptionValues>
+                        <none>none</none>
+                        <tls>tls</tls>
+                        <reality>reality</reality>
+                    </OptionValues>
+                </security>
+                <sni type="TextField"/>
+                <path type="TextField"/>
+                <params type="TextField">
+                    <help>Protocol-specific parameters as JSON (uuid/password/method/fingerprint...). Filled automatically on import.</help>
+                </params>
+                <sub_id type="TextField"/>
+            </node>
+        </nodes>
+        <inbounds type="ArrayField">
+            <inbound>
+                <uuid type="UniqueIdField"/>
+                <enabled type="BooleanField">
+                    <default>1</default>
+                </enabled>
+                <tag type="TextField">
+                    <Required>Y</Required>
+                </tag>
+                <protocol type="OptionField">
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <socks>socks</socks>
+                        <http>http</http>
+                    </OptionValues>
+                </protocol>
+                <listen type="NetworkField">
+                    <default>127.0.0.1</default>
+                    <Required>Y</Required>
+                </listen>
+                <port type="PortField">
+                    <Required>Y</Required>
+                </port>
+                <sniffing type="BooleanField">
+                    <default>0</default>
+                </sniffing>
+                <username type="TextField"/>
+                <password type="TextField"/>
+            </inbound>
+        </inbounds>
+        <rules type="ArrayField">
+            <rule>
+                <uuid type="UniqueIdField"/>
+                <enabled type="BooleanField">
+                    <default>1</default>
+                </enabled>
+                <type type="OptionField">
+                    <Required>Y</Required>
+                    <OptionValues>
+                        <domain>domain</domain>
+                        <ip>ip</ip>
+                    </OptionValues>
+                </type>
+                <values type="TextField">
+                    <Required>Y</Required>
+                    <help>Comma separated match values.</help>
+                </values>
+                <outbound_tag type="TextField">
+                    <help>Node tag, 'direct', 'block', or empty for default node.</help>
+                </outbound_tag>
+            </rule>
+        </rules>
+        <subscriptions type="ArrayField">
+            <subscription>
+                <uuid type="UniqueIdField"/>
+                <name type="TextField">
+                    <Required>Y</Required>
+                </name>
+                <url type="TextField">
+                    <Required>Y</Required>
+                </url>
+            </subscription>
+        </subscriptions>
+    </items>
 </model>

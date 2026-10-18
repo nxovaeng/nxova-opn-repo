@@ -1,0 +1,2 @@
+config.yaml:usr/local/etc/hev-socks5-tunnel/config.yaml
+rc.conf.d.tun2socks:etc/rc.conf.d/tun2socks

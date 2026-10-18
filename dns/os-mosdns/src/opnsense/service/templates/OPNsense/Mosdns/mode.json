@@ -1,0 +1,3 @@
+{% set _m = OPNsense.mosdns|default({}) %}
+{% set general = _m.general|default({}) %}
+{"mode": "{{ general.mode|default('whitelist') }}", "custom_default_route": "{{ general.custom_default_route|default('proxy') }}", "block_enabled": "{{ general.block_enabled|default('1') }}"}

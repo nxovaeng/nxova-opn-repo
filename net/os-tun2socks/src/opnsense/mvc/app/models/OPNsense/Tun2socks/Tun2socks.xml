@@ -1,6 +1,90 @@
 <model>
-    <mount>//OPNsense/Tun2socks</mount>
+    <mount>//OPNsense/tun2socks</mount>
     <version>1.0.0</version>
-    <description>Hev-Socks5-Tunnel Tun2Socks Bridge &amp; Manager</description>
-    <items/>
+    <description>hev-socks5-tunnel tun2socks daemon</description>
+    <items>
+        <tunnel>
+            <enabled type="BooleanField">
+                <default>0</default>
+                <Required>Y</Required>
+            </enabled>
+            <name type="TextField">
+                <default>tun0</default>
+                <Required>Y</Required>
+                <ValidationMessage>Specify the TUN interface name.</ValidationMessage>
+                <Mask>/^[A-Za-z0-9_]{1,15}$/</Mask>
+            </name>
+            <mtu type="TextField">
+                <default>1500</default>
+                <Required>Y</Required>
+                <ValidationMessage>Specify the TUN MTU.</ValidationMessage>
+                <Mask>/^[0-9]{1,5}$/</Mask>
+            </mtu>
+            <ipv4 type="TextField">
+                <default>198.18.0.1</default>
+                <Required>Y</Required>
+                <ValidationMessage>Specify the TUN virtual IPv4 address.</ValidationMessage>
+            </ipv4>
+            <ipv6 type="TextField">
+                <default></default>
+            </ipv6>
+            <multi_queue type="BooleanField">
+                <default>0</default>
+                <Required>Y</Required>
+            </multi_queue>
+        </tunnel>
+        <socks5>
+            <address type="TextField">
+                <default>127.0.0.1</default>
+                <Required>Y</Required>
+                <ValidationMessage>Specify the upstream SOCKS5 address.</ValidationMessage>
+            </address>
+            <port type="PortField">
+                <default>10808</default>
+                <Required>Y</Required>
+            </port>
+            <udp_mode type="OptionField">
+                <default>udp</default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <udp>UDP associate (native UDP)</udp>
+                    <tcp>UDP over TCP</tcp>
+                </OptionValues>
+            </udp_mode>
+            <username type="TextField">
+                <default></default>
+            </username>
+            <password type="TextField">
+                <default></default>
+            </password>
+        </socks5>
+        <misc>
+            <log_level type="OptionField">
+                <default>info</default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <debug>debug</debug>
+                    <info>info</info>
+                    <warn>warn</warn>
+                    <error>error</error>
+                </OptionValues>
+            </log_level>
+            <log_file type="TextField">
+                <default>/var/log/hev-socks5-tunnel.log</default>
+                <Required>Y</Required>
+            </log_file>
+            <task_stack_size type="TextField">
+                <default></default>
+                <Mask>/^[0-9]*$/</Mask>
+            </task_stack_size>
+            <connect_timeout type="TextField">
+                <default></default>
+                <Mask>/^[0-9]*$/</Mask>
+            </connect_timeout>
+            <read_write_timeout type="TextField">
+                <default></default>
+                <Mask>/^[0-9]*$/</Mask>
+            </read_write_timeout>
+        </misc>
+    </items>
 </model>

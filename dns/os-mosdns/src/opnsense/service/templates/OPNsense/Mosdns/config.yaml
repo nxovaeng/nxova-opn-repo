@@ -65,15 +65,21 @@ plugins:
         table: {{ pfalias.table|default('GFW_Proxy') }}
         timeout: {{ pfalias.timeout|default('100ms') }}
 {% endif %}
+{% set mode = general.mode|default('whitelist') %}
+{% set block_enabled = general.block_enabled|default('1') == '1' %}
     - tag: main_sequence
       type: sequence
       args:
+{% if block_enabled %}
         - exec: reject 3
           matches:
             - qname $block_domain_set
         - exec: return
           matches:
             - has_resp
+{% endif %}
+{% if mode == 'whitelist' %}
+        # whitelist: direct set -> local; everything else -> remote + pf sync
         - exec: $forward_local
           matches:
             - qname $direct_domain_set
@@ -83,6 +89,45 @@ plugins:
         - exec: $forward_remote
 {% if pfalias_enabled %}
         - exec: $sync_to_pf
+{% endif %}
+{% elif mode == 'blacklist' %}
+        # blacklist: proxy set -> remote + pf sync; everything else -> local (no sync)
+        - exec: $forward_remote
+          matches:
+            - qname $proxy_domain_set
+{% if pfalias_enabled %}
+        - exec: $sync_to_pf
+{% endif %}
+        - exec: return
+          matches:
+            - has_resp
+        - exec: $forward_local
+{% else %}
+        # custom: direct -> local; proxy -> remote + sync; fallback per custom_default_route
+        - exec: $forward_local
+          matches:
+            - qname $direct_domain_set
+        - exec: return
+          matches:
+            - has_resp
+        - exec: $forward_remote
+          matches:
+            - qname $proxy_domain_set
+{% if pfalias_enabled %}
+        - exec: $sync_to_pf
+{% endif %}
+        - exec: return
+          matches:
+            - has_resp
+{% set fallback = general.custom_default_route|default('proxy') %}
+{% if fallback == 'direct' %}
+        - exec: $forward_local
+{% else %}
+        - exec: $forward_remote
+{% if pfalias_enabled %}
+        - exec: $sync_to_pf
+{% endif %}
+{% endif %}
 {% endif %}
     - tag: udp_server
       type: udp_server

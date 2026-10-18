@@ -1,0 +1,2 @@
+{% set _m = OPNsense.xray|default({}) %}
+{{ _m | to_json }}

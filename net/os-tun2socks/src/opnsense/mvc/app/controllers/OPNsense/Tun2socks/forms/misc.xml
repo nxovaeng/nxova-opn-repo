@@ -1,0 +1,32 @@
+<form>
+    <field>
+        <id>tun2socks.misc.log_level</id>
+        <label>Log level</label>
+        <type>dropdown</type>
+        <help>Verbosity of the daemon log.</help>
+    </field>
+    <field>
+        <id>tun2socks.misc.log_file</id>
+        <label>Log file</label>
+        <type>text</type>
+        <help>Path of the daemon log file.</help>
+    </field>
+    <field>
+        <id>tun2socks.misc.task_stack_size</id>
+        <label>Task stack size</label>
+        <type>text</type>
+        <help>Optional task stack size in bytes, empty for default.</help>
+    </field>
+    <field>
+        <id>tun2socks.misc.connect_timeout</id>
+        <label>Connect timeout</label>
+        <type>text</type>
+        <help>Optional connect timeout in milliseconds, empty for default.</help>
+    </field>
+    <field>
+        <id>tun2socks.misc.read_write_timeout</id>
+        <label>Read/write timeout</label>
+        <type>text</type>
+        <help>Optional read/write timeout in milliseconds, empty for default.</help>
+    </field>
+</form>

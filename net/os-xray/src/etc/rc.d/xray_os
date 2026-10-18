@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# PROVIDE: xray_os
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+#
+# os-xray: Xray-core proxy engine with custom config.
+# Uses /usr/local/etc/xray-os/config.json (NOT the official xray-core confdir).
+# Enable flag is managed by the plugin template in /etc/rc.conf.d/xray_os.
+
+. /etc/rc.subr
+
+name=xray_os
+rcvar=xray_os_enable
+
+pidfile=/var/run/xray_os.pid
+procname=/usr/local/bin/xray
+command=/usr/sbin/daemon
+command_args="-p ${pidfile} ${procname} run -c /usr/local/etc/xray-os/config.json"
+
+load_rc_config $name
+run_rc_command "$1"

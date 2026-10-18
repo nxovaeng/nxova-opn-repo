@@ -1,42 +1,298 @@
 {#
- # Copyright (C) 2026 OPN-Box Team
+ # Copyright (C) 2026 nxovaeng
  # All rights reserved.
  #}
 
-<div class="content-box">
-    <div class="col-xs-12">
-        <h2>{{ lang._('Xray Manager 管理控制台') }}</h2>
-        <p class="text-muted">
-            {{ lang._('Xray-core 官方代理内核管理面板 (监听端口 :5384)。支持订阅导入、7层 SNI 嗅探规则编辑、VLESS/xhttp 分流与局域网专属接入。') }}
+<script>
+    $(document).ready(function() {
+        // ---- general settings ----
+        mapDataToFormUI({'frm_GeneralSettings': "/api/xray/settings/get"}).done(function() {
+            $('.selectpicker').selectpicker('refresh');
+        });
+        $("#saveGeneralAct").click(function() {
+            saveFormToEndpoint(url="/api/xray/settings/set", formid='frm_GeneralSettings',
+                callback_ok=function() {
+                    $("#responseMsg").removeClass("hidden").removeClass("alert-danger alert-info").addClass("alert-success")
+                        .html("{{ lang._('Settings saved. Press Apply to activate.') }}");
+                });
+        });
+
+        // ---- grids ----
+        $("#grid-nodes").UIBootgrid({
+            search: '/api/xray/settings/searchNodes',
+            get: '/api/xray/settings/getNode/',
+            set: '/api/xray/settings/setNode/',
+            add: '/api/xray/settings/addNode/',
+            del: '/api/xray/settings/delNode/',
+            toggle: '/api/xray/settings/toggleNode/'
+        });
+        $("#grid-inbounds").UIBootgrid({
+            search: '/api/xray/settings/searchInbounds',
+            get: '/api/xray/settings/getInbound/',
+            set: '/api/xray/settings/setInbound/',
+            add: '/api/xray/settings/addInbound/',
+            del: '/api/xray/settings/delInbound/',
+            toggle: '/api/xray/settings/toggleInbound/'
+        });
+        $("#grid-rules").UIBootgrid({
+            search: '/api/xray/settings/searchRules',
+            get: '/api/xray/settings/getRule/',
+            set: '/api/xray/settings/setRule/',
+            add: '/api/xray/settings/addRule/',
+            del: '/api/xray/settings/delRule/',
+            toggle: '/api/xray/settings/toggleRule/'
+        });
+        $("#grid-subscriptions").UIBootgrid({
+            search: '/api/xray/settings/searchSubscriptions',
+            get: '/api/xray/settings/getSubscription/',
+            add: '/api/xray/settings/addSubscription/',
+            del: '/api/xray/settings/delSubscription/'
+        });
+
+        function updateActiveBadge() {
+            ajaxCall(url="/api/xray/settings/get", sendData={}, callback=function(data, status) {
+                var active = (data['xray'] && data['xray']['general'] && data['xray']['general']['active_node']) || '';
+                $("#activeNodeBadge").text(active ? "{{ lang._('Active') }}: " + active.substring(0, 8) : "{{ lang._('No active node') }}");
+            });
+        }
+        updateActiveBadge();
+
+        // ---- import nodes ----
+        $("#importNodesAct").click(function() {
+            var links = $("#importLinks").val();
+            if (!links.trim()) return;
+            ajaxCall(url="/api/xray/settings/importNodes", sendData={links: links, sub_id: 'manual'}, callback=function(data, status) {
+                $("#importResult").text(JSON.stringify(data));
+                $("#grid-nodes").bootgrid("reload");
+                updateActiveBadge();
+            });
+        });
+
+        // ---- ping ----
+        $("#pingNodesAct").click(function() {
+            ajaxCall(url="/api/xray/settings/pingNodes", sendData={uuids: []}, callback=function(data, status) {
+                var html = "";
+                $.each(data['pings'] || {}, function(uuid, rtt) {
+                    html += uuid.substring(0, 8) + ": " + (rtt >= 0 ? rtt + " ms" : "fail") + "<br/>";
+                });
+                $("#pingResult").html(html || "{{ lang._('No nodes') }}");
+            });
+        });
+
+        // ---- apply ----
+        $("#reconfigureAct").click(function() {
+            $("#reconfigureAct_progress").addClass("fa fa-spinner fa-pulse");
+            ajaxCall(url="/api/xray/service/reconfigure", sendData={}, callback=function(data, status) {
+                $("#reconfigureAct_progress").removeClass("fa fa-spinner fa-pulse");
+                var msg = data['status'] == 'ok' ? "{{ lang._('Configuration applied.') }}" : (data['status_msg'] || "{{ lang._('Apply failed.') }}");
+                var cls = data['status'] == 'ok' ? "alert-success" : "alert-danger";
+                $("#responseMsg").removeClass("hidden alert-success alert-danger alert-info").addClass(cls).html(msg);
+                refreshStatus();
+            });
+        });
+
+        // ---- preview ----
+        $("#previewAct").click(function() {
+            ajaxCall(url="/api/xray/service/preview", sendData={}, callback=function(data, status) {
+                $("#configPreview").text(data['result'] == 'ok' ? JSON.stringify(data['config'], null, 2) : (data['error'] || 'failed'));
+            });
+        });
+
+        // ---- logs ----
+        function refreshLog() {
+            ajaxCall(url="/api/xray/service/log", sendData={lines: 100}, callback=function(data, status) {
+                $("#xrayLog").text(data['log'] || '');
+            });
+        }
+        $("#refreshLogAct").click(refreshLog);
+
+        function refreshStatus() {
+            ajaxCall(url="/api/xray/service/status", sendData={}, callback=function(data, status) {
+                $("#serviceStatus").text("{{ lang._('Status') }}: " + (data['status'] || status));
+            });
+        }
+        refreshStatus();
+
+        // rule templates
+        function addTemplateRules(templates) {
+            var chain = $.Deferred().resolve();
+            templates.forEach(function(t) {
+                chain = chain.then(function() {
+                    return ajaxCall(url="/api/xray/settings/addRule", sendData={rule: $.extend({enabled: '1'}, t)});
+                });
+            });
+            chain.done(function() { $("#grid-rules").bootgrid("reload"); });
+        }
+        $("#addTemplateAI").click(function() {
+            addTemplateRules([{type: 'domain', values: 'openai.com,chatgpt.com,anthropic.com,claude.ai', outbound_tag: ''}]);
+        });
+        $("#addTemplateMedia").click(function() {
+            addTemplateRules([{type: 'domain', values: 'netflix.com,nflxvideo.net,disneyplus.com,youtube.com,googlevideo.com', outbound_tag: ''}]);
+        });
+    });
+</script>
+
+<ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
+    <li class="active"><a data-toggle="tab" href="#nodes">{{ lang._('Nodes') }}</a></li>
+    <li><a data-toggle="tab" href="#inbounds">{{ lang._('Inbounds') }}</a></li>
+    <li><a data-toggle="tab" href="#routing">{{ lang._('Routing') }}</a></li>
+    <li><a data-toggle="tab" href="#settings">{{ lang._('Settings') }}</a></li>
+    <li><a data-toggle="tab" href="#logs">{{ lang._('Logs') }}</a></li>
+</ul>
+<div class="tab-content content-box tab-content">
+    <div id="nodes" class="tab-pane fade in active">
+        <p>
+            <span id="activeNodeBadge" class="label label-info"></span>
+            <button class="btn btn-default btn-xs" id="pingNodesAct" type="button">{{ lang._('Ping all') }}</button>
         </p>
+        <div id="pingResult" class="text-muted" style="margin-bottom:10px;"></div>
+        <table id="grid-nodes" class="table table-condensed table-hover table-striped" data-editDialog="DialogNode">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">{{ lang._('ID') }}</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">{{ lang._('Enabled') }}</th>
+                    <th data-column-id="tag" data-type="string">{{ lang._('Tag') }}</th>
+                    <th data-column-id="protocol" data-type="string">{{ lang._('Protocol') }}</th>
+                    <th data-column-id="address" data-type="string">{{ lang._('Address') }}</th>
+                    <th data-column-id="port" data-type="string">{{ lang._('Port') }}</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">{{ lang._('Commands') }}</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
         <hr/>
-
-        <div style="margin-bottom: 15px;">
-            <a id="ext-link-xray" href="#" target="_blank" class="btn btn-danger">
-                <i class="fa fa-external-link fa-fw"></i> {{ lang._('新窗口打开独立 WebUI (:5384)') }}
-            </a>
-            <button class="btn btn-default" onclick="location.reload();">
-                <i class="fa fa-refresh fa-fw"></i> {{ lang._('刷新界面') }}
-            </button>
+        <h5>{{ lang._('Import nodes') }}</h5>
+        <p class="text-muted">{{ lang._('Paste vless/vmess/trojan/ss links, one per line.') }}</p>
+        <textarea id="importLinks" rows="4" class="form-control"></textarea>
+        <div style="margin-top:10px;">
+            <button class="btn btn-primary btn-sm" id="importNodesAct" type="button">{{ lang._('Import') }}</button>
+            <span id="importResult" class="text-muted" style="margin-left:10px;"></span>
         </div>
-
-        <div class="panel panel-default" style="border-radius: 6px; overflow: hidden; margin-top: 15px;">
-            <div class="panel-heading" style="font-weight: bold;">
-                <i class="fa fa-desktop fa-fw"></i> {{ lang._('内嵌管理视图 (Port :5384)') }}
-            </div>
-            <div class="panel-body" style="padding: 0;">
-                <iframe id="xray-frame" src="" style="width: 100%; height: 800px; border: none;"></iframe>
-            </div>
-        </div>
+        <hr/>
+        <h5>{{ lang._('Subscriptions') }}</h5>
+        <table id="grid-subscriptions" class="table table-condensed table-hover table-striped" data-editDialog="DialogSubscription">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">{{ lang._('ID') }}</th>
+                    <th data-column-id="name" data-type="string">{{ lang._('Name') }}</th>
+                    <th data-column-id="url" data-type="string">{{ lang._('URL') }}</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">{{ lang._('Commands') }}</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div id="inbounds" class="tab-pane fade">
+        <p class="text-muted">{{ lang._('Built-in: hev-socks-in (127.0.0.1:10808), dns-in (127.0.0.1:10853). Add custom inbounds below.') }}</p>
+        <table id="grid-inbounds" class="table table-condensed table-hover table-striped" data-editDialog="DialogInbound">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">{{ lang._('ID') }}</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">{{ lang._('Enabled') }}</th>
+                    <th data-column-id="tag" data-type="string">{{ lang._('Tag') }}</th>
+                    <th data-column-id="protocol" data-type="string">{{ lang._('Protocol') }}</th>
+                    <th data-column-id="listen" data-type="string">{{ lang._('Listen') }}</th>
+                    <th data-column-id="port" data-type="string">{{ lang._('Port') }}</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">{{ lang._('Commands') }}</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div id="routing" class="tab-pane fade">
+        <p>
+            <button class="btn btn-default btn-xs" id="addTemplateAI" type="button">{{ lang._('Add AI template') }}</button>
+            <button class="btn btn-default btn-xs" id="addTemplateMedia" type="button">{{ lang._('Add streaming template') }}</button>
+        </p>
+        <table id="grid-rules" class="table table-condensed table-hover table-striped" data-editDialog="DialogRule">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">{{ lang._('ID') }}</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">{{ lang._('Enabled') }}</th>
+                    <th data-column-id="type" data-type="string">{{ lang._('Type') }}</th>
+                    <th data-column-id="values" data-type="string">{{ lang._('Values') }}</th>
+                    <th data-column-id="outbound_tag" data-type="string">{{ lang._('Outbound') }}</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">{{ lang._('Commands') }}</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div id="settings" class="tab-pane fade">
+        {{ partial("layout_partials/base_form",['fields':generalForm,'id':'frm_GeneralSettings']) }}
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 25%;"/>
+                <col style="width: 40%;"/>
+                <col style="width: 35%;"/>
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td><button class="btn btn-primary" id="saveGeneralAct" type="button"><b>{{ lang._('Save') }}</b></button></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        <hr/>
+        <button class="btn btn-default" id="previewAct" type="button">{{ lang._('Preview generated config') }}</button>
+        <pre id="configPreview" style="margin-top:10px; max-height:400px; overflow:auto;"></pre>
+    </div>
+    <div id="logs" class="tab-pane fade">
+        <button class="btn btn-default btn-sm" id="refreshLogAct" type="button">{{ lang._('Refresh') }}</button>
+        <pre id="xrayLog" style="margin-top:10px; max-height:500px; overflow:auto; background:#000; color:#0f0;"></pre>
     </div>
 </div>
 
-<script>
-$(document).ready(function() {
-    var host = window.location.hostname;
-    var proto = window.location.protocol;
-    var targetUrl = proto + '//' + host + ':5384';
-    $('#ext-link-xray').attr('href', targetUrl);
-    $('#xray-frame').attr('src', targetUrl);
-});
-</script>
+<div class="content-box" style="margin-top: 20px;">
+    <div class="col-md-12">
+        <button class="btn btn-primary" id="reconfigureAct" type="button">
+            <b>{{ lang._('Apply') }}</b> <i id="reconfigureAct_progress"></i>
+        </button>
+        <span id="serviceStatus" class="text-muted" style="margin-left: 10px;"></span>
+    </div>
+    <div class="col-md-12" style="margin-top: 10px;">
+        <div id="responseMsg" class="alert hidden" role="alert"></div>
+    </div>
+</div>
+
+{{ partial("layout_partials/base_dialog",['fields':nodeForm,'id':'DialogNode','label':lang._('Edit node')])}}
+{{ partial("layout_partials/base_dialog",['fields':inboundForm,'id':'DialogInbound','label':lang._('Edit inbound')])}}
+{{ partial("layout_partials/base_dialog",['fields':ruleForm,'id':'DialogRule','label':lang._('Edit rule')])}}
+{{ partial("layout_partials/base_dialog",['fields':subscriptionForm,'id':'DialogSubscription','label':lang._('Edit subscription')])}}

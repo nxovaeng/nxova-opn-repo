@@ -1,0 +1,38 @@
+<form>
+    <field>
+        <id>tun2socks.tunnel.enabled</id>
+        <label>Enable</label>
+        <type>checkbox</type>
+        <help>Enable the tun2socks daemon.</help>
+    </field>
+    <field>
+        <id>tun2socks.tunnel.name</id>
+        <label>Interface name</label>
+        <type>text</type>
+        <help>TUN interface name, e.g. tun0. Assign it under Interfaces -&gt; Assignments after first start.</help>
+    </field>
+    <field>
+        <id>tun2socks.tunnel.mtu</id>
+        <label>MTU</label>
+        <type>text</type>
+        <help>MTU of the TUN interface.</help>
+    </field>
+    <field>
+        <id>tun2socks.tunnel.ipv4</id>
+        <label>Virtual IPv4</label>
+        <type>text</type>
+        <help>Virtual IPv4 address of the TUN interface. Policy-route proxy traffic here as gateway.</help>
+    </field>
+    <field>
+        <id>tun2socks.tunnel.ipv6</id>
+        <label>Virtual IPv6</label>
+        <type>text</type>
+        <help>Optional virtual IPv6 address of the TUN interface.</help>
+    </field>
+    <field>
+        <id>tun2socks.tunnel.multi_queue</id>
+        <label>Multi-queue</label>
+        <type>checkbox</type>
+        <help>Enable multi-queue support on the TUN interface.</help>
+    </field>
+</form>

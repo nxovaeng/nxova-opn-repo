@@ -1,9 +1,7 @@
 <menu>
     <Services>
-        <NetBox VisibleName="NetBox" cssClass="fa fa-cubes fa-fw">
-            <Tun2Socks VisibleName="Tun2Socks" Order="20">
-                <Dashboard VisibleName="Tun2Socks Manager" url="/ui/tun2socks" Order="10"/>
-            </Tun2Socks>
-        </NetBox>
+        <Tun2socks VisibleName="Tun2Socks" cssClass="fa fa-random fa-fw" Order="460">
+            <Settings VisibleName="Settings" url="/ui/tun2socks" Order="10"/>
+        </Tun2socks>
     </Services>
 </menu>

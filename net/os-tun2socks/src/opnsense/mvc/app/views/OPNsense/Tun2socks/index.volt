@@ -1,42 +1,155 @@
 {#
- # Copyright (C) 2026 OPN-Box Team
+ # Copyright (C) 2026 nxovaeng
  # All rights reserved.
  #}
 
-<div class="content-box">
-    <div class="col-xs-12">
-        <h2>{{ lang._('Tun2Socks (Hev-Socks5-Tunnel) 管理控制台') }}</h2>
-        <p class="text-muted">
-            {{ lang._('基于纯 C 协程的极致性能 Tun2Socks 虚拟网卡代理与 Web 管理面板 (监听端口 :5382)。') }}
-        </p>
-        <hr/>
+<script>
+    $(document).ready(function() {
+        var data_get_map = {
+            'frm_TunnelSettings': "/api/tun2socks/settings/get",
+            'frm_Socks5Settings': "/api/tun2socks/settings/get",
+            'frm_MiscSettings': "/api/tun2socks/settings/get"
+        };
+        mapDataToFormUI(data_get_map).done(function(data) {
+            $('.selectpicker').selectpicker('refresh');
+        });
 
-        <div style="margin-bottom: 15px;">
-            <a id="ext-link-tun2socks" href="#" target="_blank" class="btn btn-success">
-                <i class="fa fa-external-link fa-fw"></i> {{ lang._('新窗口打开独立 WebUI (:5382)') }}
-            </a>
-            <button class="btn btn-default" onclick="location.reload();">
-                <i class="fa fa-refresh fa-fw"></i> {{ lang._('刷新界面') }}
-            </button>
-        </div>
+        function saveSection(formid) {
+            saveFormToEndpoint(url="/api/tun2socks/settings/set", formid=formid,
+                callback_ok=function() {
+                    $("#responseMsg").removeClass("hidden")
+                        .removeClass("alert-danger alert-info").addClass("alert-success")
+                        .html("{{ lang._('Settings saved. Press Apply to activate.') }}");
+                },
+                callback_fail=function() {
+                    $("#responseMsg").removeClass("hidden")
+                        .removeClass("alert-success alert-info").addClass("alert-danger")
+                        .html("{{ lang._('Failed to save settings.') }}");
+                }
+            );
+        }
 
-        <div class="panel panel-default" style="border-radius: 6px; overflow: hidden; margin-top: 15px;">
-            <div class="panel-heading" style="font-weight: bold;">
-                <i class="fa fa-desktop fa-fw"></i> {{ lang._('内嵌管理视图 (Port :5382)') }}
-            </div>
-            <div class="panel-body" style="padding: 0;">
-                <iframe id="tun2socks-frame" src="" style="width: 100%; height: 800px; border: none;"></iframe>
-            </div>
-        </div>
+        $("#saveTunnelAct").click(function() { saveSection('frm_TunnelSettings'); });
+        $("#saveSocks5Act").click(function() { saveSection('frm_Socks5Settings'); });
+        $("#saveMiscAct").click(function() { saveSection('frm_MiscSettings'); });
+
+        $("#reconfigureAct").click(function() {
+            $("#reconfigureAct_progress").addClass("fa fa-spinner fa-pulse");
+            ajaxCall(url="/api/tun2socks/service/reconfigure", sendData={}, callback=function(data, status) {
+                $("#reconfigureAct_progress").removeClass("fa fa-spinner fa-pulse");
+                var msg, cls;
+                if (data['status'] == 'ok') {
+                    msg = "{{ lang._('Configuration applied.') }}";
+                    cls = "alert-success";
+                } else {
+                    msg = (data['status_msg'] || "{{ lang._('Apply failed.') }}");
+                    cls = "alert-danger";
+                }
+                $("#responseMsg").removeClass("hidden alert-success alert-danger alert-info").addClass(cls).html(msg);
+                refreshStatus();
+            });
+        });
+
+        function refreshStatus() {
+            ajaxCall(url="/api/tun2socks/service/status", sendData={}, callback=function(data, status) {
+                $("#serviceStatus").text("{{ lang._('Status') }}: " + (data['status'] || status));
+            });
+        }
+
+        function refreshLog() {
+            $("#refreshLogAct_progress").addClass("fa fa-spinner fa-pulse");
+            ajaxCall(url="/api/tun2socks/service/log", sendData={}, callback=function(data, status) {
+                $("#refreshLogAct_progress").removeClass("fa fa-spinner fa-pulse");
+                $("#serviceLog").text(data['response'] || status);
+            });
+        }
+        $("#refreshLogAct").click(function() { refreshLog(); });
+
+        refreshStatus();
+        refreshLog();
+    });
+</script>
+
+<ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
+    <li class="active"><a data-toggle="tab" href="#tunnel">{{ lang._('Tunnel') }}</a></li>
+    <li><a data-toggle="tab" href="#socks5">{{ lang._('SOCKS5') }}</a></li>
+    <li><a data-toggle="tab" href="#misc">{{ lang._('Misc') }}</a></li>
+</ul>
+<div class="tab-content content-box tab-content">
+    <div id="tunnel" class="tab-pane fade in active">
+        {{ partial("layout_partials/base_form",['fields':tunnelForm,'id':'frm_TunnelSettings']) }}
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 25%;"/>
+                <col style="width: 40%;"/>
+                <col style="width: 35%;"/>
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td><button class="btn btn-primary" id="saveTunnelAct" type="button"><b>{{ lang._('Save') }}</b></button></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="socks5" class="tab-pane fade">
+        {{ partial("layout_partials/base_form",['fields':socks5Form,'id':'frm_Socks5Settings']) }}
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 25%;"/>
+                <col style="width: 40%;"/>
+                <col style="width: 35%;"/>
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td><button class="btn btn-primary" id="saveSocks5Act" type="button"><b>{{ lang._('Save') }}</b></button></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="misc" class="tab-pane fade">
+        {{ partial("layout_partials/base_form",['fields':miscForm,'id':'frm_MiscSettings']) }}
+        <table style="table-layout: fixed; width: 100%;">
+            <colgroup>
+                <col style="width: 25%;"/>
+                <col style="width: 40%;"/>
+                <col style="width: 35%;"/>
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td><button class="btn btn-primary" id="saveMiscAct" type="button"><b>{{ lang._('Save') }}</b></button></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<script>
-$(document).ready(function() {
-    var host = window.location.hostname;
-    var proto = window.location.protocol;
-    var targetUrl = proto + '//' + host + ':5382';
-    $('#ext-link-tun2socks').attr('href', targetUrl);
-    $('#tun2socks-frame').attr('src', targetUrl);
-});
-</script>
+<div class="content-box" style="margin-top: 20px;">
+    <div class="col-md-12">
+        <button class="btn btn-primary" id="reconfigureAct" type="button">
+            <b>{{ lang._('Apply') }}</b> <i id="reconfigureAct_progress"></i>
+        </button>
+        <span id="serviceStatus" class="text-muted" style="margin-left: 10px;"></span>
+    </div>
+    <div class="col-md-12" style="margin-top: 10px;">
+        <div id="responseMsg" class="alert hidden" role="alert"></div>
+    </div>
+</div>
+
+<div class="content-box" style="margin-top: 20px;">
+    <div class="col-md-12">
+        <h4>{{ lang._('Service log') }}</h4>
+        <p class="text-muted">{{ lang._('Last 100 lines of the daemon log.') }}</p>
+        <button class="btn btn-default" id="refreshLogAct" type="button">
+            {{ lang._('Refresh') }} <i id="refreshLogAct_progress"></i>
+        </button>
+    </div>
+    <div class="col-md-12" style="margin-top: 10px;">
+        <pre id="serviceLog" style="max-height: 300px; overflow-y: auto;"></pre>
+    </div>
+</div>
