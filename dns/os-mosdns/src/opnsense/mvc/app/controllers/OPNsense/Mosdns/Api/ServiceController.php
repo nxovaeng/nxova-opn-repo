@@ -101,7 +101,7 @@ class ServiceController extends ApiMutableServiceControllerBase
      */
     public function logAction($target = 'mosdns')
     {
-        $lines = (int)$this->request->get('lines', 100);
+        $lines = (int)$this->request->get('lines', 'int', 100);
         $lines = max(1, min(500, $lines));
         $backend = new Backend();
         $action = $target === 'aliasd' ? 'mosdns show_aliasd_log' : 'mosdns show_log';
