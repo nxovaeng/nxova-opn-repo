@@ -22,107 +22,107 @@ class SettingsController extends ApiMutableModelControllerBase
      */
     public function searchNodesAction()
     {
-        return $this->searchBase('nodes.node');
+        return $this->searchBase('nodes');
     }
 
     public function searchInboundsAction()
     {
-        return $this->searchBase('inbounds.inbound');
+        return $this->searchBase('inbounds');
     }
 
     public function searchRulesAction()
     {
-        return $this->searchBase('rules.rule');
+        return $this->searchBase('rules');
     }
 
     public function searchSubscriptionsAction()
     {
-        return $this->searchBase('subscriptions.subscription');
+        return $this->searchBase('subscriptions');
     }
 
     public function getNodeAction($uuid = null)
     {
-        return $this->getBase('node', 'nodes.node', $uuid);
+        return $this->getBase('node', 'nodes', $uuid);
     }
 
     public function addNodeAction()
     {
-        return $this->addBase('node', 'nodes.node');
+        return $this->addBase('node', 'nodes');
     }
 
     public function setNodeAction($uuid)
     {
-        return $this->setBase('node', 'nodes.node', $uuid);
+        return $this->setBase('node', 'nodes', $uuid);
     }
 
     public function delNodeAction($uuid)
     {
-        return $this->delBase('nodes.node', $uuid);
+        return $this->delBase('nodes', $uuid);
     }
 
     public function toggleNodeAction($uuid, $enabled = null)
     {
-        return $this->toggleBase('nodes.node', $uuid, $enabled);
+        return $this->toggleBase('nodes', $uuid, $enabled);
     }
 
     public function getInboundAction($uuid = null)
     {
-        return $this->getBase('inbound', 'inbounds.inbound', $uuid);
+        return $this->getBase('inbound', 'inbounds', $uuid);
     }
 
     public function addInboundAction()
     {
-        return $this->addBase('inbound', 'inbounds.inbound');
+        return $this->addBase('inbound', 'inbounds');
     }
 
     public function setInboundAction($uuid)
     {
-        return $this->setBase('inbound', 'inbounds.inbound', $uuid);
+        return $this->setBase('inbound', 'inbounds', $uuid);
     }
 
     public function delInboundAction($uuid)
     {
-        return $this->delBase('inbounds.inbound', $uuid);
+        return $this->delBase('inbounds', $uuid);
     }
 
     public function toggleInboundAction($uuid, $enabled = null)
     {
-        return $this->toggleBase('inbounds.inbound', $uuid, $enabled);
+        return $this->toggleBase('inbounds', $uuid, $enabled);
     }
 
     public function getRuleAction($uuid = null)
     {
-        return $this->getBase('rule', 'rules.rule', $uuid);
+        return $this->getBase('rule', 'rules', $uuid);
     }
 
     public function addRuleAction()
     {
-        return $this->addBase('rule', 'rules.rule');
+        return $this->addBase('rule', 'rules');
     }
 
     public function setRuleAction($uuid)
     {
-        return $this->setBase('rule', 'rules.rule', $uuid);
+        return $this->setBase('rule', 'rules', $uuid);
     }
 
     public function delRuleAction($uuid)
     {
-        return $this->delBase('rules.rule', $uuid);
+        return $this->delBase('rules', $uuid);
     }
 
     public function toggleRuleAction($uuid, $enabled = null)
     {
-        return $this->toggleBase('rules.rule', $uuid, $enabled);
+        return $this->toggleBase('rules', $uuid, $enabled);
     }
 
     public function getSubscriptionAction($uuid = null)
     {
-        return $this->getBase('subscription', 'subscriptions.subscription', $uuid);
+        return $this->getBase('subscription', 'subscriptions', $uuid);
     }
 
     public function addSubscriptionAction()
     {
-        return $this->addBase('subscription', 'subscriptions.subscription');
+        return $this->addBase('subscription', 'subscriptions');
     }
 
     public function delSubscriptionAction($uuid)
@@ -130,7 +130,7 @@ class SettingsController extends ApiMutableModelControllerBase
         // delete subscription and its nodes
         $mdl = $this->getModel();
         $sub = $mdl->subscriptions->subscription->getNodeByReference('uuid.' . $uuid);
-        $result = $this->delBase('subscriptions.subscription', $uuid);
+        $result = $this->delBase('subscriptions', $uuid);
         if ($result['result'] != 'failed' && $sub != null) {
             foreach ($mdl->nodes->node->iterateItems() as $nodeUuid => $node) {
                 if ((string)$node->sub_id == $uuid) {
