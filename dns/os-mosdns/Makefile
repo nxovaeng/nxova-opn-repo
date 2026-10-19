@@ -1,5 +1,5 @@
 PLUGIN_NAME=        mosdns
-PLUGIN_VERSION=     2026.10.18
+PLUGIN_VERSION=     2026.10.19
 PLUGIN_REVISION=    1
 PLUGIN_COMMENT=     MosDNS dynamic DNS forwarder with pf table sync (native MVC)
 PLUGIN_MAINTAINER=  nxovaeng@users.noreply.github.com
