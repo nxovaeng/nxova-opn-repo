@@ -72,6 +72,17 @@ build_plugin() {
         chmod +x "${PLUGINS_SRC}/${_src}/src/bin/"*
     fi
     cd "${PLUGINS_SRC}/${_src}"
+    # CI 自动加版本: PLUGIN_VERSION=<date>.<run_number>, 如 2026.10.19.42
+    # run_number 单调递增, 保证 pkg upgrade 能认出新包; 仓库里的 Makefile 保持干净日期
+    if [ -n "${PLUGIN_BUILD}" ]; then
+        _ver=$(awk '/^PLUGIN_VERSION[ \t]*=/{print $2}' Makefile)
+        case "${_ver}" in
+            *.*.*.*) echo "Version already has build suffix: ${_ver}" ;;
+            *) _newver="${_ver}.${PLUGIN_BUILD}"
+               sed -i '' "s/^PLUGIN_VERSION.*/PLUGIN_VERSION=     ${_newver}/" Makefile
+               echo "Version bumped: ${_ver} -> ${_newver}" ;;
+        esac
+    fi
     make package PLUGIN_DEVEL=
     cp ./work/pkg/*.pkg "${PUBLISH_DIR}/"
     cd "${WORKSPACE_DIR}"

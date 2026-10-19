@@ -43,9 +43,12 @@ jobs:
       # FreeBSD VM 里: 下载二进制 + make package + pkg repo
       - name: Package and create repo in FreeBSD VM
         uses: vmactions/freebsd-vm@v1
+        env:
+          PLUGIN_BUILD: ${{ github.run_number }}
         with:
           release: "15.0"
           usesh: true
+          envs: 'PLUGIN_BUILD'
           prepare: |
             pkg install -y git
           run: |
