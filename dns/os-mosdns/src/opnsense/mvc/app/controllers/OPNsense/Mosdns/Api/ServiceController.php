@@ -35,7 +35,7 @@ class ServiceController extends ApiMutableServiceControllerBase
      */
     public function listRulesAction()
     {
-        $raw = trim((new Backend())->configdRun('mosdns rules.list'));
+        $raw = trim((new Backend())->configdRun('mosdns rules list'));
         $data = json_decode($raw, true);
         return ['result' => 'ok', 'files' => is_array($data) ? $data : []];
     }
@@ -46,12 +46,15 @@ class ServiceController extends ApiMutableServiceControllerBase
     public function getRuleAction($name)
     {
         $name = basename($name);
-        $raw = (new Backend())->configdRun('mosdns rules.get', [$name]);
+        $raw = (new Backend())->configdRun('mosdns rules get', [$name]);
         return ['result' => 'ok', 'name' => $name, 'content' => $raw];
     }
 
     /**
      * Save a rule file (custom-*.txt only). Body: {content: "..."}.
+     * Content is validated by rule_tool.py before install; on validation
+     * failure the live file is untouched and errors are returned.
+     * mosdns loads rule files at startup, so restart it to apply.
      */
     public function setRuleAction($name)
     {
@@ -62,9 +65,18 @@ class ServiceController extends ApiMutableServiceControllerBase
         $content = $this->request->getPost('content', 'string', '');
         $tmp = tempnam('/tmp', 'mosdns-rule-');
         file_put_contents($tmp, $content);
-        $result = trim((new Backend())->configdRun('mosdns rules.install', [$name, $tmp]));
+        $result = trim((new Backend())->configdRun('mosdns rules install', [$name, $tmp]));
         @unlink($tmp);
-        return ['result' => $result === 'OK' ? 'saved' : 'failed', 'output' => $result];
+        if ($result === 'OK') {
+            // rule files are read at mosdns startup; restart to reload them
+            (new Backend())->configdRun('mosdns restart');
+            return ['result' => 'saved'];
+        }
+        $data = json_decode($result, true);
+        if (is_array($data) && !empty($data['errors'])) {
+            return ['result' => 'failed', 'errors' => $data['errors']];
+        }
+        return ['result' => 'failed', 'output' => $result];
     }
 
     /**
@@ -76,7 +88,7 @@ class ServiceController extends ApiMutableServiceControllerBase
         if ($domain === '') {
             return ['result' => 'failed', 'error' => 'empty domain'];
         }
-        $raw = trim((new Backend())->configdRun('mosdns rules.test', [$domain]));
+        $raw = trim((new Backend())->configdRun('mosdns rules test', [$domain]));
         $data = json_decode($raw, true);
         if (!is_array($data)) {
             return ['result' => 'failed', 'error' => $raw];
@@ -95,5 +107,34 @@ class ServiceController extends ApiMutableServiceControllerBase
         $action = $target === 'aliasd' ? 'mosdns show_aliasd_log' : 'mosdns show_log';
         $raw = $backend->configdRun($action, [(string)$lines]);
         return ['result' => 'ok', 'log' => $raw];
+    }
+
+    /**
+     * pf-aliasd companion daemon controls. configd action names are nested
+     * (mosdns -> pfaliasd -> ...), so space-separated invocation is required.
+     */
+    public function pfaliasdStatusAction()
+    {
+        $raw = trim((new Backend())->configdRun('mosdns pfaliasd status'));
+        $running = stripos($raw, 'is running') !== false;
+        return ['status' => $running ? 'running' : 'stopped', 'output' => $raw];
+    }
+
+    public function pfaliasdStartAction()
+    {
+        $raw = trim((new Backend())->configdRun('mosdns pfaliasd start'));
+        return ['status' => 'ok', 'output' => $raw];
+    }
+
+    public function pfaliasdStopAction()
+    {
+        $raw = trim((new Backend())->configdRun('mosdns pfaliasd stop'));
+        return ['status' => 'ok', 'output' => $raw];
+    }
+
+    public function pfaliasdRestartAction()
+    {
+        $raw = trim((new Backend())->configdRun('mosdns pfaliasd restart'));
+        return ['status' => 'ok', 'output' => $raw];
     }
 }

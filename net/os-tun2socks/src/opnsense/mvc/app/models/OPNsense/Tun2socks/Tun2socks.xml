@@ -9,7 +9,7 @@
                 <Required>Y</Required>
             </enabled>
             <name type="TextField">
-                <default>tun0</default>
+                <default>tun_hev</default>
                 <Required>Y</Required>
                 <ValidationMessage>Specify the TUN interface name.</ValidationMessage>
                 <Mask>/^[A-Za-z0-9_]{1,15}$/</Mask>

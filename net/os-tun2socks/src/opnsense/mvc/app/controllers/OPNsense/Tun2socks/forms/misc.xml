@@ -1,32 +1,32 @@
 <form>
     <field>
         <id>tun2socks.misc.log_level</id>
-        <label>Log level</label>
+        <label>日志级别</label>
         <type>dropdown</type>
-        <help>Verbosity of the daemon log.</help>
+        <help>守护进程日志详细程度：debug 最啰嗦，error 只记错误。日常用 info，排障切 debug。</help>
     </field>
     <field>
         <id>tun2socks.misc.log_file</id>
-        <label>Log file</label>
+        <label>日志文件</label>
         <type>text</type>
-        <help>Path of the daemon log file.</help>
+        <help>守护进程日志文件路径（默认 /var/log/hev-socks5-tunnel.log，可在“日志”菜单查看）。</help>
     </field>
     <field>
         <id>tun2socks.misc.task_stack_size</id>
-        <label>Task stack size</label>
+        <label>任务栈大小</label>
         <type>text</type>
-        <help>Optional task stack size in bytes, empty for default.</help>
+        <help>可选，每个任务的栈大小（字节）。留空用默认；连接数大时可设 8192 或 16384。</help>
     </field>
     <field>
         <id>tun2socks.misc.connect_timeout</id>
-        <label>Connect timeout</label>
+        <label>连接超时</label>
         <type>text</type>
-        <help>Optional connect timeout in milliseconds, empty for default.</help>
+        <help>可选，向上游建连的超时（毫秒）。留空用默认；常用 5000。</help>
     </field>
     <field>
         <id>tun2socks.misc.read_write_timeout</id>
-        <label>Read/write timeout</label>
+        <label>读写超时</label>
         <type>text</type>
-        <help>Optional read/write timeout in milliseconds, empty for default.</help>
+        <help>可选，读写空闲超时（毫秒）。留空用默认；常用 5000-10000。</help>
     </field>
 </form>

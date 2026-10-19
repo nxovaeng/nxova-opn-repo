@@ -1,32 +1,32 @@
 <form>
     <field>
         <id>tun2socks.socks5.address</id>
-        <label>Server address</label>
+        <label>服务器地址</label>
         <type>text</type>
-        <help>Upstream SOCKS5 server address, usually a local xray-core inbound.</help>
+        <help>上游 SOCKS5 服务器地址，一般填 127.0.0.1（本机 xray-core 的 hev-socks-in 入站）。</help>
     </field>
     <field>
         <id>tun2socks.socks5.port</id>
-        <label>Server port</label>
+        <label>服务器端口</label>
         <type>text</type>
-        <help>Upstream SOCKS5 server port.</help>
+        <help>上游 SOCKS5 服务器端口（xray 侧 hev-socks-in 默认 10808）。</help>
     </field>
     <field>
         <id>tun2socks.socks5.udp_mode</id>
-        <label>UDP mode</label>
+        <label>UDP 模式</label>
         <type>dropdown</type>
-        <help>How UDP traffic is relayed to the upstream.</help>
+        <help>UDP 流量的转发方式：udp 为原生 UDP associate（推荐，延迟低）；tcp 为 UDP over TCP（上游不支持 UDP associate 时用）。</help>
     </field>
     <field>
         <id>tun2socks.socks5.username</id>
-        <label>Username</label>
+        <label>用户名</label>
         <type>text</type>
-        <help>Optional SOCKS5 authentication username.</help>
+        <help>可选，SOCKS5 认证用户名（xray 侧 hev-socks-in 默认无认证，留空）。</help>
     </field>
     <field>
         <id>tun2socks.socks5.password</id>
-        <label>Password</label>
+        <label>密码</label>
         <type>password</type>
-        <help>Optional SOCKS5 authentication password.</help>
+        <help>可选，SOCKS5 认证密码。</help>
     </field>
 </form>

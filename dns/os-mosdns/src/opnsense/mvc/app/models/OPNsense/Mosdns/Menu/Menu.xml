@@ -2,6 +2,10 @@
     <Services>
         <Mosdns VisibleName="MosDNS" cssClass="fa fa-globe fa-fw" Order="450">
             <Settings VisibleName="Settings" url="/ui/mosdns" Order="10"/>
+            <PfAliasd VisibleName="PF Alias Daemon" url="/ui/mosdns/pfaliasd" Order="20"/>
+            <Rules VisibleName="Rules" url="/ui/mosdns/rules" Order="30"/>
+            <Test VisibleName="Test" url="/ui/mosdns/test" Order="40"/>
+            <Logs VisibleName="Logs" url="/ui/mosdns/logs" Order="50"/>
         </Mosdns>
     </Services>
 </menu>

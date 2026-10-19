@@ -15,6 +15,7 @@ Read-only: cn.txt, gfw.txt
 import sys
 import os
 import json
+import re
 
 RULE_DIR = '/usr/local/etc/mosdns/rule'
 EDITABLE = {'custom-direct.txt', 'custom-proxy.txt', 'custom-block.txt'}
@@ -104,6 +105,11 @@ def cmd_install(name, staging):
         sys.exit(1)
     with open(staging) as f:
         content = f.read()
+    # validate before touching the live file: a bad rule file can break mosdns startup
+    errors = validate_content(content)
+    if errors:
+        print(json.dumps({'result': 'failed', 'errors': errors}, ensure_ascii=False))
+        sys.exit(1)
     # normalize: LF, strip blank lines
     lines = []
     for line in content.replace('\r\n', '\n').split('\n'):
@@ -116,6 +122,56 @@ def cmd_install(name, staging):
         f.write('\n'.join(lines) + '\n' if lines else '')
     os.unlink(staging)
     print('OK')
+
+
+# domain label: 1-63 chars, alnum + hyphen, not leading/trailing hyphen
+_LABEL_RE = r'[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?'
+_DOMAIN_RE = re.compile(rf'^{_LABEL_RE}(?:\.{_LABEL_RE})+$', re.IGNORECASE)
+
+
+def validate_rule(line, lineno):
+    """Return an error string for an invalid rule line, or None if OK."""
+    s = line.strip()
+    if not s or s.startswith('#'):
+        return None
+    low = s.lower()
+    if low.startswith('full:'):
+        dom, kind = s[5:], 'full'
+    elif low.startswith('domain:'):
+        dom, kind = s[7:], 'domain'
+    else:
+        dom, kind = s, 'domain'  # bare domain = suffix match
+    if not dom:
+        return f'line {lineno}: empty domain'
+    if '://' in s or '/' in dom:
+        return f'line {lineno}: must not contain scheme or path: {s}'
+    if ':' in dom:
+        return f'line {lineno}: must not contain port: {s}'
+    if ' ' in dom or '\t' in dom:
+        return f'line {lineno}: must not contain whitespace: {s}'
+    if not _DOMAIN_RE.match(dom):
+        return f'line {lineno}: invalid domain "{dom}"'
+    return None
+
+
+def validate_content(content):
+    """Validate full file content. Returns list of error strings (empty = valid)."""
+    errors = []
+    for i, line in enumerate(content.replace('\r\n', '\n').split('\n'), 1):
+        err = validate_rule(line, i)
+        if err:
+            errors.append(err)
+    return errors
+
+
+def cmd_validate():
+    """Read content from stdin, print validation result as JSON."""
+    content = sys.stdin.read()
+    errors = validate_content(content)
+    if errors:
+        print(json.dumps({'result': 'failed', 'errors': errors}, ensure_ascii=False))
+        sys.exit(1)
+    print(json.dumps({'result': 'ok', 'errors': []}))
 
 
 def cmd_test(domain):
@@ -198,6 +254,8 @@ def main():
         cmd_get(sys.argv[2])
     elif cmd == 'install' and len(sys.argv) == 4:
         cmd_install(sys.argv[2], sys.argv[3])
+    elif cmd == 'validate':
+        cmd_validate()
     elif cmd == 'test' and len(sys.argv) == 3:
         cmd_test(sys.argv[2])
     else:

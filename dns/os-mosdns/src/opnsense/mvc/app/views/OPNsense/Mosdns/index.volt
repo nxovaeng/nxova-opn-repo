@@ -8,8 +8,7 @@
         var data_get_map = {
             'frm_GeneralSettings': "/api/mosdns/settings/get",
             'frm_ForwardSettings': "/api/mosdns/settings/get",
-            'frm_PfaliasSettings': "/api/mosdns/settings/get",
-            'frm_PfaliasdSettings': "/api/mosdns/settings/get"
+            'frm_PfaliasSettings': "/api/mosdns/settings/get"
         };
         mapDataToFormUI(data_get_map).done(function(data) {
             $('.selectpicker').selectpicker('refresh');
@@ -33,7 +32,6 @@
         $("#saveGeneralAct").click(function() { saveSection('frm_GeneralSettings'); });
         $("#saveForwardAct").click(function() { saveSection('frm_ForwardSettings'); });
         $("#savePfaliasAct").click(function() { saveSection('frm_PfaliasSettings'); });
-        $("#savePfaliasdAct").click(function() { saveSection('frm_PfaliasdSettings'); });
 
         $("#reconfigureAct").click(function() {
             $("#reconfigureAct_progress").addClass("fa fa-spinner fa-pulse");
@@ -58,63 +56,67 @@
             });
         }
         refreshStatus();
+    });
+</script>
 
-        // ---- rules ----
-        function loadRuleList() {
-            ajaxCall(url="/api/mosdns/service/listRules", sendData={}, callback=function(data, status) {
-                var sel = $("#ruleFileSelect").empty();
-                $.each(data['files'] || [], function(i, f) {
-                    sel.append($("<option>").val(f['name']).text(f['name'] + " (" + f['count'] + ")" + (f['editable'] ? "" : " [read-only]")));
-                });
-                loadRuleContent();
+<div class="row" style="margin-bottom: 10px;">
+    <div class="col-md-12">
+        <div class="pull-right">
+            <span id="svc-mosdns" style="margin-right: 15px;">
+                <i id="svc-mosdns-icon" class="fa fa-circle text-muted"></i>
+                <strong>mosdns</strong>
+                <button id="svc-mosdns-restart" class="btn btn-default btn-xs" type="button" title="{{ lang._('Restart') }}">
+                    <i class="fa fa-refresh"></i>
+                </button>
+                <button id="svc-mosdns-toggle" class="btn btn-default btn-xs" type="button" title="{{ lang._('Start/Stop') }}">
+                    <i class="fa fa-power-off"></i>
+                </button>
+            </span>
+            <span id="svc-pfaliasd">
+                <i id="svc-pfaliasd-icon" class="fa fa-circle text-muted"></i>
+                <strong>pf-aliasd</strong>
+                <button id="svc-pfaliasd-restart" class="btn btn-default btn-xs" type="button" title="{{ lang._('Restart') }}">
+                    <i class="fa fa-refresh"></i>
+                </button>
+                <button id="svc-pfaliasd-toggle" class="btn btn-default btn-xs" type="button" title="{{ lang._('Start/Stop') }}">
+                    <i class="fa fa-power-off"></i>
+                </button>
+            </span>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        function setSvcIcon(id, running) {
+            $("#" + id).removeClass("text-muted text-success text-danger")
+                .addClass(running ? "text-success" : "text-danger");
+        }
+        function refreshSvc() {
+            ajaxCall(url="/api/mosdns/service/status", sendData={}, callback=function(data, status) {
+                setSvcIcon("svc-mosdns-icon", data['status'] == 'running');
+            });
+            ajaxCall(url="/api/mosdns/service/pfaliasdStatus", sendData={}, callback=function(data, status) {
+                setSvcIcon("svc-pfaliasd-icon", data['status'] == 'running');
             });
         }
-        function loadRuleContent() {
-            var name = $("#ruleFileSelect").val();
-            if (!name) return;
-            ajaxCall(url="/api/mosdns/service/getRule/" + name, sendData={}, callback=function(data, status) {
-                $("#ruleFileContent").val(data['content'] || '');
-                var editable = !/\[read-only\]/.test($("#ruleFileSelect option:selected").text());
-                $("#ruleFileContent").prop("disabled", !editable);
-                $("#saveRuleFileAct").prop("disabled", !editable);
+        function svcAct(svc, act) {
+            var url = svc == 'mosdns' ? "/api/mosdns/service/" + act : "/api/mosdns/service/pfaliasd" + act.charAt(0).toUpperCase() + act.slice(1);
+            ajaxCall(url=url, sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvc, 1000);
             });
         }
-        $("#ruleFileSelect").change(loadRuleContent);
-        $("#saveRuleFileAct").click(function() {
-            var name = $("#ruleFileSelect").val();
-            ajaxCall(url="/api/mosdns/service/setRule/" + name, sendData={content: $("#ruleFileContent").val()}, callback=function(data, status) {
-                $("#ruleFileMsg").text(data['result'] == 'saved' ? "{{ lang._('Saved.') }}" : "{{ lang._('Failed.') }}");
-                loadRuleList();
-            });
+        $("#svc-mosdns-restart").click(function() { svcAct('mosdns', 'restart'); });
+        $("#svc-pfaliasd-restart").click(function() { svcAct('pfaliasd', 'restart'); });
+        $("#svc-mosdns-toggle").click(function() {
+            var running = $("#svc-mosdns-icon").hasClass("text-success");
+            svcAct('mosdns', running ? 'stop' : 'start');
         });
-        loadRuleList();
-
-        // ---- domain test ----
-        $("#testDomainAct").click(function() {
-            var domain = $("#testDomain").val().trim();
-            if (!domain) return;
-            ajaxCall(url="/api/mosdns/service/testDomain", sendData={domain: domain}, callback=function(data, status) {
-                if (data['result'] != 'ok') {
-                    $("#testResult").html('<div class="alert alert-danger">' + (data['error'] || 'failed') + '</div>');
-                    return;
-                }
-                var badge = data['action'] == 'proxy' ? 'label-warning' : (data['action'] == 'block' ? 'label-danger' : 'label-success');
-                var html = '<h4><span class="label ' + badge + '">' + data['action'] + '</span> <small>' + data['domain'] + '</small></h4>';
-                html += '<p>' + data['explain'] + '</p>';
-                if (data['matched_rule']) html += '<p class="text-muted">matched: <code>' + data['matched_rule'] + '</code> (' + data['matched_file'] + ')</p>';
-                if (data['sync_pf']) html += '<p class="text-muted">will sync to pf table</p>';
-                $("#testResult").html(html);
-            });
+        $("#svc-pfaliasd-toggle").click(function() {
+            var running = $("#svc-pfaliasd-icon").hasClass("text-success");
+            svcAct('pfaliasd', running ? 'stop' : 'start');
         });
-
-        // ---- logs ----
-        function refreshLog(target) {
-            ajaxCall(url="/api/mosdns/service/log/" + target, sendData={lines: 100}, callback=function(data, status) {
-                $("#mosdnsLog").text(data['log'] || '');
-            });
-        }
-        $("#refreshMosdnsLog").click(function() { refreshLog('mosdns'); });
-        $("#refreshAliasdLog").click(function() { refreshLog('aliasd'); });
+        refreshSvc();
     });
 </script>
 
@@ -122,10 +124,6 @@
     <li class="active"><a data-toggle="tab" href="#general">{{ lang._('General') }}</a></li>
     <li><a data-toggle="tab" href="#forward">{{ lang._('Forwarding') }}</a></li>
     <li><a data-toggle="tab" href="#pfalias">{{ lang._('PF table sync') }}</a></li>
-    <li><a data-toggle="tab" href="#pfaliasd">{{ lang._('pf-aliasd') }}</a></li>
-    <li><a data-toggle="tab" href="#rules">{{ lang._('Rules') }}</a></li>
-    <li><a data-toggle="tab" href="#test">{{ lang._('Test') }}</a></li>
-    <li><a data-toggle="tab" href="#logs">{{ lang._('Logs') }}</a></li>
 </ul>
 <div class="tab-content content-box tab-content">
     <div id="general" class="tab-pane fade in active">
@@ -178,49 +176,6 @@
                 </tr>
             </tbody>
         </table>
-    </div>
-    <div id="pfaliasd" class="tab-pane fade">
-        {{ partial("layout_partials/base_form",['fields':pfaliasdForm,'id':'frm_PfaliasdSettings']) }}
-        <table style="table-layout: fixed; width: 100%;">
-            <colgroup>
-                <col style="width: 25%;"/>
-                <col style="width: 40%;"/>
-                <col style="width: 35%;"/>
-            </colgroup>
-            <tbody>
-                <tr>
-                    <td></td>
-                    <td><button class="btn btn-primary" id="savePfaliasdAct" type="button"><b>{{ lang._('Save') }}</b></button></td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <div id="rules" class="tab-pane fade">
-        <p class="text-muted">{{ lang._('Edit custom rule lists. Authority lists (cn.txt, gfw.txt) are read-only.') }}</p>
-        <div class="form-group">
-            <select id="ruleFileSelect" class="form-control" style="max-width:300px;"></select>
-        </div>
-        <textarea id="ruleFileContent" rows="15" class="form-control" style="font-family:monospace;"></textarea>
-        <div style="margin-top:10px;">
-            <button class="btn btn-primary btn-sm" id="saveRuleFileAct" type="button">{{ lang._('Save list') }}</button>
-            <span id="ruleFileMsg" class="text-muted" style="margin-left:10px;"></span>
-        </div>
-    </div>
-    <div id="test" class="tab-pane fade">
-        <p class="text-muted">{{ lang._('Simulate the routing decision for a domain without real queries.') }}</p>
-        <div class="form-inline">
-            <input type="text" id="testDomain" class="form-control" placeholder="example.com" style="min-width:300px;"/>
-            <button class="btn btn-primary btn-sm" id="testDomainAct" type="button">{{ lang._('Test') }}</button>
-        </div>
-        <div id="testResult" style="margin-top:15px;"></div>
-    </div>
-    <div id="logs" class="tab-pane fade">
-        <p>
-            <button class="btn btn-default btn-sm" id="refreshMosdnsLog" type="button">mosdns {{ lang._('Refresh') }}</button>
-            <button class="btn btn-default btn-sm" id="refreshAliasdLog" type="button">pf-aliasd {{ lang._('Refresh') }}</button>
-        </p>
-        <pre id="mosdnsLog" style="max-height:400px; overflow:auto; background:#000; color:#0f0;"></pre>
     </div>
 </div>
 

@@ -4,7 +4,7 @@
 {% set socks5 = _m.socks5|default({}) %}
 {% set misc = _m.misc|default({}) %}
 tunnel:
-  name: {{ tunnel.name|default('tun0') }}
+  name: {{ tunnel.name|default('tun_hev') }}
   mtu: {{ tunnel.mtu|default('1500') }}
 {% if tunnel.multi_queue|default('0') == '1' %}
   multi-queue: true
