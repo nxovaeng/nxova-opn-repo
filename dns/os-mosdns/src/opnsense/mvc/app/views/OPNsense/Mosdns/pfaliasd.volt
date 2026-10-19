@@ -71,24 +71,24 @@
     });
 </script>
 
-<div class="row" style="margin-bottom: 10px;">
-    <div class="col-md-12">
-        <div class="pull-right">
-            <div class="btn-group" role="group" aria-label="pf-aliasd">
-                <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('Start') }}">
-                    <i class="fa fa-play fa-fw"></i>
-                </button>
-                <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="{{ lang._('Restart') }}">
-                    <i class="fa fa-refresh fa-fw"></i>
-                </button>
-                <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('Stop') }}">
-                    <i class="fa fa-square fa-fw"></i>
-                </button>
-            </div>
-        </div>
-        <div class="clearfix"></div>
-    </div>
+<div id="svc-btns" class="btn-group pull-right" role="group" aria-label="pf-aliasd" style="display:none;">
+    <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('启动') }}">
+        <i class="fa fa-play fa-fw"></i>
+    </button>
+    <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="{{ lang._('重启') }}">
+        <i class="fa fa-refresh fa-fw"></i>
+    </button>
+    <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('停止') }}">
+        <i class="fa fa-square fa-fw"></i>
+    </button>
 </div>
+<script>
+    $(document).ready(function() {
+        var $h1 = $('h1').first();
+        if ($h1.length) { $('#svc-btns').show().detach().appendTo($h1); }
+        else { $('#svc-btns').show(); }
+    });
+</script>
 
 <div class="content-box">
     {{ partial("layout_partials/base_form",['fields':pfaliasdForm,'id':'frm_PfaliasdSettings']) }}

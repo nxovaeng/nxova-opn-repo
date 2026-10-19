@@ -60,10 +60,7 @@
     });
 </script>
 
-<div class="row" style="margin-bottom: 10px;">
-    <div class="col-md-12">
-        <div class="pull-right">
-            <div class="btn-group" role="group" aria-label="tun2socks">
+<div id="svc-btns" class="btn-group pull-right" role="group" aria-label="tun2socks" style="display:none;">
                 <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('启动') }}">
                     <i class="fa fa-play fa-fw"></i>
                 </button>
@@ -73,11 +70,14 @@
                 <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('停止') }}">
                     <i class="fa fa-square fa-fw"></i>
                 </button>
-            </div>
-        </div>
-        <div class="clearfix"></div>
-    </div>
 </div>
+<script>
+    $(document).ready(function() {
+        var $h1 = $('h1').first();
+        if ($h1.length) { $('#svc-btns').show().detach().appendTo($h1); }
+        else { $('#svc-btns').show(); }
+    });
+</script>
 <script>
     $(document).ready(function() {
         function refreshSvcStatus() {
