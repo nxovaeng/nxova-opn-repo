@@ -1,26 +1,26 @@
 <form>
     <field>
         <id>xray.general.enabled</id>
-        <label>Enable</label>
+        <label>启用</label>
         <type>checkbox</type>
-        <help>Enable the xray-os proxy engine.</help>
+        <help>启用 xray-os 代理引擎。</help>
     </field>
     <field>
         <id>xray.general.log_level</id>
-        <label>Log level</label>
+        <label>日志级别</label>
         <type>dropdown</type>
-        <help>Xray log verbosity.</help>
+        <help>xray 日志详细程度，日常用 warning，排障用 debug。</help>
     </field>
     <field>
         <id>xray.general.domain_strategy</id>
-        <label>Domain strategy</label>
+        <label>域名策略</label>
         <type>dropdown</type>
-        <help>Routing domain resolution strategy.</help>
+        <help>路由时的域名解析策略：AsIs 直接用域名匹配；IPIfNonMatch 匹配不到再查 IP；IPOnDemand 按需解析。</help>
     </field>
     <field>
         <id>xray.general.dns_servers</id>
-        <label>DNS servers</label>
+        <label>DNS 服务器</label>
         <type>text</type>
-        <help>Comma separated. e.g. tcp://1.1.1.1:53,https://1.1.1.1/dns-query</help>
+        <help>逗号分隔。如 tcp://1.1.1.1:53,https://1.1.1.1/dns-query。xray 内部 DNS 查询用。</help>
     </field>
 </form>

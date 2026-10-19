@@ -1,24 +1,25 @@
 <form>
     <field>
         <id>xray.rules.rule.enabled</id>
-        <label>Enabled</label>
+        <label>启用</label>
         <type>checkbox</type>
     </field>
     <field>
         <id>xray.rules.rule.type</id>
-        <label>Type</label>
+        <label>类型</label>
         <type>dropdown</type>
+        <help>domain 按域名匹配，ip 按 IP/CIDR 匹配。</help>
     </field>
     <field>
         <id>xray.rules.rule.values</id>
-        <label>Values</label>
+        <label>值</label>
         <type>text</type>
-        <help>Comma separated domains or IPs.</help>
+        <help>逗号分隔的域名或 IP，如 google.com,youtube.com。</help>
     </field>
     <field>
         <id>xray.rules.rule.outbound_tag</id>
-        <label>Outbound</label>
+        <label>出站</label>
         <type>text</type>
-        <help>Node tag, 'direct', 'block', or empty for the default node.</help>
+        <help>节点标签；填 direct 直连、block 拒绝；留空走默认节点。</help>
     </field>
 </form>

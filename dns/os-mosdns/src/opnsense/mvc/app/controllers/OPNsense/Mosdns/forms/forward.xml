@@ -1,38 +1,38 @@
 <form>
     <field>
         <id>mosdns.forward.remote_upstreams</id>
-        <label>Remote upstreams</label>
+        <label>代理上游</label>
         <type>text</type>
-        <help>Upstreams for proxy domains, comma separated. tcp://, tls:// and https:// (DoH) are supported.</help>
+        <help>代理域名的上游，逗号分隔。支持 tcp://、tls://、https://（DoH）。如 tcp://1.1.1.1:53,https://1.1.1.1/dns-query。</help>
     </field>
     <field>
         <id>mosdns.forward.remote_socks5</id>
-        <label>SOCKS5 proxy</label>
+        <label>SOCKS5 代理</label>
         <type>text</type>
-        <help>Optional SOCKS5 proxy (host:port) used for remote upstreams. Empty means direct.</help>
+        <help>可选，远端上游走的 SOCKS5 代理（host:port）。留空为直连。一般填本机 xray 入站，如 127.0.0.1:10808。</help>
     </field>
     <field>
         <id>mosdns.forward.local_upstreams</id>
-        <label>Local upstreams</label>
+        <label>直连上游</label>
         <type>text</type>
-        <help>Upstreams for direct (domestic) domains, comma separated.</help>
+        <help>直连（国内）域名的上游，逗号分隔。如 223.5.5.5,119.29.29.29。</help>
     </field>
     <field>
         <id>mosdns.forward.direct_files</id>
-        <label>Direct domain files</label>
+        <label>直连域名文件</label>
         <type>text</type>
-        <help>Domain list files resolved via local upstreams, comma separated.</help>
+        <help>走本地上游解析的域名列表文件，逗号分隔。在“规则”菜单里编辑。</help>
     </field>
     <field>
         <id>mosdns.forward.proxy_files</id>
-        <label>Proxy domain files</label>
+        <label>代理域名文件</label>
         <type>text</type>
-        <help>Domain list files resolved via remote upstreams, comma separated.</help>
+        <help>走远端上游解析的域名列表文件，逗号分隔。在“规则”菜单里编辑。</help>
     </field>
     <field>
         <id>mosdns.forward.block_files</id>
-        <label>Block domain files</label>
+        <label>阻止域名文件</label>
         <type>text</type>
-        <help>Domain list files to block (NXDOMAIN), comma separated.</help>
+        <help>要阻止的域名列表文件（返回 NXDOMAIN），逗号分隔。在“规则”菜单里编辑。</help>
     </field>
 </form>

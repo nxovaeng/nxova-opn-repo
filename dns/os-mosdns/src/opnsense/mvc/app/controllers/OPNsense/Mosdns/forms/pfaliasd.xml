@@ -1,20 +1,20 @@
 <form>
     <field>
         <id>mosdns.pfaliasd.enabled</id>
-        <label>Enable pf-aliasd</label>
+        <label>启用 pf-aliasd</label>
         <type>checkbox</type>
-        <help>Run the pf-aliasd daemon (listens on the socket below, writes to pf tables).</help>
+        <help>运行 pf-aliasd 守护进程（监听下面的 socket，把 DNS 结果写入 pf 表）。</help>
     </field>
     <field>
         <id>mosdns.pfaliasd.socket_path</id>
-        <label>Socket path</label>
+        <label>Socket 路径</label>
         <type>text</type>
-        <help>Unix socket shared by pf-aliasd and the mosdns pf_alias plugin.</help>
+        <help>pf-aliasd 与 mosdns pf_alias 插件共用的 Unix socket（默认 /var/run/pf-aliasd.sock）。</help>
     </field>
     <field>
         <id>mosdns.pfaliasd.flush_tables</id>
-        <label>Flush tables on start</label>
+        <label>启动时清空表</label>
         <type>text</type>
-        <help>Comma separated pf tables to empty when pf-aliasd starts. Empty means keep.</help>
+        <help>pf-aliasd 启动时要清空的 pf 表，逗号分隔。留空则保留旧记录。</help>
     </field>
 </form>

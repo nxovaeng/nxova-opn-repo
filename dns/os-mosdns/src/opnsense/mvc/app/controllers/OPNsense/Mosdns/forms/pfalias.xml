@@ -1,38 +1,38 @@
 <form>
     <field>
         <id>mosdns.pfalias.enabled</id>
-        <label>Enable pf sync</label>
+        <label>启用 pf 同步</label>
         <type>checkbox</type>
-        <help>Sync resolved proxy-domain addresses into a pf table via pf-aliasd.</help>
+        <help>把代理域名的解析结果经 pf-aliasd 同步到 pf 表，供策略路由用。</help>
     </field>
     <field>
         <id>mosdns.pfalias.table</id>
-        <label>pf table</label>
+        <label>pf 表名</label>
         <type>text</type>
-        <help>Target pf table name (usually an OPNsense External alias), e.g. GFW_Proxy.</help>
+        <help>目标 pf 表名（一般是防火墙→别名里的“外部（高级）”类型），如 GFW_Proxy。</help>
     </field>
     <field>
         <id>mosdns.pfalias.min_ttl</id>
-        <label>Min TTL</label>
+        <label>最小 TTL</label>
         <type>text</type>
-        <help>Minimum seconds a resolved address stays in the table.</help>
+        <help>解析出的地址在表中至少保留多少秒（默认 60）。</help>
     </field>
     <field>
         <id>mosdns.pfalias.max_ttl</id>
-        <label>Max TTL</label>
+        <label>最大 TTL</label>
         <type>text</type>
-        <help>Maximum seconds a resolved address stays in the table.</help>
+        <help>解析出的地址在表中至多保留多少秒（默认 86400）。</help>
     </field>
     <field>
         <id>mosdns.pfalias.timeout</id>
-        <label>Socket timeout</label>
+        <label>Socket 超时</label>
         <type>text</type>
-        <help>Timeout for talking to the pf-aliasd socket, e.g. 100ms.</help>
+        <help>与 pf-aliasd socket 通信的超时，如 100ms。</help>
     </field>
     <field>
         <id>mosdns.pfalias.sync</id>
-        <label>Synchronous write</label>
+        <label>同步写入</label>
         <type>checkbox</type>
-        <help>Wait for the daemon ACK before answering the DNS query (kills first-packet race).</help>
+        <help>等 daemon 回 ACK 再回答 DNS 查询（消除首包竞态，推荐开）。</help>
     </field>
 </form>

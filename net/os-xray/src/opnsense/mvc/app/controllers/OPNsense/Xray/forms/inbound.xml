@@ -1,44 +1,47 @@
 <form>
     <field>
         <id>xray.inbounds.inbound.enabled</id>
-        <label>Enabled</label>
+        <label>启用</label>
         <type>checkbox</type>
     </field>
     <field>
         <id>xray.inbounds.inbound.tag</id>
-        <label>Tag</label>
+        <label>标签</label>
         <type>text</type>
+        <help>入站标签。hev-socks-in（127.0.0.1:10808）是给 tun2socks 用的固定入站，别删。</help>
     </field>
     <field>
         <id>xray.inbounds.inbound.protocol</id>
-        <label>Protocol</label>
+        <label>协议</label>
         <type>dropdown</type>
+        <help>socks / http。</help>
     </field>
     <field>
         <id>xray.inbounds.inbound.listen</id>
-        <label>Listen</label>
+        <label>监听地址</label>
         <type>text</type>
+        <help>一般 127.0.0.1（仅本机），要给局域网用填 0.0.0.0。</help>
     </field>
     <field>
         <id>xray.inbounds.inbound.port</id>
-        <label>Port</label>
+        <label>端口</label>
         <type>text</type>
     </field>
     <field>
         <id>xray.inbounds.inbound.sniffing</id>
-        <label>Sniffing</label>
+        <label>协议嗅探</label>
         <type>checkbox</type>
-        <help>Enable protocol sniffing (http/tls/quic, route only).</help>
+        <help>嗅探 http/tls/quic 域名用于分流（仅路由，不改写）。</help>
     </field>
     <field>
         <id>xray.inbounds.inbound.username</id>
-        <label>Username</label>
+        <label>用户名</label>
         <type>text</type>
-        <help>Empty = no auth.</help>
+        <help>留空为无认证。</help>
     </field>
     <field>
         <id>xray.inbounds.inbound.password</id>
-        <label>Password</label>
+        <label>密码</label>
         <type>password</type>
     </field>
 </form>

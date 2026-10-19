@@ -56,24 +56,61 @@
             });
         }
 
-        function refreshLog() {
-            $("#refreshLogAct_progress").addClass("fa fa-spinner fa-pulse");
-            ajaxCall(url="/api/tun2socks/service/log", sendData={}, callback=function(data, status) {
-                $("#refreshLogAct_progress").removeClass("fa fa-spinner fa-pulse");
-                $("#serviceLog").text(data['response'] || status);
+        refreshStatus();
+    });
+</script>
+
+<div class="row" style="margin-bottom: 10px;">
+    <div class="col-md-12">
+        <div class="pull-right">
+            <div class="btn-group" role="group" aria-label="tun2socks">
+                <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('启动') }}">
+                    <i class="fa fa-play fa-fw"></i>
+                </button>
+                <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="{{ lang._('重启') }}">
+                    <i class="fa fa-refresh fa-fw"></i>
+                </button>
+                <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('停止') }}">
+                    <i class="fa fa-square fa-fw"></i>
+                </button>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        function refreshSvcStatus() {
+            ajaxCall(url="/api/tun2socks/service/status", sendData={}, callback=function(data, status) {
+                var running = data['status'] == 'running';
+                $("#svc-start").prop("disabled", running).toggleClass("btn-success", !running).toggleClass("btn-default", running);
+                $("#svc-stop").prop("disabled", !running);
+                $("#svc-restart").prop("disabled", !running);
             });
         }
-        $("#refreshLogAct").click(function() { refreshLog(); });
-
-        refreshStatus();
-        refreshLog();
+        $("#svc-start").click(function() {
+            ajaxCall(url="/api/tun2socks/service/start", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvcStatus, 1500);
+            });
+        });
+        $("#svc-restart").click(function() {
+            ajaxCall(url="/api/tun2socks/service/restart", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvcStatus, 1500);
+            });
+        });
+        $("#svc-stop").click(function() {
+            ajaxCall(url="/api/tun2socks/service/stop", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvcStatus, 1500);
+            });
+        });
+        refreshSvcStatus();
     });
 </script>
 
 <ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
-    <li class="active"><a data-toggle="tab" href="#tunnel">{{ lang._('Tunnel') }}</a></li>
+    <li class="active"><a data-toggle="tab" href="#tunnel">隧道</a></li>
     <li><a data-toggle="tab" href="#socks5">{{ lang._('SOCKS5') }}</a></li>
-    <li><a data-toggle="tab" href="#misc">{{ lang._('Misc') }}</a></li>
+    <li><a data-toggle="tab" href="#misc">其他</a></li>
 </ul>
 <div class="tab-content content-box tab-content">
     <div id="tunnel" class="tab-pane fade in active">
@@ -138,18 +175,5 @@
     </div>
     <div class="col-md-12" style="margin-top: 10px;">
         <div id="responseMsg" class="alert hidden" role="alert"></div>
-    </div>
-</div>
-
-<div class="content-box" style="margin-top: 20px;">
-    <div class="col-md-12">
-        <h4>{{ lang._('Service log') }}</h4>
-        <p class="text-muted">{{ lang._('Last 100 lines of the daemon log.') }}</p>
-        <button class="btn btn-default" id="refreshLogAct" type="button">
-            {{ lang._('Refresh') }} <i id="refreshLogAct_progress"></i>
-        </button>
-    </div>
-    <div class="col-md-12" style="margin-top: 10px;">
-        <pre id="serviceLog" style="max-height: 300px; overflow-y: auto;"></pre>
     </div>
 </div>

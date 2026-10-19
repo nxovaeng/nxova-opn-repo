@@ -132,12 +132,59 @@
     });
 </script>
 
+<div class="row" style="margin-bottom: 10px;">
+    <div class="col-md-12">
+        <div class="pull-right">
+            <div class="btn-group" role="group" aria-label="xray">
+                <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('启动') }}">
+                    <i class="fa fa-play fa-fw"></i>
+                </button>
+                <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="{{ lang._('重启') }}">
+                    <i class="fa fa-refresh fa-fw"></i>
+                </button>
+                <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('停止') }}">
+                    <i class="fa fa-square fa-fw"></i>
+                </button>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        function refreshSvcStatus() {
+            ajaxCall(url="/api/xray/service/status", sendData={}, callback=function(data, status) {
+                var running = data['status'] == 'running';
+                $("#svc-start").prop("disabled", running).toggleClass("btn-success", !running).toggleClass("btn-default", running);
+                $("#svc-stop").prop("disabled", !running);
+                $("#svc-restart").prop("disabled", !running);
+            });
+        }
+        $("#svc-start").click(function() {
+            ajaxCall(url="/api/xray/service/start", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvcStatus, 1500);
+            });
+        });
+        $("#svc-restart").click(function() {
+            ajaxCall(url="/api/xray/service/restart", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvcStatus, 1500);
+            });
+        });
+        $("#svc-stop").click(function() {
+            ajaxCall(url="/api/xray/service/stop", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvcStatus, 1500);
+            });
+        });
+        refreshSvcStatus();
+    });
+</script>
+
 <ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
-    <li class="active"><a data-toggle="tab" href="#nodes">{{ lang._('Nodes') }}</a></li>
-    <li><a data-toggle="tab" href="#inbounds">{{ lang._('Inbounds') }}</a></li>
-    <li><a data-toggle="tab" href="#routing">{{ lang._('Routing') }}</a></li>
-    <li><a data-toggle="tab" href="#settings">{{ lang._('Settings') }}</a></li>
-    <li><a data-toggle="tab" href="#logs">{{ lang._('Logs') }}</a></li>
+    <li class="active"><a data-toggle="tab" href="#nodes">节点</a></li>
+    <li><a data-toggle="tab" href="#inbounds">入站</a></li>
+    <li><a data-toggle="tab" href="#routing">路由</a></li>
+    <li><a data-toggle="tab" href="#settings">设置</a></li>
+    <li><a data-toggle="tab" href="#logs">日志</a></li>
 </ul>
 <div class="tab-content content-box tab-content">
     <div id="nodes" class="tab-pane fade in active">

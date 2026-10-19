@@ -1,12 +1,14 @@
 <form>
     <field>
         <id>xray.subscriptions.subscription.name</id>
-        <label>Name</label>
+        <label>名称</label>
         <type>text</type>
+        <help>订阅备注名，如“机场A”。</help>
     </field>
     <field>
         <id>xray.subscriptions.subscription.url</id>
-        <label>URL</label>
+        <label>订阅链接</label>
         <type>text</type>
+        <help>订阅 URL，更新时拉取并替换该订阅的节点。</help>
     </field>
 </form>

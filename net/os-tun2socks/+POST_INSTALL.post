@@ -7,3 +7,5 @@
 rm -f /var/lib/php/tmp/opnsense_menu_cache.xml
 rm -f /var/lib/php/tmp/mdl_cache_*.json
 rm -f /var/lib/php/cache/*.php
+# Reset PHP OPcache so new controller actions take effect (old PHP files may be cached).
+service php-fpm restart 2>/dev/null || true

@@ -44,25 +44,27 @@
             });
         });
 
-        function setSvcIcon(id, running) {
-            $("#" + id).removeClass("text-muted text-success text-danger")
-                .addClass(running ? "text-success" : "text-danger");
-        }
         function refreshSvc() {
             ajaxCall(url="/api/mosdns/service/pfaliasdStatus", sendData={}, callback=function(data, status) {
-                setSvcIcon("svc-pfaliasd-icon", data['status'] == 'running');
+                var running = data['status'] == 'running';
+                $("#svc-start").prop("disabled", running).toggleClass("btn-success", !running).toggleClass("btn-default", running);
+                $("#svc-stop").prop("disabled", !running);
+                $("#svc-restart").prop("disabled", !running);
             });
         }
-        $("#svc-pfaliasd-restart").click(function() {
-            ajaxCall(url="/api/mosdns/service/pfaliasdRestart", sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvc, 1000);
+        $("#svc-start").click(function() {
+            ajaxCall(url="/api/mosdns/service/pfaliasdStart", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvc, 1500);
             });
         });
-        $("#svc-pfaliasd-toggle").click(function() {
-            var running = $("#svc-pfaliasd-icon").hasClass("text-success");
-            var act = running ? 'pfaliasdStop' : 'pfaliasdStart';
-            ajaxCall(url="/api/mosdns/service/" + act, sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvc, 1000);
+        $("#svc-restart").click(function() {
+            ajaxCall(url="/api/mosdns/service/pfaliasdRestart", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvc, 1500);
+            });
+        });
+        $("#svc-stop").click(function() {
+            ajaxCall(url="/api/mosdns/service/pfaliasdStop", sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvc, 1500);
             });
         });
         refreshSvc();
@@ -72,16 +74,17 @@
 <div class="row" style="margin-bottom: 10px;">
     <div class="col-md-12">
         <div class="pull-right">
-            <span id="svc-pfaliasd">
-                <i id="svc-pfaliasd-icon" class="fa fa-circle text-muted"></i>
-                <strong>pf-aliasd</strong>
-                <button id="svc-pfaliasd-restart" class="btn btn-default btn-xs" type="button" title="{{ lang._('Restart') }}">
-                    <i class="fa fa-refresh"></i>
+            <div class="btn-group" role="group" aria-label="pf-aliasd">
+                <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('Start') }}">
+                    <i class="fa fa-play fa-fw"></i>
                 </button>
-                <button id="svc-pfaliasd-toggle" class="btn btn-default btn-xs" type="button" title="{{ lang._('Start/Stop') }}">
-                    <i class="fa fa-power-off"></i>
+                <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="{{ lang._('Restart') }}">
+                    <i class="fa fa-refresh fa-fw"></i>
                 </button>
-            </span>
+                <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('Stop') }}">
+                    <i class="fa fa-square fa-fw"></i>
+                </button>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>

@@ -1,38 +1,38 @@
 <form>
     <field>
         <id>mosdns.general.enabled</id>
-        <label>Enable</label>
+        <label>启用</label>
         <type>checkbox</type>
-        <help>Enable the MosDNS forwarder.</help>
+        <help>启用 MosDNS 分流转发。</help>
     </field>
     <field>
         <id>mosdns.general.listen_address</id>
-        <label>Listen address</label>
+        <label>监听地址</label>
         <type>text</type>
-        <help>Address to listen on, e.g. 0.0.0.0 for all interfaces.</help>
+        <help>监听地址，0.0.0.0 表示所有接口。</help>
     </field>
     <field>
         <id>mosdns.general.listen_port</id>
-        <label>Listen port</label>
+        <label>监听端口</label>
         <type>text</type>
-        <help>UDP/TCP port for DNS queries.</help>
+        <help>DNS 查询的 UDP/TCP 端口（默认 5353）。</help>
     </field>
     <field>
         <id>mosdns.general.mode</id>
-        <label>Split mode</label>
+        <label>分流模式</label>
         <type>dropdown</type>
-        <help>Whitelist: non-direct domains go via proxy. Blacklist: only proxy-listed domains go via proxy. Custom: mixed with fallback below.</help>
+        <help>白名单：非直连域名走代理；黑名单：只有代理名单里的域名走代理；自定义：混合，下面设默认走向。</help>
     </field>
     <field>
         <id>mosdns.general.custom_default_route</id>
-        <label>Custom fallback</label>
+        <label>自定义默认走向</label>
         <type>dropdown</type>
-        <help>Custom mode only: where unmatched domains go.</help>
+        <help>仅自定义模式：未命中任何名单的域名走哪里。</help>
     </field>
     <field>
         <id>mosdns.general.block_enabled</id>
-        <label>Enable block list</label>
+        <label>启用阻止名单</label>
         <type>checkbox</type>
-        <help>Reject queries matching the block list first.</help>
+        <help>优先拒绝命中阻止名单的查询。</help>
     </field>
 </form>

@@ -1,48 +1,54 @@
 <form>
     <field>
         <id>xray.nodes.node.enabled</id>
-        <label>Enabled</label>
+        <label>启用</label>
         <type>checkbox</type>
     </field>
     <field>
         <id>xray.nodes.node.tag</id>
-        <label>Tag</label>
+        <label>标签</label>
         <type>text</type>
-        <help>Outbound tag used in routing rules.</help>
+        <help>出站标签，路由规则里引用。留空自动生成。</help>
     </field>
     <field>
         <id>xray.nodes.node.protocol</id>
-        <label>Protocol</label>
+        <label>协议</label>
         <type>dropdown</type>
+        <help>vless / vmess / trojan / shadowsocks。</help>
     </field>
     <field>
         <id>xray.nodes.node.address</id>
-        <label>Address</label>
+        <label>地址</label>
         <type>text</type>
+        <help>服务器地址（域名或 IP）。</help>
     </field>
     <field>
         <id>xray.nodes.node.port</id>
-        <label>Port</label>
+        <label>端口</label>
         <type>text</type>
     </field>
     <field>
         <id>xray.nodes.node.network</id>
-        <label>Network</label>
+        <label>传输</label>
         <type>dropdown</type>
+        <help>tcp / ws / xhttp / grpc。链接导入时自动识别。</help>
     </field>
     <field>
         <id>xray.nodes.node.security</id>
-        <label>Security</label>
+        <label>加密</label>
         <type>dropdown</type>
+        <help>none / tls / reality。</help>
     </field>
     <field>
         <id>xray.nodes.node.sni</id>
         <label>SNI</label>
         <type>text</type>
+        <help>TLS 握手的 SNI，一般填伪装域名。</help>
     </field>
     <field>
         <id>xray.nodes.node.path</id>
-        <label>Path</label>
+        <label>路径</label>
         <type>text</type>
+        <help>ws / xhttp / grpc 的路径。</help>
     </field>
 </form>

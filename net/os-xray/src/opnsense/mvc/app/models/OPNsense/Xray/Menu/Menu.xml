@@ -1,7 +1,7 @@
 <menu>
     <Services>
         <Xray VisibleName="Xray" cssClass="fa fa-paper-plane fa-fw" Order="300">
-            <Settings VisibleName="Settings" url="/ui/xray" Order="10"/>
+            <Settings VisibleName="设置" url="/ui/xray" Order="10"/>
         </Xray>
     </Services>
 </menu>

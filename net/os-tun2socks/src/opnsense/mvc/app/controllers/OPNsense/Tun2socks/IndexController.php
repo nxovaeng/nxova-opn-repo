@@ -17,4 +17,9 @@ class IndexController extends BaseIndexController
         $this->view->miscForm = $this->getForm('misc');
         $this->view->pick('OPNsense/Tun2socks/index');
     }
+
+    public function logsAction()
+    {
+        $this->view->pick('OPNsense/Tun2socks/logs');
+    }
 }

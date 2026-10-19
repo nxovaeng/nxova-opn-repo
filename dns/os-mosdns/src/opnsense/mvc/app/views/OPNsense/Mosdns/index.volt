@@ -62,68 +62,47 @@
 <div class="row" style="margin-bottom: 10px;">
     <div class="col-md-12">
         <div class="pull-right">
-            <span id="svc-mosdns" style="margin-right: 15px;">
-                <i id="svc-mosdns-icon" class="fa fa-circle text-muted"></i>
-                <strong>mosdns</strong>
-                <button id="svc-mosdns-restart" class="btn btn-default btn-xs" type="button" title="{{ lang._('Restart') }}">
-                    <i class="fa fa-refresh"></i>
+            <div class="btn-group" role="group" aria-label="mosdns">
+                <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('Start') }}">
+                    <i class="fa fa-play fa-fw"></i>
                 </button>
-                <button id="svc-mosdns-toggle" class="btn btn-default btn-xs" type="button" title="{{ lang._('Start/Stop') }}">
-                    <i class="fa fa-power-off"></i>
+                <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="{{ lang._('Restart') }}">
+                    <i class="fa fa-refresh fa-fw"></i>
                 </button>
-            </span>
-            <span id="svc-pfaliasd">
-                <i id="svc-pfaliasd-icon" class="fa fa-circle text-muted"></i>
-                <strong>pf-aliasd</strong>
-                <button id="svc-pfaliasd-restart" class="btn btn-default btn-xs" type="button" title="{{ lang._('Restart') }}">
-                    <i class="fa fa-refresh"></i>
+                <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('Stop') }}">
+                    <i class="fa fa-square fa-fw"></i>
                 </button>
-                <button id="svc-pfaliasd-toggle" class="btn btn-default btn-xs" type="button" title="{{ lang._('Start/Stop') }}">
-                    <i class="fa fa-power-off"></i>
-                </button>
-            </span>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
 </div>
 <script>
     $(document).ready(function() {
-        function setSvcIcon(id, running) {
-            $("#" + id).removeClass("text-muted text-success text-danger")
-                .addClass(running ? "text-success" : "text-danger");
-        }
         function refreshSvc() {
             ajaxCall(url="/api/mosdns/service/status", sendData={}, callback=function(data, status) {
-                setSvcIcon("svc-mosdns-icon", data['status'] == 'running');
-            });
-            ajaxCall(url="/api/mosdns/service/pfaliasdStatus", sendData={}, callback=function(data, status) {
-                setSvcIcon("svc-pfaliasd-icon", data['status'] == 'running');
-            });
-        }
-        function svcAct(svc, act) {
-            var url = svc == 'mosdns' ? "/api/mosdns/service/" + act : "/api/mosdns/service/pfaliasd" + act.charAt(0).toUpperCase() + act.slice(1);
-            ajaxCall(url=url, sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvc, 1000);
+                var running = data['status'] == 'running';
+                $("#svc-start").prop("disabled", running).toggleClass("btn-success", !running).toggleClass("btn-default", running);
+                $("#svc-stop").prop("disabled", !running);
+                $("#svc-restart").prop("disabled", !running);
             });
         }
-        $("#svc-mosdns-restart").click(function() { svcAct('mosdns', 'restart'); });
-        $("#svc-pfaliasd-restart").click(function() { svcAct('pfaliasd', 'restart'); });
-        $("#svc-mosdns-toggle").click(function() {
-            var running = $("#svc-mosdns-icon").hasClass("text-success");
-            svcAct('mosdns', running ? 'stop' : 'start');
-        });
-        $("#svc-pfaliasd-toggle").click(function() {
-            var running = $("#svc-pfaliasd-icon").hasClass("text-success");
-            svcAct('pfaliasd', running ? 'stop' : 'start');
-        });
+        function svcAct(act) {
+            ajaxCall(url="/api/mosdns/service/" + act, sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvc, 1500);
+            });
+        }
+        $("#svc-start").click(function() { svcAct('start'); });
+        $("#svc-restart").click(function() { svcAct('restart'); });
+        $("#svc-stop").click(function() { svcAct('stop'); });
         refreshSvc();
     });
 </script>
 
 <ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
-    <li class="active"><a data-toggle="tab" href="#general">{{ lang._('General') }}</a></li>
-    <li><a data-toggle="tab" href="#forward">{{ lang._('Forwarding') }}</a></li>
-    <li><a data-toggle="tab" href="#pfalias">{{ lang._('PF table sync') }}</a></li>
+    <li class="active"><a data-toggle="tab" href="#general">通用</a></li>
+    <li><a data-toggle="tab" href="#forward">转发</a></li>
+    <li><a data-toggle="tab" href="#pfalias">PF 表同步</a></li>
 </ul>
 <div class="tab-content content-box tab-content">
     <div id="general" class="tab-pane fade in active">
