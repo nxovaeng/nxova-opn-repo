@@ -22,6 +22,11 @@ load_rc_config $name
 : ${pf_aliasd_socket:=/var/run/pf-aliasd.sock}
 : ${pf_aliasd_tables:=}
 
-command_args="-p ${pidfile} ${procname} -socket ${pf_aliasd_socket} -tables ${pf_aliasd_tables}"
+command_args="-p ${pidfile} ${procname} -socket ${pf_aliasd_socket}"
+# -tables must be omitted entirely when empty: Go's flag package treats
+# a trailing "-tables" with no value as "flag needs an argument" and exits.
+if [ -n "${pf_aliasd_tables}" ]; then
+    command_args="${command_args} -tables ${pf_aliasd_tables}"
+fi
 
 run_rc_command "$1"
