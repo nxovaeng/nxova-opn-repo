@@ -2,10 +2,10 @@
     <Services>
         <Mosdns VisibleName="MosDNS" cssClass="fa fa-globe fa-fw" Order="450">
             <Settings VisibleName="设置" url="/ui/mosdns" Order="10"/>
-            <PfAliasd VisibleName="PF 别名守护" url="/ui/mosdns/pfaliasd" Order="20"/>
-            <Rules VisibleName="规则" url="/ui/mosdns/rules" Order="30"/>
-            <Test VisibleName="测试" url="/ui/mosdns/test" Order="40"/>
-            <Logs VisibleName="日志" url="/ui/mosdns/logs" Order="50"/>
+            <PfAliasd VisibleName="PF 别名守护" url="/ui/mosdns/index/pfaliasd" Order="20"/>
+            <Rules VisibleName="规则" url="/ui/mosdns/index/rules" Order="30"/>
+            <Test VisibleName="测试" url="/ui/mosdns/index/test" Order="40"/>
+            <Logs VisibleName="日志" url="/ui/mosdns/index/logs" Order="50"/>
         </Mosdns>
     </Services>
 </menu>

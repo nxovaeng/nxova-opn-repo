@@ -2,7 +2,7 @@
     <Services>
         <Tun2socks VisibleName="Tun2Socks" cssClass="fa fa-random fa-fw" Order="460">
             <Settings VisibleName="设置" url="/ui/tun2socks" Order="10"/>
-            <Logs VisibleName="日志" url="/ui/tun2socks/logs" Order="20"/>
+            <Logs VisibleName="日志" url="/ui/tun2socks/index/logs" Order="20"/>
         </Tun2socks>
     </Services>
 </menu>
