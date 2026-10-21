@@ -19,4 +19,11 @@ command=/usr/sbin/daemon
 command_args="-p ${pidfile} ${procname} run -c /usr/local/etc/xray-os/config.json"
 
 load_rc_config $name
+
+# geosite:/geoip: routing rules need the geo data files shipped with the
+# official xray-core package (PLUGIN_DEPENDS). Point xray at them when present.
+if [ -d /usr/local/share/xray ]; then
+    export XRAY_LOCATION_ASSET=${XRAY_LOCATION_ASSET:-/usr/local/share/xray}
+fi
+
 run_rc_command "$1"

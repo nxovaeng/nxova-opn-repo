@@ -8,13 +8,13 @@
         <id>xray.rules.rule.type</id>
         <label>类型</label>
         <type>dropdown</type>
-        <help>domain 按域名匹配，ip 按 IP/CIDR 匹配。</help>
+        <help>domain 按域名匹配（支持 geosite:分类，如 geosite:cn）；ip 按 IP/CIDR 匹配（支持 geoip:cn、geoip:private）；source 按来源地址匹配（按设备分流）；port 按目标端口匹配。</help>
     </field>
     <field>
         <id>xray.rules.rule.values</id>
         <label>值</label>
         <type>text</type>
-        <help>逗号分隔的域名或 IP，如 google.com,youtube.com。</help>
+        <help>逗号分隔。如 google.com,youtube.com；或 192.168.1.0/24；端口如 53,443 或 1000-2000。</help>
     </field>
     <field>
         <id>xray.rules.rule.outbound_tag</id>

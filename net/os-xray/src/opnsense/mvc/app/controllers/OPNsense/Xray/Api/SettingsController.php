@@ -183,7 +183,7 @@ class SettingsController extends ApiMutableModelControllerBase
         $added = 0;
         foreach ($nodes as $ndata) {
             $node = $mdl->nodes->node->add();
-            foreach (['tag', 'protocol', 'address', 'port', 'network', 'security', 'sni', 'path', 'params', 'sub_id'] as $f) {
+            foreach (['tag', 'protocol', 'address', 'port', 'network', 'security', 'sni', 'path', 'user_id', 'password', 'ss_method', 'vmess_cipher', 'flow', 'alter_id', 'host', 'fingerprint', 'allow_insecure', 'public_key', 'short_id', 'spider_x', 'params', 'sub_id'] as $f) {
                 if (isset($ndata[$f])) {
                     $node->$f = $ndata[$f];
                 }
@@ -234,7 +234,7 @@ class SettingsController extends ApiMutableModelControllerBase
         foreach ($nodes as $ndata) {
             $node = $mdl->nodes->node->add();
             $ndata['sub_id'] = $uuid;
-            foreach (['tag', 'protocol', 'address', 'port', 'network', 'security', 'sni', 'path', 'params', 'sub_id'] as $f) {
+            foreach (['tag', 'protocol', 'address', 'port', 'network', 'security', 'sni', 'path', 'user_id', 'password', 'ss_method', 'vmess_cipher', 'flow', 'alter_id', 'host', 'fingerprint', 'allow_insecure', 'public_key', 'short_id', 'spider_x', 'params', 'sub_id'] as $f) {
                 if (isset($ndata[$f])) {
                     $node->$f = $ndata[$f];
                 }

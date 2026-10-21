@@ -77,6 +77,98 @@ def build_inbounds(model):
     return inbounds
 
 
+def build_stream(nd):
+    """xray streamSettings from the node's structured stream fields."""
+    net = (nd.get('network') or 'tcp').lower()
+    sec = (nd.get('security') or 'none').lower()
+    sni = nd.get('sni') or ''
+    path = nd.get('path') or ''
+    host = nd.get('host') or ''
+    ss = {'network': net}
+    if net == 'ws':
+        ws = {'path': path or '/'}
+        if host:
+            ws['headers'] = {'Host': host}
+        ss['wsSettings'] = ws
+    elif net == 'xhttp':
+        xh = {'path': path or '/'}
+        if host:
+            xh['host'] = host
+        ss['xhttpSettings'] = xh
+    elif net == 'grpc':
+        ss['grpcSettings'] = {'serviceName': path, 'multiMode': False}
+    if sec == 'tls':
+        tls = {'serverName': sni}
+        if nd.get('allow_insecure') == '1':
+            tls['allowInsecure'] = True
+        if nd.get('fingerprint'):
+            tls['fingerprint'] = nd['fingerprint']
+        ss['security'] = 'tls'
+        ss['tlsSettings'] = tls
+    elif sec == 'reality':
+        ss['security'] = 'reality'
+        ss['realitySettings'] = {
+            'serverName': sni,
+            'fingerprint': nd.get('fingerprint') or 'chrome',
+            'publicKey': nd.get('public_key') or '',
+            'shortId': nd.get('short_id') or '',
+            'spiderX': nd.get('spider_x') or '',
+        }
+    return ss
+
+
+def structured_ready(nd):
+    """True when the node's credential field for its protocol is filled;
+    then the structured fields are authoritative over the legacy params JSON."""
+    proto = (nd.get('protocol') or '').lower()
+    if proto in ('vless', 'vmess'):
+        return bool(nd.get('user_id'))
+    if proto in ('trojan', 'shadowsocks'):
+        return bool(nd.get('password'))
+    return False
+
+
+def build_outbound_from_fields(nd):
+    proto = (nd.get('protocol') or '').lower()
+    addr = nd.get('address') or ''
+    try:
+        port = int(nd.get('port') or 0)
+    except (TypeError, ValueError):
+        port = 0
+    if not proto or not addr or not port:
+        return None
+    ss = build_stream(nd)
+    if proto == 'vless':
+        user = {'id': nd.get('user_id') or '', 'encryption': 'none'}
+        if nd.get('flow'):
+            user['flow'] = nd['flow']
+        return {'protocol': 'vless',
+                'settings': {'vnext': [{'address': addr, 'port': port, 'users': [user]}]},
+                'streamSettings': ss}
+    if proto == 'vmess':
+        try:
+            alter = int(nd.get('alter_id') or 0)
+        except (TypeError, ValueError):
+            alter = 0
+        user = {'id': nd.get('user_id') or '', 'alterId': alter,
+                'security': nd.get('vmess_cipher') or 'auto'}
+        return {'protocol': 'vmess',
+                'settings': {'vnext': [{'address': addr, 'port': port, 'users': [user]}]},
+                'streamSettings': ss}
+    if proto == 'trojan':
+        return {'protocol': 'trojan',
+                'settings': {'servers': [{'address': addr, 'port': port,
+                                          'password': nd.get('password') or ''}]},
+                'streamSettings': ss}
+    if proto == 'shadowsocks':
+        return {'protocol': 'shadowsocks',
+                'settings': {'servers': [{'address': addr, 'port': port,
+                                          'method': nd.get('ss_method') or 'aes-256-gcm',
+                                          'password': nd.get('password') or '',
+                                          'uot': True}]}}
+    return None
+
+
 def build_outbounds(model):
     nodes = (model.get('nodes') or {}).get('node', {})
     active = (model.get('general') or {}).get('active_node', '')
@@ -86,12 +178,17 @@ def build_outbounds(model):
     for uuid, nd in nodes.items():
         if nd.get('enabled') != '1':
             continue
-        try:
-            ob = json.loads(nd.get('params') or '{}')
-        except Exception:
-            continue
-        if not ob.get('protocol'):
-            continue
+        ob = None
+        if structured_ready(nd):
+            ob = build_outbound_from_fields(nd)
+        if ob is None:
+            # legacy path: full outbound stored in params (imported nodes)
+            try:
+                ob = json.loads(nd.get('params') or '{}')
+            except Exception:
+                continue
+            if not ob.get('protocol'):
+                continue
         tag = nd.get('tag') or f'node-{uuid[:8]}'
         # dedupe tags
         base, i = tag, 2
@@ -132,8 +229,14 @@ def build_routing(model):
             'type': 'field',
             'outboundTag': r.get('outbound_tag') or 'proxy-default',
         }
-        if (r.get('type') or 'domain') == 'ip':
+        rtype = (r.get('type') or 'domain')
+        if rtype == 'ip':
             entry['ip'] = values
+        elif rtype == 'source':
+            entry['source'] = values
+        elif rtype == 'port':
+            # xray port matcher is one string: "53,80,443" or ranges "1000-2000"
+            entry['port'] = ','.join(values)
         else:
             entry['domain'] = values
         rules.append(entry)

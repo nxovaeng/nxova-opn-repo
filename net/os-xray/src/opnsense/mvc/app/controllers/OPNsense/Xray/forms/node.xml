@@ -28,6 +28,42 @@
         <type>text</type>
     </field>
     <field>
+        <id>xray.nodes.node.user_id</id>
+        <label>用户 ID</label>
+        <type>text</type>
+        <help>vless / vmess 的 UUID。从链接导入时自动填充。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.password</id>
+        <label>密码</label>
+        <type>password</type>
+        <help>trojan / shadowsocks 的密码。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.ss_method</id>
+        <label>SS 加密方式</label>
+        <type>text</type>
+        <help>仅 shadowsocks 用：aes-256-gcm、chacha20-ietf-poly1305、2022-blake3-aes-256-gcm 等。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.vmess_cipher</id>
+        <label>VMess 加密</label>
+        <type>dropdown</type>
+        <help>仅 vmess 用，一般 auto。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.flow</id>
+        <label>流控 flow</label>
+        <type>text</type>
+        <help>仅 vless 用，常用 xtls-rprx-vision，没有就留空。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.alter_id</id>
+        <label>alterId</label>
+        <type>text</type>
+        <help>仅 vmess 用，新版一般为 0。</help>
+    </field>
+    <field>
         <id>xray.nodes.node.network</id>
         <label>传输</label>
         <type>dropdown</type>
@@ -49,6 +85,48 @@
         <id>xray.nodes.node.path</id>
         <label>路径</label>
         <type>text</type>
-        <help>ws / xhttp / grpc 的路径。</help>
+        <help>ws / xhttp 的路径；grpc 时填 serviceName。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.host</id>
+        <label>Host 头</label>
+        <type>text</type>
+        <help>ws / xhttp 的 Host 伪装域名，可留空。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.fingerprint</id>
+        <label>指纹</label>
+        <type>text</type>
+        <help>TLS / REALITY 的 uTLS 指纹：chrome、firefox、safari、ios、android、edge、random。REALITY 留空默认 chrome。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.allow_insecure</id>
+        <label>跳过证书验证</label>
+        <type>checkbox</type>
+        <help>仅 TLS：服务端是自签证书时才勾。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.public_key</id>
+        <label>REALITY 公钥</label>
+        <type>text</type>
+        <help>仅 REALITY：链接里的 pbk。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.short_id</id>
+        <label>REALITY shortId</label>
+        <type>text</type>
+        <help>仅 REALITY：链接里的 sid，可留空。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.spider_x</id>
+        <label>REALITY spiderX</label>
+        <type>text</type>
+        <help>仅 REALITY：链接里的 spx，可留空。</help>
+    </field>
+    <field>
+        <id>xray.nodes.node.params</id>
+        <label>高级参数 JSON</label>
+        <type>text</type>
+        <help>完整的 outbound JSON，导入时自动填充。上面的凭据填了就以凭据为准，此项不用动，手动建节点不用填。</help>
     </field>
 </form>

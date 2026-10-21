@@ -69,6 +69,27 @@ def stream_settings(query, default_sni, default_host):
     return ss
 
 
+def flat_stream_fields(query, ss):
+    """Structured (form-editable) copies of the stream/credential settings."""
+    # the effective ws/xhttp host: explicit ?host= wins, stream_settings falls
+    # back to the server address - mirror that so both build paths agree
+    host = (query.get('host') or [''])[0]
+    ws = ss.get('wsSettings') or {}
+    if (ws.get('headers') or {}).get('Host'):
+        host = ws['headers']['Host']
+    xh = ss.get('xhttpSettings') or {}
+    if xh.get('host'):
+        host = xh['host']
+    return {
+        'host': host,
+        'fingerprint': (query.get('fp') or [''])[0],
+        'allow_insecure': '1' if (query.get('allowInsecure') or query.get('insecure') or ['0'])[0] == '1' else '0',
+        'public_key': (query.get('pbk') or [''])[0],
+        'short_id': (query.get('sid') or [''])[0],
+        'spider_x': (query.get('spx') or [''])[0],
+    }
+
+
 def parse_vless(u, query, sub_id):
     uuid = urllib.parse.unquote(u.username or '')
     host = u.hostname or ''
@@ -84,13 +105,20 @@ def parse_vless(u, query, sub_id):
         'settings': {'vnext': [{'address': host, 'port': port, 'users': [user]}]},
         'streamSettings': ss,
     }
-    return {
+    # grpc carries its service name in the path slot of the form
+    path = (query.get('path') or [''])[0]
+    if ss['network'] == 'grpc':
+        path = (query.get('serviceName') or [''])[0]
+    node = {
         'tag': name, 'protocol': 'vless', 'address': host, 'port': port,
         'network': ss['network'], 'security': ss.get('security', 'none'),
         'sni': (ss.get('tlsSettings') or ss.get('realitySettings') or {}).get('serverName', ''),
-        'path': (query.get('path') or [''])[0],
+        'path': path,
+        'user_id': uuid, 'flow': flow,
         'params': json.dumps(outbound), 'sub_id': sub_id,
     }
+    node.update(flat_stream_fields(query, ss))
+    return node
 
 
 def parse_vmess(link, sub_id):
@@ -123,6 +151,10 @@ def parse_vmess(link, sub_id):
         'tag': name, 'protocol': 'vmess', 'address': host, 'port': port,
         'network': net, 'security': 'tls' if tls else 'none',
         'sni': data.get('sni') or '', 'path': data.get('path') or '',
+        'user_id': data.get('id', ''), 'alter_id': str(data.get('aid') or 0),
+        'vmess_cipher': data.get('scy') or 'auto',
+        'host': ((ss.get('wsSettings') or {}).get('headers') or {}).get('Host') or data.get('host') or '',
+        'allow_insecure': '1' if str(data.get('allowInsecure', '')).lower() in ('1', 'true') else '0',
         'params': json.dumps(outbound), 'sub_id': sub_id,
     }
 
@@ -140,13 +172,16 @@ def parse_trojan(u, query, sub_id):
         'settings': {'servers': [{'address': host, 'port': port, 'password': pwd}]},
         'streamSettings': ss,
     }
-    return {
+    node = {
         'tag': name, 'protocol': 'trojan', 'address': host, 'port': port,
         'network': ss['network'], 'security': ss.get('security', 'tls'),
         'sni': (ss.get('tlsSettings') or {}).get('serverName', ''),
         'path': (query.get('path') or [''])[0],
+        'password': pwd,
         'params': json.dumps(outbound), 'sub_id': sub_id,
     }
+    node.update(flat_stream_fields(query, ss))
+    return node
 
 
 def parse_ss(u, sub_id):
@@ -178,6 +213,7 @@ def parse_ss(u, sub_id):
     return {
         'tag': name, 'protocol': 'shadowsocks', 'address': host, 'port': port,
         'network': 'tcp', 'security': 'none', 'sni': '', 'path': '',
+        'password': pwd, 'ss_method': method,
         'params': json.dumps(outbound), 'sub_id': sub_id,
     }
 

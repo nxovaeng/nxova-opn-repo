@@ -71,7 +71,7 @@ class ServiceController extends ApiMutableServiceControllerBase
      */
     public function logAction()
     {
-        $lines = (int)$this->request->get('lines', 100);
+        $lines = (int)$this->request->get('lines', 'int', 100);
         $lines = max(1, min(500, $lines));
         $backend = new Backend();
         $raw = $backend->configdRun('xray show_log', [(string)$lines]);
