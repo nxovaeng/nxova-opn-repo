@@ -96,6 +96,11 @@ build_plugin "net/os-tun2socks" "hev-socks5-tunnel"
 if [ -f "${WORKSPACE_DIR}/autobuild/index.html" ]; then
     cp "${WORKSPACE_DIR}/autobuild/index.html" "${PUBLISH_DIR}/"
 fi
+# 仓库自带 pkg 源配置: 新机器一条 fetch 就能自举本仓库
+#   fetch -o /usr/local/etc/pkg/repos/nxova-opn.conf https://opnrepo.zro.qzz.io/nxova-opn.conf
+if [ -f "${WORKSPACE_DIR}/autobuild/nxova-opn.conf" ]; then
+    cp "${WORKSPACE_DIR}/autobuild/nxova-opn.conf" "${PUBLISH_DIR}/"
+fi
 cd "${PUBLISH_DIR}"
 pkg repo .
 echo "==> 仓库内容:"
