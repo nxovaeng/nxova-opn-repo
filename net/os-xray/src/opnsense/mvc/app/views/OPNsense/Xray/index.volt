@@ -502,7 +502,7 @@
             <button class="btn btn-default btn-xs" id="addTemplateCN" type="button">＋ 国内直连（geosite/geoip）</button>
             <button class="btn btn-default btn-xs" id="addTemplateAds" type="button">＋ 广告拦截</button>
         </p>
-        <p class="text-muted">规则按表格顺序自上而下匹配，命中即止；都没命中走活动节点。出站留空 = 默认节点，也可以填某个节点标签做定向分流。</p>
+        <p class="text-muted">规则按表格顺序自上而下匹配，命中即止；都没命中走活动节点。出站留空 = 默认节点，也可以填某个节点标签做定向分流。设置里开启「共享规则组」后，MosDNS「规则」页的规则组会在应用时自动转换并排在本表规则之后（阻止 &gt; 直连 &gt; 代理）。</p>
         <table id="grid-rules" class="table table-condensed table-hover table-striped" data-editDialog="DialogRule">
             <thead>
                 <tr>

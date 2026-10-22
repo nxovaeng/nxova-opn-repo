@@ -32,6 +32,10 @@
             <dns_servers type="TextField">
                 <default>tcp://1.1.1.1:53,tcp://8.8.8.8:53,https://1.1.1.1/dns-query</default>
             </dns_servers>
+            <sync_rule_groups type="BooleanField">
+                <default>1</default>
+                <help>Convert the shared rule groups (os-mosdns rule store) into routing rules on apply.</help>
+            </sync_rule_groups>
         </general>
         <nodes type="ArrayField">
             <node>

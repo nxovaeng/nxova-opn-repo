@@ -26,6 +26,7 @@ class IndexController extends BaseIndexController
 
     public function rulesAction()
     {
+        $this->view->rulegroupForm = $this->getForm('rulegroup');
         $this->view->pick('OPNsense/Mosdns/rules');
     }
 

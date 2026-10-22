@@ -23,4 +23,10 @@
         <type>text</type>
         <help>逗号分隔。如 tcp://1.1.1.1:53,https://1.1.1.1/dns-query。xray 内部 DNS 查询用。</help>
     </field>
+    <field>
+        <id>xray.general.sync_rule_groups</id>
+        <label>共享规则组</label>
+        <type>checkbox</type>
+        <help>应用时把 MosDNS「规则」页维护的共享规则组（纯 txt 域名组）转换成 xray 路由规则，排在手动规则之后（阻止 &gt; 直连 &gt; 代理）。没装 os-mosdns 时自动跳过。</help>
+    </field>
 </form>
