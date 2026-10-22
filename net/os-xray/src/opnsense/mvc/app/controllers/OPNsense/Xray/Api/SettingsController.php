@@ -15,6 +15,19 @@ class SettingsController extends ApiMutableModelControllerBase
     protected static $internalModelClass = '\OPNsense\Xray\Xray';
 
     /**
+     * Find an ArrayField item by its container uuid (iterateItems keys).
+     */
+    private function findByUuid($collection, $uuid)
+    {
+        foreach ($collection->iterateItems() as $key => $item) {
+            if ($key === $uuid) {
+                return $item;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Search nodes/inbounds/rules/subscriptions (bootgrid).
      * GET /api/xray/settings/searchNodes etc. are auto-provided by
      * ApiMutableModelControllerBase via getModel()->nodes->... ?
@@ -129,7 +142,7 @@ class SettingsController extends ApiMutableModelControllerBase
     {
         // delete subscription and its nodes
         $mdl = $this->getModel();
-        $sub = $mdl->subscriptions->subscription->getNodeByReference('uuid.' . $uuid);
+        $sub = $this->findByUuid($mdl->subscriptions->subscription, $uuid);
         $result = $this->delBase('subscriptions', $uuid);
         if ($result['result'] != 'failed' && $sub != null) {
             foreach ($mdl->nodes->node->iterateItems() as $nodeUuid => $node) {
@@ -152,7 +165,7 @@ class SettingsController extends ApiMutableModelControllerBase
             return ['result' => 'failed'];
         }
         $mdl = $this->getModel();
-        $node = $mdl->nodes->node->getNodeByReference('uuid.' . $uuid);
+        $node = $this->findByUuid($mdl->nodes->node, $uuid);
         if ($node == null) {
             return ['result' => 'failed', 'error' => 'node not found'];
         }
@@ -174,7 +187,7 @@ class SettingsController extends ApiMutableModelControllerBase
         $links = $this->request->getPost('links', 'string', '');
         $subId = $this->request->getPost('sub_id', 'string', 'manual');
         $backend = new Backend();
-        $raw = $backend->configdRun('xray import_nodes', [$links, $subId]);
+        $raw = $backend->configdpRun('xray import_nodes', [$links, $subId]);
         $nodes = json_decode(trim($raw), true);
         if (!is_array($nodes)) {
             return ['result' => 'failed', 'error' => trim($raw)];
@@ -214,12 +227,12 @@ class SettingsController extends ApiMutableModelControllerBase
         }
         $uuid = $this->request->getPost('uuid', 'string', '');
         $mdl = $this->getModel();
-        $sub = $mdl->subscriptions->subscription->getNodeByReference('uuid.' . $uuid);
+        $sub = $this->findByUuid($mdl->subscriptions->subscription, $uuid);
         if ($sub == null) {
             return ['result' => 'failed', 'error' => 'subscription not found'];
         }
         $backend = new Backend();
-        $raw = $backend->configdRun('xray fetch_subscription', [(string)$sub->url]);
+        $raw = $backend->configdpRun('xray fetch_subscription', [(string)$sub->url]);
         $nodes = json_decode(trim($raw), true);
         if (!is_array($nodes)) {
             return ['result' => 'failed', 'error' => trim($raw)];
@@ -263,7 +276,7 @@ class SettingsController extends ApiMutableModelControllerBase
             }
         }
         $backend = new Backend();
-        $raw = $backend->configdRun('xray ping_nodes', [json_encode($targets)]);
+        $raw = $backend->configdpRun('xray ping_nodes', [json_encode($targets)]);
         $result = json_decode(trim($raw), true);
         return ['result' => 'ok', 'pings' => is_array($result) ? $result : []];
     }

@@ -48,7 +48,12 @@ class ServiceController extends ApiMutableServiceControllerBase
         if ($mdl === null || !isset($mdl->rulegroups)) {
             return null;
         }
-        return $mdl->rulegroups->group->getNodeByReference('uuid.' . $uuid);
+        foreach ($mdl->rulegroups->group->iterateItems() as $key => $group) {
+            if ($key === $uuid) {
+                return $group;
+            }
+        }
+        return null;
     }
 
     private function groupsManifest()
@@ -75,7 +80,7 @@ class ServiceController extends ApiMutableServiceControllerBase
     {
         $tmp = tempnam('/tmp', 'mosdns-groups-');
         file_put_contents($tmp, json_encode($this->groupsManifest()));
-        $raw = trim((new Backend())->configdRun('mosdns rules merge', [$tmp]));
+        $raw = trim((new Backend())->configdpRun('mosdns rules merge', [$tmp]));
         @unlink($tmp);
         $data = json_decode($raw, true);
         return is_array($data) ? $data : ['result' => 'failed', 'output' => $raw];
@@ -106,7 +111,7 @@ class ServiceController extends ApiMutableServiceControllerBase
         if ($group === null) {
             return ['result' => 'failed', 'error' => 'group not found'];
         }
-        $raw = trim((new Backend())->configdRun('mosdns rules get_group',
+        $raw = trim((new Backend())->configdpRun('mosdns rules get_group',
             [$uuid, (string)$group->source]));
         $data = json_decode($raw, true);
         return is_array($data) ? $data : ['result' => 'failed', 'error' => $raw];
@@ -132,7 +137,7 @@ class ServiceController extends ApiMutableServiceControllerBase
         $content = $this->request->getPost('content', 'string', '');
         $tmp = tempnam('/tmp', 'mosdns-group-');
         file_put_contents($tmp, $content);
-        $result = trim((new Backend())->configdRun('mosdns rules install_group', [$uuid, $tmp]));
+        $result = trim((new Backend())->configdpRun('mosdns rules install_group', [$uuid, $tmp]));
         @unlink($tmp);
         if ($result !== 'OK') {
             $data = json_decode($result, true);
@@ -165,7 +170,7 @@ class ServiceController extends ApiMutableServiceControllerBase
         if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
             return ['result' => 'failed', 'error' => 'invalid url'];
         }
-        $raw = trim((new Backend())->configdRun('mosdns rules fetch_group', [$uuid, $url]));
+        $raw = trim((new Backend())->configdpRun('mosdns rules fetch_group', [$uuid, $url]));
         $data = json_decode($raw, true);
         if (!is_array($data) || ($data['result'] ?? '') !== 'ok') {
             return is_array($data) ? $data : ['result' => 'failed', 'error' => $raw];
@@ -193,7 +198,7 @@ class ServiceController extends ApiMutableServiceControllerBase
     public function getRuleAction($name)
     {
         $name = basename($name);
-        $raw = (new Backend())->configdRun('mosdns rules get', [$name]);
+        $raw = (new Backend())->configdpRun('mosdns rules get', [$name]);
         return ['result' => 'ok', 'name' => $name, 'content' => $raw];
     }
 
@@ -212,7 +217,7 @@ class ServiceController extends ApiMutableServiceControllerBase
         $content = $this->request->getPost('content', 'string', '');
         $tmp = tempnam('/tmp', 'mosdns-rule-');
         file_put_contents($tmp, $content);
-        $result = trim((new Backend())->configdRun('mosdns rules install', [$name, $tmp]));
+        $result = trim((new Backend())->configdpRun('mosdns rules install', [$name, $tmp]));
         @unlink($tmp);
         if ($result === 'OK') {
             // rule files are read at mosdns startup; restart to reload them
@@ -235,7 +240,7 @@ class ServiceController extends ApiMutableServiceControllerBase
         if ($domain === '') {
             return ['result' => 'failed', 'error' => 'empty domain'];
         }
-        $raw = trim((new Backend())->configdRun('mosdns rules test', [$domain]));
+        $raw = trim((new Backend())->configdpRun('mosdns rules test', [$domain]));
         $data = json_decode($raw, true);
         if (!is_array($data)) {
             return ['result' => 'failed', 'error' => $raw];
@@ -252,7 +257,7 @@ class ServiceController extends ApiMutableServiceControllerBase
         $lines = max(1, min(500, $lines));
         $backend = new Backend();
         $action = $target === 'aliasd' ? 'mosdns show_aliasd_log' : 'mosdns show_log';
-        $raw = $backend->configdRun($action, [(string)$lines]);
+        $raw = $backend->configdpRun($action, [(string)$lines]);
         return ['result' => 'ok', 'log' => $raw];
     }
 

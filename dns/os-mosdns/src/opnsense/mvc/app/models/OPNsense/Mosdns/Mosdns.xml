@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/mosdns</mount>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <description>MosDNS dynamic DNS forwarder with pf table sync</description>
     <items>
         <general>
@@ -107,9 +107,8 @@
                 <default></default>
             </flush_tables>
         </pfaliasd>
-        <rulegroups type="ArrayField">
-            <group>
-                <uuid type="UniqueIdField"/>
+        <rulegroups>
+            <group type="ArrayField">
                 <enabled type="BooleanField">
                     <default>1</default>
                 </enabled>

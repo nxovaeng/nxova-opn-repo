@@ -41,7 +41,7 @@ class SettingsController extends ApiMutableModelControllerBase
         $result = $this->delBase('rulegroups', $uuid);
         if (($result['result'] ?? '') !== 'failed') {
             // drop the group's content/cache files as well
-            (new Backend())->configdRun('mosdns rules delete_group', [$uuid]);
+            (new Backend())->configdpRun('mosdns rules delete_group', [$uuid]);
         }
         return $result;
     }

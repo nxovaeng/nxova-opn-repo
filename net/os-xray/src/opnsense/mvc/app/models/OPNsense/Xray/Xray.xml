@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/xray</mount>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <description>Xray-core routing engine manager (custom config, no conflict with official package)</description>
     <items>
         <general>
@@ -37,9 +37,8 @@
                 <help>Convert the shared rule groups (os-mosdns rule store) into routing rules on apply.</help>
             </sync_rule_groups>
         </general>
-        <nodes type="ArrayField">
-            <node>
-                <uuid type="UniqueIdField"/>
+        <nodes>
+            <node type="ArrayField">
                 <enabled type="BooleanField">
                     <default>1</default>
                 </enabled>
@@ -131,9 +130,8 @@
                 <sub_id type="TextField"/>
             </node>
         </nodes>
-        <inbounds type="ArrayField">
-            <inbound>
-                <uuid type="UniqueIdField"/>
+        <inbounds>
+            <inbound type="ArrayField">
                 <enabled type="BooleanField">
                     <default>1</default>
                 </enabled>
@@ -161,9 +159,8 @@
                 <password type="TextField"/>
             </inbound>
         </inbounds>
-        <rules type="ArrayField">
-            <rule>
-                <uuid type="UniqueIdField"/>
+        <rules>
+            <rule type="ArrayField">
                 <enabled type="BooleanField">
                     <default>1</default>
                 </enabled>
@@ -185,9 +182,8 @@
                 </outbound_tag>
             </rule>
         </rules>
-        <subscriptions type="ArrayField">
-            <subscription>
-                <uuid type="UniqueIdField"/>
+        <subscriptions>
+            <subscription type="ArrayField">
                 <name type="TextField">
                     <Required>Y</Required>
                 </name>

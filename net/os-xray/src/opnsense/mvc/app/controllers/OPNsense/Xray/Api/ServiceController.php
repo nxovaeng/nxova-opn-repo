@@ -74,7 +74,7 @@ class ServiceController extends ApiMutableServiceControllerBase
         $lines = (int)$this->request->get('lines', 'int', 100);
         $lines = max(1, min(500, $lines));
         $backend = new Backend();
-        $raw = $backend->configdRun('xray show_log', [(string)$lines]);
+        $raw = $backend->configdpRun('xray show_log', [(string)$lines]);
         return ['result' => 'ok', 'log' => $raw];
     }
 }
