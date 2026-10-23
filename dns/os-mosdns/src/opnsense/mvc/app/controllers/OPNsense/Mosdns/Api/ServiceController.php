@@ -36,12 +36,43 @@ class ServiceController extends ApiMutableServiceControllerBase
                 $ret['status_msg'] = trim(($ret['status_msg'] ?? '') .
                     ' 警告：自动创建别名失败，请到防火墙 → 别名手动新建同名“外部（高级）”别名。');
             }
-            (new Backend())->configdRun('mosdns pfaliasd restart');
+            // pf-aliasd is NOT restarted here on purpose: the two services
+            // are independent (only the menu groups them). The daemon has
+            // its own Apply (reconfigurePfaliasdAction below); a mosdns
+            // config change does not need a daemon restart.
             if (!empty($merge['warnings'])) {
                 $ret['status_msg'] = trim(($ret['status_msg'] ?? '') .
                     ' 规则合并警告：' . implode('；', $merge['warnings']));
             }
         }
+        return $ret;
+    }
+
+    /**
+     * Apply for the pf-aliasd daemon ONLY: regenerate templates (its
+     * rc.conf.d toggle lives in the shared OPNsense/Mosdns template dir),
+     * make sure the sync target alias exists, restart the daemon. mosdns
+     * itself is never stopped or restarted here -- the services are
+     * separate; only the menu groups them under MosDNS.
+     */
+    public function reconfigurePfaliasdAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $backend = new Backend();
+        $tpl = trim($backend->configdpRun('template reload', ['OPNsense/Mosdns']));
+        if ($tpl !== 'OK') {
+            return ['status' => 'failed', 'status_msg' => '模板生成失败：' . $tpl];
+        }
+        $ret = ['status' => 'ok'];
+        $created = $this->ensureAliasTable();
+        if ($created) {
+            $ret['status_msg'] = '已自动创建别名 ' . $created . '（外部/高级），pf 表已生成。';
+        } elseif ($created === false) {
+            $ret['status_msg'] = '警告：自动创建别名失败，请到防火墙 → 别名手动新建同名“外部（高级）”别名。';
+        }
+        $backend->configdRun('mosdns pfaliasd restart');
         return $ret;
     }
 

@@ -30,7 +30,7 @@
 
         $("#reconfigureAct").click(function() {
             $("#reconfigureAct_progress").addClass("fa fa-spinner fa-pulse");
-            ajaxCall(url="/api/mosdns/service/reconfigure", sendData={}, callback=function(data, status) {
+            ajaxCall(url="/api/mosdns/service/reconfigurePfaliasd", sendData={}, callback=function(data, status) {
                 $("#reconfigureAct_progress").removeClass("fa fa-spinner fa-pulse");
                 var msg, cls;
                 if (data['status'] == 'ok') {
