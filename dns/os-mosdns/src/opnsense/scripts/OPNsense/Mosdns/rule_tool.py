@@ -137,7 +137,7 @@ def cmd_install(name, staging):
 
 # domain label: 1-63 chars, alnum + hyphen, not leading/trailing hyphen
 _LABEL_RE = r'[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?'
-_DOMAIN_RE = re.compile(rf'^{_LABEL_RE}(?:\.{_LABEL_RE})*$', re.IGNORECASE)
+_DOMAIN_RE = re.compile(rf'^{_LABEL_RE}(?:\.{_LABEL_RE})+$', re.IGNORECASE)
 
 
 def validate_rule(line, lineno):
@@ -162,7 +162,8 @@ def validate_rule(line, lineno):
     elif low.startswith('domain:'):
         dom, kind = s[7:], 'domain'
     else:
-        dom, kind = s, 'domain'  # bare domain (or single TLD label) = suffix match
+        dom, kind = s, 'domain'  # bare domain = suffix match (single-label
+        # TLD entries like 'cn' are unsupported: far too broad, dropped)
     if not dom:
         return f'line {lineno}: empty domain'
     if '://' in s or '/' in dom:
