@@ -5,7 +5,7 @@
 <h1>nxova-opn-repo - OPNsense 软件源</h1>
 <p>基于域名的分流套件：mosdns DNS 分流 -&gt; pf 表 -&gt; 策略路由 -&gt; xray-core 出口。各插件独立启停。</p>
 <h2>在 OPNsense 上添加软件源</h2>
-<pre>fetch -o /usr/local/etc/pkg/repos/nxova-opn.conf https://raw.githubusercontent.com/nxovaeng/nxova-opn-repo/main/autobuild/nxova-opn.conf
+<pre>fetch -o /usr/local/etc/pkg/repos/nxova-opn.conf https://opnrepo.zro.qzz.io/nxova-opn.conf
 pkg update -r nxova-opn
 pkg install -r nxova-opn os-mosdns os-xray os-tun2socks</pre>
 <h2>包含内容</h2>

@@ -20,7 +20,7 @@ OPNsense 自用插件仓库：基于域名的分流套件，各插件独立启�
 ## 安装
 
 ```sh
-fetch -o /usr/local/etc/pkg/repos/nxova-opn.conf https://raw.githubusercontent.com/nxovaeng/nxova-opn-repo/main/autobuild/nxova-opn.conf
+fetch -o /usr/local/etc/pkg/repos/nxova-opn.conf https://opnrepo.zro.qzz.io/nxova-opn.conf
 pkg update -r nxova-opn && pkg install -r nxova-opn os-mosdns os-xray os-tun2socks
 ```
 
