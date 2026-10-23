@@ -19,8 +19,6 @@ import subprocess
 CONF_DIR = '/usr/local/etc/xray-os'
 MODEL_JSON = os.path.join(CONF_DIR, 'model.json')
 CONFIG_JSON = os.path.join(CONF_DIR, 'config.json')
-GROUP_RULES_JSON = os.path.join(CONF_DIR, 'group_rules.json')
-SYNC_GROUPS_SCRIPT = '/usr/local/opnsense/scripts/OPNsense/Xray/sync_rule_groups.py'
 XRAY_BIN = '/usr/local/bin/xray'
 
 
@@ -214,27 +212,6 @@ def build_outbounds(model):
     return outbounds
 
 
-def load_group_rules(model):
-    """Routing rules converted from the shared rule groups (os-mosdns store)
-    by sync_rule_groups.py into group_rules.json. Empty when the sync is
-    disabled in the model or no store exists."""
-    general = model.get('general') or {}
-    if general.get('sync_rule_groups') == '0':
-        return []
-    try:
-        with open(GROUP_RULES_JSON) as f:
-            data = json.load(f)
-    except Exception:
-        return []
-    out = []
-    if isinstance(data, list):
-        for r in data:
-            if isinstance(r, dict) and r.get('domain') and r.get('outboundTag'):
-                out.append({'type': 'field', 'domain': r['domain'],
-                            'outboundTag': r['outboundTag']})
-    return out
-
-
 def build_routing(model):
     rules = []
     rules.append({
@@ -263,9 +240,6 @@ def build_routing(model):
         else:
             entry['domain'] = values
         rules.append(entry)
-    # shared rule groups (converted by sync_rule_groups.py) go after the
-    # hand-written rules and before the catch-all
-    rules.extend(load_group_rules(model))
     rules.append({
         'type': 'field',
         'network': 'tcp,udp',
@@ -299,15 +273,6 @@ def main():
     except Exception as e:
         print(f'cannot read model: {e}', file=sys.stderr)
         sys.exit(1)
-    # refresh the shared rule groups in xray format (best effort: a missing
-    # os-mosdns store just yields no group rules)
-    general = model.get('general') or {}
-    if general.get('sync_rule_groups') != '0' and os.path.exists(SYNC_GROUPS_SCRIPT):
-        try:
-            subprocess.run([sys.executable, SYNC_GROUPS_SCRIPT],
-                           capture_output=True, timeout=20)
-        except Exception:
-            pass
     cfg = build_config(model)
     text = json.dumps(cfg, indent=2, ensure_ascii=False)
     if preview:
