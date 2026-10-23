@@ -21,6 +21,32 @@ class SettingsController extends ApiMutableModelControllerBase
         return $this->searchBase('rulegroups');
     }
 
+    /* the rules page shows local and remote groups as two separate grids;
+       both live in the same rulegroups array, split by the source field */
+    public function searchLocalGroupsAction()
+    {
+        return $this->searchBase('rulegroups', null, null, function ($record) {
+            return (string)$record->source !== 'remote';
+        });
+    }
+
+    public function searchRemoteGroupsAction()
+    {
+        return $this->searchBase('rulegroups', null, null, function ($record) {
+            return (string)$record->source === 'remote';
+        });
+    }
+
+    public function addLocalGroupAction()
+    {
+        return $this->addBase('group', 'rulegroups', ['source' => 'local']);
+    }
+
+    public function addRemoteGroupAction()
+    {
+        return $this->addBase('group', 'rulegroups', ['source' => 'remote']);
+    }
+
     public function getGroupAction($uuid = null)
     {
         return $this->getBase('group', 'rulegroups', $uuid);

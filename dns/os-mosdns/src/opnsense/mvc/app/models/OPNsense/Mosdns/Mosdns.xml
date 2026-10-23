@@ -116,11 +116,12 @@
                     <Required>Y</Required>
                 </name>
                 <type type="OptionField">
+                    <default>direct</default>
                     <Required>Y</Required>
                     <OptionValues>
-                        <direct>direct</direct>
-                        <proxy>proxy</proxy>
-                        <block>block</block>
+                        <direct>直连</direct>
+                        <proxy>代理</proxy>
+                        <block>阻止</block>
                     </OptionValues>
                 </type>
                 <tags type="TextField">
@@ -130,8 +131,8 @@
                     <default>local</default>
                     <Required>Y</Required>
                     <OptionValues>
-                        <local>local</local>
-                        <remote>remote</remote>
+                        <local>本地</local>
+                        <remote>在线</remote>
                     </OptionValues>
                 </source>
                 <url type="TextField">

@@ -15,7 +15,7 @@
         <id>mosdns.rulegroups.group.type</id>
         <label>类型</label>
         <type>dropdown</type>
-        <help>direct 直连、proxy 代理、block 阻止。合并时按类型分别汇入 custom-direct / custom-proxy / custom-block.txt。</help>
+        <help>直连 / 代理 / 阻止。合并时按类型分别汇入 custom-direct / custom-proxy / custom-block.txt。</help>
     </field>
     <field>
         <id>mosdns.rulegroups.group.tags</id>
@@ -24,15 +24,9 @@
         <help>逗号分隔的自由标签，如 家里,办公室,AI。仅做标记和筛选，不影响匹配。</help>
     </field>
     <field>
-        <id>mosdns.rulegroups.group.source</id>
-        <label>来源</label>
-        <type>dropdown</type>
-        <help>local 本地文件（在本页编辑内容）；remote 在线地址（纯 txt 链接，可托管到 Vercel 等静态托管，家里和办公室填同一个地址即可复用）。</help>
-    </field>
-    <field>
         <id>mosdns.rulegroups.group.url</id>
         <label>在线地址</label>
         <type>text</type>
-        <help>仅 remote 用。纯 txt，一行一条规则（裸域名 / domain: / full:，# 开头为注释）。拉取后缓存在本地，断网时用上次缓存合并。</help>
+        <help>纯 txt 地址，一行一条规则（裸域名 / domain: / full:，# 开头为注释）。可托管到 Vercel 等静态托管，家里和办公室填同一个地址即可复用。拉取后缓存在本地，断网时用上次缓存合并。</help>
     </field>
 </form>
