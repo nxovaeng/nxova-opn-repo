@@ -120,7 +120,7 @@ def cmd_install(name, staging):
     errors = validate_content(content)
     if errors:
         print(json.dumps({'result': 'failed', 'errors': errors}, ensure_ascii=False))
-        sys.exit(1)
+        return
     # normalize: LF, strip blank lines
     lines = []
     for line in content.replace('\r\n', '\n').split('\n'):
@@ -300,7 +300,7 @@ def cmd_install_group(uuid, staging):
     errors = validate_content(content)
     if errors:
         print(json.dumps({'result': 'failed', 'errors': errors}, ensure_ascii=False))
-        sys.exit(1)
+        return
     os.makedirs(GROUPS_DIR, exist_ok=True)
     with open(local_p, 'w') as f:
         f.write(content.replace('\r\n', '\n'))
@@ -315,7 +315,7 @@ def cmd_fetch_group(uuid, url):
     _, cache_p = group_paths(uuid)
     if not (url.startswith('https://') or url.startswith('http://')):
         print(json.dumps({'result': 'failed', 'error': 'url must be http(s)'}, ensure_ascii=False))
-        sys.exit(1)
+        return
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'os-mosdns rule fetcher'})
         with urllib.request.urlopen(req, timeout=20) as resp:
@@ -325,13 +325,13 @@ def cmd_fetch_group(uuid, url):
         content = raw.decode('utf-8', 'replace')
     except Exception as e:
         print(json.dumps({'result': 'failed', 'error': f'fetch failed: {e}'}, ensure_ascii=False))
-        sys.exit(1)
+        return
     cleaned, dropped, converted = sanitize_content(content)
     if count_rules(cleaned) == 0:
         print(json.dumps({'result': 'failed',
                           'error': 'no valid rules after dropping unsupported lines',
                           'dropped': len(dropped)}, ensure_ascii=False))
-        sys.exit(1)
+        return
     os.makedirs(GROUPS_DIR, exist_ok=True)
     with open(cache_p, 'w') as f:
         f.write(cleaned)
