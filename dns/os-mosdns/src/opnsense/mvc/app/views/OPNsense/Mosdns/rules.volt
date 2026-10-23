@@ -125,36 +125,36 @@
             });
         }
 
-        // ---- merged files: stats + preview ----
-        function refreshFileStats(selectName) {
+        // ---- merged files: table (label / file / count / merged time /
+        // preview button); content loads on demand into a modal ----
+        function refreshFileStats() {
             ajaxCall("/api/mosdns/service/listRules", {}, function(data, status) {
                 var byName = {};
                 $.each(data['files'] || [], function(i, f) { byName[f['name']] = f; });
-                var order = ['custom_direct.txt', 'custom_proxy.txt', 'custom_block.txt', 'sync_direct.txt', 'sync_proxy.txt', 'sync_block.txt'];
-                var html = $.map(order, function(n) {
-                    var f = byName[n];
-                    return n.replace('.txt', '') + ' <b>' + (f ? f['count'] : 0) + '</b>';
-                }).join(' · ');
-                $("#mergedStats").html(html);
-                var $sel = $("#previewFileSelect");
-                var cur = selectName || $sel.val();
-                $sel.empty();
-                $.each(data['files'] || [], function(i, f) {
-                    $sel.append($("<option>").val(f['name']).text(f['name'] + "（" + f['count'] + " 条）"));
+                var meta = [
+                    ['custom_direct.txt', '自定义直连'], ['custom_proxy.txt', '自定义代理'], ['custom_block.txt', '自定义阻止'],
+                    ['sync_direct.txt', '同步直连'], ['sync_proxy.txt', '同步代理'], ['sync_block.txt', '同步阻止']
+                ];
+                var rows = $.map(meta, function(pair) {
+                    var f = byName[pair[0]] || {};
+                    return '<tr><td>' + pair[1] + '</td><td><code>' + pair[0] + '</code></td>'
+                         + '<td>' + (f['count'] || 0) + ' 条</td>'
+                         + '<td>' + fmtTime(f['mtime']) + '</td>'
+                         + '<td><button type="button" class="btn btn-xs btn-default merged-preview" data-name="' + pair[0] + '" data-label="' + pair[1] + '">预览</button></td></tr>';
                 });
-                if (cur && byName[cur]) $sel.val(cur);
-                loadPreview();
+                $('#mergedFilesBody').html(rows.join(''));
             });
         }
 
-        function loadPreview() {
-            var name = $("#previewFileSelect").val();
-            if (!name) return;
+        $(document).on('click', '.merged-preview', function() {
+            var name = $(this).data('name');
+            $('#mpTitle').text('预览合并文件：' + $(this).data('label') + '（' + name + '）');
+            $('#mpText').val('加载中…');
+            $('#mergedPreviewModal').modal('show');
             ajaxCall("/api/mosdns/service/getRule/" + name, {}, function(data, status) {
-                $("#previewContent").val(data['content'] || '');
+                $('#mpText').val(data['content'] || '（空）');
             });
-        }
-        $("#previewFileSelect").change(loadPreview);
+        });
 
         function mergeSummaryText(data) {
             if (!data || data['result'] !== 'ok') return null;
@@ -447,15 +447,32 @@
     <h4 style="margin-top: 0;">合并并应用</h4>
     <div>
         <button class="btn btn-primary btn-sm" id="mergeRulesAct" type="button">合并并应用</button>
-        <span class="text-muted" style="margin-left: 10px;">合并产物当前条数：<span id="mergedStats"></span></span>
+        <span class="text-muted" style="margin-left: 10px;">把启用的组按类别合并成下面六个文件，并重启 mosdns 生效。</span>
     </div>
     <div id="mergeMsg" style="margin-top: 6px;"></div>
-    <div style="margin-top: 12px;">
-        <div class="form-group">
-            <select id="previewFileSelect" class="form-control" style="max-width: 300px;"></select>
+    <table class="table table-striped table-condensed table-hover" style="margin-top: 12px;">
+        <thead>
+            <tr><th style="width: 16%;">合并文件</th><th style="width: 22%;">文件名</th><th style="width: 12%;">条数</th><th style="width: 28%;">合并更新时间</th><th></th></tr>
+        </thead>
+        <tbody id="mergedFilesBody"></tbody>
+    </table>
+    <p class="text-muted">六个文件由规则组合并生成（自定义组 → custom_*，在线组 → sync_*），不要直接编辑，改组即可；内容点「预览」查看。</p>
+</div>
+
+<div class="modal fade" id="mergedPreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="mpTitle">预览</h4>
+            </div>
+            <div class="modal-body">
+                <textarea id="mpText" rows="18" class="form-control" style="font-family: monospace;" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
         </div>
-        <textarea id="previewContent" rows="12" class="form-control" style="font-family: monospace;" readonly></textarea>
-        <p class="text-muted" style="margin-top: 6px;">sync_*.txt 由规则组合并生成，不要直接编辑（改组即可）。</p>
     </div>
 </div>
 
