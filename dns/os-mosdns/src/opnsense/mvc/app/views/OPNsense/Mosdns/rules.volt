@@ -234,8 +234,9 @@
             ajaxCall("/api/mosdns/service/fetchGroup/" + uuid, {}, function(data, status) {
                 if (data['result'] === 'ok') {
                     var txt = mergeSummaryText(data['merge']);
+                    var droppedTxt = (data['dropped'] || 0) > 0 ? '（已移除 ' + data['dropped'] + ' 条不支持的行）' : '';
                     $m.removeClass("text-muted text-danger").addClass("text-success")
-                      .text('已拉取 ' + (data['count'] || 0) + ' 条并合并，mosdns 已重启。' + (txt ? ' ' + txt : ''));
+                      .text('已拉取 ' + (data['count'] || 0) + ' 条并合并' + droppedTxt + '，mosdns 已重启。' + (txt ? ' ' + txt : ''));
                 } else if (data['errors'] && data['errors'].length) {
                     $m.removeClass("text-muted").addClass("text-danger").text('拉取内容校验失败（保留旧缓存）：' + data['errors'].join('；'));
                 } else {

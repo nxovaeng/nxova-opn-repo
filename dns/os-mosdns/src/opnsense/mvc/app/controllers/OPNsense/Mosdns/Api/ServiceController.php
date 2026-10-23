@@ -183,7 +183,8 @@ class ServiceController extends ApiMutableServiceControllerBase
         if (($merge['result'] ?? '') === 'ok') {
             (new Backend())->configdRun('mosdns restart');
         }
-        return ['result' => 'ok', 'count' => $data['count'] ?? 0, 'merge' => $merge];
+        return ['result' => 'ok', 'count' => $data['count'] ?? 0,
+            'dropped' => $data['dropped'] ?? 0, 'merge' => $merge];
     }
 
     /**

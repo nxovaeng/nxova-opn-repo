@@ -186,6 +186,27 @@ def validate_content(content):
     return errors
 
 
+def sanitize_content(content):
+    """Drop lines outside the supported rule format (for REMOTE lists:
+    upstream lists are third-party data, a few bad lines must not reject
+    the whole file -- and must never reach mosdns, which exits on a bad
+    rule line). Returns (cleaned_content, dropped_lines). Comments and
+    blank lines are kept (inert); local group content is NOT sanitized,
+    it stays strictly validated so typos surface as errors."""
+    kept, dropped = [], []
+    for line in content.replace('\r\n', '\n').split('\n'):
+        t = line.strip()
+        if not t or t.startswith('#'):
+            if t:
+                kept.append(t)
+            continue
+        if validate_rule(t, 0) is None:
+            kept.append(t)
+        else:
+            dropped.append(t)
+    return ('\n'.join(kept) + ('\n' if kept else '')), dropped
+
+
 def cmd_validate():
     """Read content from stdin, print validation result as JSON."""
     content = sys.stdin.read()
@@ -299,14 +320,18 @@ def cmd_fetch_group(uuid, url):
     except Exception as e:
         print(json.dumps({'result': 'failed', 'error': f'fetch failed: {e}'}, ensure_ascii=False))
         sys.exit(1)
-    errors = validate_content(content)
-    if errors:
-        print(json.dumps({'result': 'failed', 'errors': errors[:20]}, ensure_ascii=False))
+    cleaned, dropped = sanitize_content(content)
+    if count_rules(cleaned) == 0:
+        print(json.dumps({'result': 'failed',
+                          'error': 'no valid rules after dropping unsupported lines',
+                          'dropped': len(dropped)}, ensure_ascii=False))
         sys.exit(1)
     os.makedirs(GROUPS_DIR, exist_ok=True)
     with open(cache_p, 'w') as f:
-        f.write(content.replace('\r\n', '\n'))
-    print(json.dumps({'result': 'ok', 'count': count_rules(content)}, ensure_ascii=False))
+        f.write(cleaned)
+    print(json.dumps({'result': 'ok', 'count': count_rules(cleaned),
+                      'dropped': len(dropped), 'dropped_sample': dropped[:5]},
+                     ensure_ascii=False))
 
 
 def cmd_delete_group(uuid):
@@ -391,8 +416,16 @@ def cmd_merge(staging):
                 continue
             errors = validate_content(content)
             if errors:
-                warnings.append(f'组「{name}」跳过：内容校验失败（{errors[0]}）')
-                continue
+                if gsource == 'remote':
+                    content, dropped = sanitize_content(content)
+                    if dropped:
+                        warnings.append(f'组「{name}」移除了 {len(dropped)} 条不支持的行')
+                    if count_rules(content) == 0:
+                        warnings.append(f'组「{name}」跳过：清洗后无有效规则')
+                        continue
+                else:
+                    warnings.append(f'组「{name}」跳过：内容校验失败（{errors[0]}）')
+                    continue
             tags = _hdr(g.get('tags'))
             parts.append(f'# ===== {name} [{gtype}/{g.get("source", "local")}]'
                          + (f' tags: {tags}' if tags else '') + ' =====\n')
