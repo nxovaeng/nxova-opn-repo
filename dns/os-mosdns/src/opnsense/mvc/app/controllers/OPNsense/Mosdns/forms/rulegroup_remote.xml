@@ -21,6 +21,6 @@
         <id>group.url</id>
         <label>在线地址</label>
         <type>text</type>
-        <help>纯 txt 地址，一行一条规则（裸域名 / domain: / full: / regexp:，# 开头为注释）。对话框上方有预设清单下拉可选（Loyalsoldier 维护的国内外常用名单）。也可自托管到 Vercel 等静态托管，家里和办公室填同一个地址即可复用。拉取后缓存在本地，断网时用上次缓存合并。</help>
+        <help>纯 txt 地址，一行一条规则（裸域名 / domain: / full: / regexp:，# 开头为注释）。对话框上方有预设清单下拉可选（Loyalsoldier 维护的国内外常用名单，含 GitHub 直连与 jsdelivr CDN 加速双源）。也可自托管到 Vercel 等静态托管，家里和办公室填同一个地址即可复用。拉取后缓存在本地，断网时用上次缓存合并。</help>
     </field>
 </form>

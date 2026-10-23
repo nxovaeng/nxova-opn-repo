@@ -33,8 +33,10 @@
     function presetOptions(type) {
         var out = [];
         $.each(PRESET_DEFS[type] || [], function(i, d) {
-            out.push({label: d[0], name: d[1],
+            out.push({label: d[0] + '（GitHub 直连）', name: d[1],
                       url: 'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/' + d[2]});
+            out.push({label: d[0] + '（jsdelivr CDN 加速）', name: d[1],
+                      url: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/' + d[2]});
         });
         return out;
     }
@@ -83,10 +85,14 @@
         });
 
         // ---- preset dropdown inside each remote dialog (fills the URL field) ----
+        // NOTE: match the <input> precisely -- core's form_input_tr renders five
+        // elements whose id ends with the field id (row_*, control_label_*,
+        // help_for_*, the input itself, help_block_*); a bare [id$=".url"]
+        // selector matches all five and before() would insert a select at each.
         $.each({Direct: 'direct', Proxy: 'proxy', Block: 'block'}, function(capT, t) {
             var $dlg = $('#DialogRemote' + capT);
-            var $url = $dlg.find('[id$=".url"]');
-            if (!$dlg.length || !$url.length) return;
+            var $url = $dlg.find('input[id$=".url"]').first();
+            if (!$dlg.length || !$url.length || $dlg.find('select.grp-preset').length) return;
             var $sel = $('<select class="form-control grp-preset" style="margin-bottom: 6px;">'
                        + '<option value="">— 选择预设清单（自动填入地址）—</option></select>');
             $.each(presetOptions(t), function(i, p) {
@@ -96,7 +102,7 @@
                 var v = $(this).val();
                 if (!v) return;
                 $url.val(v).trigger('change');
-                var $nm = $dlg.find('[id$=".name"]');
+                var $nm = $dlg.find('input[id$=".name"]').first();
                 if ($nm.length && !$nm.val()) {
                     $nm.val($(this).find(':selected').data('gname'));
                 }
