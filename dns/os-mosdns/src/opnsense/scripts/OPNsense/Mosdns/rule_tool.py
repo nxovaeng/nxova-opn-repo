@@ -193,18 +193,23 @@ def sanitize_content(content):
     rule line). Returns (cleaned_content, dropped_lines). Comments and
     blank lines are kept (inert); local group content is NOT sanitized,
     it stays strictly validated so typos surface as errors."""
-    kept, dropped = [], []
+    kept, dropped, converted = [], [], []
     for line in content.replace('\r\n', '\n').split('\n'):
         t = line.strip()
         if not t or t.startswith('#'):
             if t:
                 kept.append(t)
             continue
+        if t.startswith('*.') and validate_rule('domain:' + t[2:], 0) is None:
+            # wildcard is exactly a suffix match: *.wild.com == domain:wild.com
+            kept.append('domain:' + t[2:])
+            converted.append(t)
+            continue
         if validate_rule(t, 0) is None:
             kept.append(t)
         else:
             dropped.append(t)
-    return ('\n'.join(kept) + ('\n' if kept else '')), dropped
+    return ('\n'.join(kept) + ('\n' if kept else '')), dropped, converted
 
 
 def cmd_validate():
@@ -320,7 +325,7 @@ def cmd_fetch_group(uuid, url):
     except Exception as e:
         print(json.dumps({'result': 'failed', 'error': f'fetch failed: {e}'}, ensure_ascii=False))
         sys.exit(1)
-    cleaned, dropped = sanitize_content(content)
+    cleaned, dropped, converted = sanitize_content(content)
     if count_rules(cleaned) == 0:
         print(json.dumps({'result': 'failed',
                           'error': 'no valid rules after dropping unsupported lines',
@@ -330,7 +335,8 @@ def cmd_fetch_group(uuid, url):
     with open(cache_p, 'w') as f:
         f.write(cleaned)
     print(json.dumps({'result': 'ok', 'count': count_rules(cleaned),
-                      'dropped': len(dropped), 'dropped_sample': dropped[:5]},
+                      'dropped': len(dropped), 'dropped_sample': dropped[:5],
+                      'converted': len(converted)},
                      ensure_ascii=False))
 
 
@@ -417,9 +423,14 @@ def cmd_merge(staging):
             errors = validate_content(content)
             if errors:
                 if gsource == 'remote':
-                    content, dropped = sanitize_content(content)
+                    content, dropped, converted = sanitize_content(content)
+                    notes = []
                     if dropped:
-                        warnings.append(f'组「{name}」移除了 {len(dropped)} 条不支持的行')
+                        notes.append(f'移除了 {len(dropped)} 条不支持的行')
+                    if converted:
+                        notes.append(f'转换了 {len(converted)} 条通配符为 domain:')
+                    if notes:
+                        warnings.append(f'组「{name}」' + '，'.join(notes))
                     if count_rules(content) == 0:
                         warnings.append(f'组「{name}」跳过：清洗后无有效规则')
                         continue

@@ -184,7 +184,8 @@ class ServiceController extends ApiMutableServiceControllerBase
             (new Backend())->configdRun('mosdns restart');
         }
         return ['result' => 'ok', 'count' => $data['count'] ?? 0,
-            'dropped' => $data['dropped'] ?? 0, 'merge' => $merge];
+            'dropped' => $data['dropped'] ?? 0, 'converted' => $data['converted'] ?? 0,
+            'merge' => $merge];
     }
 
     /**
