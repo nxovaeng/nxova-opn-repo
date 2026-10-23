@@ -232,9 +232,8 @@
             $m.removeClass("text-danger text-success").addClass("text-muted").text("保存中…");
             ajaxCall("/api/mosdns/service/setGroupContent/" + gcUuid, {content: $("#gcText").val()}, function(data, status) {
                 if (data['result'] === 'saved') {
-                    var txt = mergeSummaryText(data['merge']);
                     $m.removeClass("text-muted text-danger").addClass("text-success")
-                      .text('已保存并合并，mosdns 已重启。' + (txt ? ' ' + txt : ''));
+                      .text('已保存到文件。点页面下方「合并并应用」后合并生效（会重启 mosdns）。');
                 } else if (data['errors'] && data['errors'].length) {
                     $m.removeClass("text-muted").addClass("text-danger").text('校验失败：' + data['errors'].join('；'));
                 } else {
@@ -252,13 +251,12 @@
             $m.removeClass("text-danger text-success").addClass("text-muted").text("拉取中…");
             ajaxCall("/api/mosdns/service/fetchGroup/" + uuid, {}, function(data, status) {
                 if (data['result'] === 'ok') {
-                    var txt = mergeSummaryText(data['merge']);
                     var cleanNotes = [];
                     if ((data['dropped'] || 0) > 0) cleanNotes.push('已移除 ' + data['dropped'] + ' 条不支持的行');
                     if ((data['converted'] || 0) > 0) cleanNotes.push('转换 ' + data['converted'] + ' 条通配符为 domain:');
                     var droppedTxt = cleanNotes.length ? '（' + cleanNotes.join('，') + '）' : '';
                     $m.removeClass("text-muted text-danger").addClass("text-success")
-                      .text('已拉取 ' + (data['count'] || 0) + ' 条并合并' + droppedTxt + '，mosdns 已重启。' + (txt ? ' ' + txt : ''));
+                      .text('已拉取 ' + (data['count'] || 0) + ' 条，缓存已更新' + droppedTxt + '。点页面下方「合并并应用」后生效。');
                 } else if (data['errors'] && data['errors'].length) {
                     $m.removeClass("text-muted").addClass("text-danger").text('拉取内容校验失败（保留旧缓存）：' + data['errors'].join('；'));
                 } else {
@@ -277,7 +275,7 @@
     规则组只做 mosdns 的粗粒度分流：哪些域名<b>直连</b>、哪些走<b>代理</b>、哪些<b>阻止</b>，按类别分开管理。
     每类里<b>在线组</b>在上（填一个纯 txt 地址，或从预设清单里选；拉取后缓存到本地）、<b>自定义组</b>在下（内容在本页弹窗里维护）。
     规则一行一条：裸域名（后缀匹配）/ domain: / full: / regexp:，# 开头是注释；单个顶级域名（如 cn）不支持。在线列表同步时会清洗：通配符 *.x 转 domain:x，其余不支持的行（含顶级域名行）直接移除并计数。
-    改组信息（名称/标签/开关）后点页面下方「合并并应用」生效；关掉的组不参与合并。
+    编辑内容、拉取、改组信息（名称/标签/开关）都只存文件，点页面下方「合并并应用」才统一合并并重启 mosdns 生效；关掉的组不参与合并。
 </p>
 
 <ul class="nav nav-tabs" data-tabs="tabs" id="ruletabs">
@@ -311,7 +309,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容（成功自动合并），「查看缓存」看上次拉到的内容。拉取失败保留旧缓存。</p>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「合并并应用」才生效。</p>
 
         <h4 style="margin-top: 18px;">自定义组（直连）</h4>
         <table id="grid-local-direct" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalDirect">
@@ -336,7 +334,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑，保存后自动合并）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「合并并应用」才生效）。</p>
     </div>
     <div id="tab-proxy" class="tab-pane fade">
         <h4 style="margin-top: 0;">在线组（代理）</h4>
@@ -363,7 +361,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容（成功自动合并），「查看缓存」看上次拉到的内容。拉取失败保留旧缓存。</p>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「合并并应用」才生效。</p>
 
         <h4 style="margin-top: 18px;">自定义组（代理）</h4>
         <table id="grid-local-proxy" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalProxy">
@@ -388,7 +386,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑，保存后自动合并）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「合并并应用」才生效）。</p>
     </div>
     <div id="tab-block" class="tab-pane fade">
         <h4 style="margin-top: 0;">在线组（阻止）</h4>
@@ -415,7 +413,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容（成功自动合并），「查看缓存」看上次拉到的内容。拉取失败保留旧缓存。</p>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「合并并应用」才生效。</p>
 
         <h4 style="margin-top: 18px;">自定义组（阻止）</h4>
         <table id="grid-local-block" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalBlock">
@@ -440,7 +438,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑，保存后自动合并）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「合并并应用」才生效）。</p>
     </div>
 </div>
 <div id="remoteMsg" style="margin-top: 6px;"></div>
@@ -475,7 +473,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="button" class="btn btn-primary" id="gcSave">保存并合并</button>
+                <button type="button" class="btn btn-primary" id="gcSave">保存</button>
             </div>
         </div>
     </div>

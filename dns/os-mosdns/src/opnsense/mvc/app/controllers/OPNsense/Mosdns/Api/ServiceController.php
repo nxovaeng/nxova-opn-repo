@@ -150,16 +150,16 @@ class ServiceController extends ApiMutableServiceControllerBase
             }
             return ['result' => 'failed', 'output' => $result];
         }
-        $merge = $this->runMerge();
-        if (($merge['result'] ?? '') === 'ok') {
-            (new Backend())->configdRun('mosdns restart');
-        }
-        return ['result' => 'saved', 'merge' => $merge];
+        // Deliberately no merge/restart here: editing only writes the
+        // group's file. Merging + mosdns restart happens once, when the
+        // user clicks Merge & Apply (mergeRulesAction).
+        return ['result' => 'saved'];
     }
 
     /**
-     * Fetch a remote group's URL into its cache (validated; a failed fetch
-     * keeps the old cache), then merge and restart.
+     * Fetch a remote group's URL into its cache (sanitized; a failed fetch
+     * keeps the old cache). Like editing, this only updates the file --
+     * merging + mosdns restart is Merge & Apply's job.
      */
     public function fetchGroupAction($uuid)
     {
@@ -179,13 +179,8 @@ class ServiceController extends ApiMutableServiceControllerBase
         if (!is_array($data) || ($data['result'] ?? '') !== 'ok') {
             return is_array($data) ? $data : ['result' => 'failed', 'error' => $raw];
         }
-        $merge = $this->runMerge();
-        if (($merge['result'] ?? '') === 'ok') {
-            (new Backend())->configdRun('mosdns restart');
-        }
         return ['result' => 'ok', 'count' => $data['count'] ?? 0,
-            'dropped' => $data['dropped'] ?? 0, 'converted' => $data['converted'] ?? 0,
-            'merge' => $merge];
+            'dropped' => $data['dropped'] ?? 0, 'converted' => $data['converted'] ?? 0];
     }
 
     /**
