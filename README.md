@@ -8,7 +8,6 @@ OPNsense 自用插件与配套守护进程仓库：基于域名的分流（mosdn
 nxova-opn-repo/
 ├── README.md
 ├── dns/os-mosdns/        # mosdns DNS 引擎插件（配 pf-aliasd）
-├── net/os-netbox/        # 策略路由总控插件（meta，聚合 mosdns/tun2socks/xray）
 ├── net/os-tun2socks/     # TUN 转 SOCKS5 桥接插件
 ├── net/os-xray/          # xray-core 路由引擎插件（镜像，见下）
 ├── daemon/pf-aliasd/     # Go 守护进程：DNS 解析结果 → pf 表（独立 go module）
