@@ -8,53 +8,103 @@
         return $('<div>').text(s == null ? '' : String(s)).html();
     }
 
-    $(document).ready(function() {
-        var typeBadges = {
-            direct: '<span class="label label-success">直连</span>',
-            proxy: '<span class="label label-primary">代理</span>',
-            block: '<span class="label label-danger">阻止</span>'
-        };
-        function typeFmt(column, row) { return typeBadges[row.type] || escHtml(row.type); }
+    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-        // ---- local groups grid (content edited in a modal) ----
-        $("#grid-groups-local").UIBootgrid({
-            search: '/api/mosdns/settings/searchLocalGroups',
-            get: '/api/mosdns/settings/getGroup/',
-            set: '/api/mosdns/settings/setGroup/',
-            add: '/api/mosdns/settings/addLocalGroup/',
-            del: '/api/mosdns/settings/delGroup/',
-            toggle: '/api/mosdns/settings/toggleGroup/',
-            formatters: {
-                typeFmt: typeFmt,
-                contentFmt: function(column, row) {
-                    return '<button type="button" class="btn btn-xs btn-primary grp-content" data-mode="edit" data-uuid="' + row.uuid + '">'
-                         + '<span class="fa fa-pencil"></span> 修改内容</button>';
-                }
-            }
+    /* Preset online lists (Loyalsoldier/v2ray-rules-dat, release branch),
+       per category; each entry: [display name, suggested group name, file] */
+    var PRESET_DEFS = {
+        direct: [
+            ['直连域名 direct-list', 'direct-list', 'direct-list.txt'],
+            ['中国域名 china-list', 'china-list', 'china-list.txt'],
+            ['Apple 中国 apple-cn', 'apple-cn', 'apple-cn.txt'],
+            ['Google 中国 google-cn', 'google-cn', 'google-cn.txt']
+        ],
+        proxy: [
+            ['代理域名 proxy-list', 'proxy-list', 'proxy-list.txt'],
+            ['GFW 列表 gfw', 'gfw', 'gfw.txt']
+        ],
+        block: [
+            ['广告拒绝 reject-list', 'reject-list', 'reject-list.txt'],
+            ['Win 隐私跟踪 win-spy', 'win-spy', 'win-spy.txt'],
+            ['Win 系统更新 win-update', 'win-update', 'win-update.txt'],
+            ['Win 附加跟踪 win-extra', 'win-extra', 'win-extra.txt']
+        ]
+    };
+    function presetOptions(type) {
+        var out = [];
+        $.each(PRESET_DEFS[type] || [], function(i, d) {
+            out.push({label: d[0] + '（GitHub）', name: d[1],
+                      url: 'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/' + d[2]});
+            out.push({label: d[0] + '（jsdelivr）', name: d[1],
+                      url: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/' + d[2]});
+        });
+        return out;
+    }
+
+    $(document).ready(function() {
+        function urlFmt(column, row) {
+            if (!row.url) return '<span class="text-muted">—</span>';
+            var u = escHtml(row.url);
+            return '<span title="' + u + '">' + (row.url.length > 42 ? u.substring(0, 42) + '…' : u) + '</span>';
+        }
+        function contentFmt(column, row) {
+            return '<button type="button" class="btn btn-xs btn-primary grp-content" data-mode="edit" data-uuid="' + row.uuid + '">'
+                 + '<span class="fa fa-pencil"></span> 修改内容</button>';
+        }
+        function opsFmt(column, row) {
+            return '<button type="button" class="btn btn-xs btn-default grp-fetch" data-uuid="' + row.uuid + '">'
+                 + '<span class="fa fa-refresh"></span> 拉取</button> '
+                 + '<button type="button" class="btn btn-xs btn-default grp-content" data-mode="view" data-uuid="' + row.uuid + '">'
+                 + '<span class="fa fa-eye"></span> 查看缓存</button>';
+        }
+
+        // ---- six grids: per type, remote (online) on top, local (custom) below ----
+        $.each(['direct', 'proxy', 'block'], function(i, t) {
+            $("#grid-remote-" + t).UIBootgrid({
+                search: '/api/mosdns/settings/searchRemote' + cap(t) + 'Groups',
+                get: '/api/mosdns/settings/getGroup/',
+                set: '/api/mosdns/settings/setGroup/',
+                add: '/api/mosdns/settings/addRemote' + cap(t) + 'Group/',
+                del: '/api/mosdns/settings/delGroup/',
+                toggle: '/api/mosdns/settings/toggleGroup/',
+                formatters: { urlFmt: urlFmt, opsFmt: opsFmt }
+            });
+            $("#grid-local-" + t).UIBootgrid({
+                search: '/api/mosdns/settings/searchLocal' + cap(t) + 'Groups',
+                get: '/api/mosdns/settings/getGroup/',
+                set: '/api/mosdns/settings/setGroup/',
+                add: '/api/mosdns/settings/addLocal' + cap(t) + 'Group/',
+                del: '/api/mosdns/settings/delGroup/',
+                toggle: '/api/mosdns/settings/toggleGroup/',
+                formatters: { contentFmt: contentFmt }
+            });
         });
 
-        // ---- remote groups grid (content fetched from URL, cache viewable) ----
-        $("#grid-groups-remote").UIBootgrid({
-            search: '/api/mosdns/settings/searchRemoteGroups',
-            get: '/api/mosdns/settings/getGroup/',
-            set: '/api/mosdns/settings/setGroup/',
-            add: '/api/mosdns/settings/addRemoteGroup/',
-            del: '/api/mosdns/settings/delGroup/',
-            toggle: '/api/mosdns/settings/toggleGroup/',
-            formatters: {
-                typeFmt: typeFmt,
-                urlFmt: function(column, row) {
-                    if (!row.url) return '<span class="text-muted">—</span>';
-                    var u = escHtml(row.url);
-                    return '<span title="' + u + '">' + (row.url.length > 42 ? u.substring(0, 42) + '…' : u) + '</span>';
-                },
-                opsFmt: function(column, row) {
-                    return '<button type="button" class="btn btn-xs btn-default grp-fetch" data-uuid="' + row.uuid + '">'
-                         + '<span class="fa fa-refresh"></span> 拉取</button> '
-                         + '<button type="button" class="btn btn-xs btn-default grp-content" data-mode="view" data-uuid="' + row.uuid + '">'
-                         + '<span class="fa fa-eye"></span> 查看缓存</button>';
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function() {
+            $(window).trigger('resize');
+        });
+
+        // ---- preset dropdown inside each remote dialog (fills the URL field) ----
+        $.each({Direct: 'direct', Proxy: 'proxy', Block: 'block'}, function(capT, t) {
+            var $dlg = $('#DialogRemote' + capT);
+            var $url = $dlg.find('[id$=".url"]');
+            if (!$dlg.length || !$url.length) return;
+            var $sel = $('<select class="form-control grp-preset" style="margin-bottom: 6px;">'
+                       + '<option value="">— 选择预设清单（自动填入地址）—</option></select>');
+            $.each(presetOptions(t), function(i, p) {
+                $sel.append($('<option>').val(p.url).text(p.label).attr('data-gname', p.name));
+            });
+            $sel.on('change', function() {
+                var v = $(this).val();
+                if (!v) return;
+                $url.val(v).trigger('change');
+                var $nm = $dlg.find('[id$=".name"]');
+                if ($nm.length && !$nm.val()) {
+                    $nm.val($(this).find(':selected').data('gname'));
                 }
-            }
+                $(this).val('');
+            });
+            $url.before($sel);
         });
 
         // ---- merged files: stats + preview ----
@@ -65,7 +115,7 @@
                 var order = ['sync_direct.txt', 'sync_proxy.txt', 'sync_block.txt'];
                 var html = $.map(order, function(n) {
                     var f = byName[n];
-                    return n.replace('custom-', '').replace('.txt', '') + ' <b>' + (f ? f['count'] : 0) + '</b>';
+                    return n.replace('.txt', '') + ' <b>' + (f ? f['count'] : 0) + '</b>';
                 }).join(' · ');
                 $("#mergedStats").html(html);
                 var $sel = $("#previewFileSelect");
@@ -137,7 +187,9 @@
             $("#groupContentModal").modal('show');
             ajaxCall("/api/mosdns/settings/getGroup/" + uuid, {}, function(gdata, status) {
                 var g = (gdata && gdata['group']) || {};
-                $("#gcTitle").text((edit ? '修改内容' : '查看缓存') + ' - ' + (g['name'] || ''));
+                var nm = g['name'];
+                if (nm && typeof nm === 'object') nm = '';
+                $("#gcTitle").text((edit ? '修改内容' : '查看缓存') + (nm ? ' - ' + nm : ''));
             });
             ajaxCall("/api/mosdns/service/getGroupContent/" + uuid, {}, function(data, status) {
                 if (data['result'] !== 'ok') {
@@ -197,85 +249,192 @@
     });
 </script>
 
-<div class="content-box" style="margin-bottom: 15px;">
-    <p class="text-muted" style="margin-bottom: 8px;">
-        规则组是<b>纯 txt 域名清单</b>（一行一条：裸域名 / domain: / full:，# 开头是注释），带类型、标签标记，是唯一的规则源。
-        本地组在本页维护内容；在线组只填一个纯 txt 地址（可托管到 Vercel 等静态托管），家里和办公室填同一个地址就能复用同一份规则。
-        保存或应用时，启用的组会被合并进 mosdns 的 sync_direct / sync_proxy / sync_block.txt 并导出共享清单；
-        xray 等其他工具读同一份清单和 txt，按各自格式转换使用。关掉的组不参与合并，可临时停用。
-    </p>
+<p class="text-muted" style="margin-bottom: 10px;">
+    规则组只做 mosdns 的粗粒度分流：哪些域名<b>直连</b>、哪些走<b>代理</b>、哪些<b>阻止</b>，按类别分开管理。
+    每类里<b>在线组</b>在上（填一个纯 txt 地址，或从预设清单里选；拉取后缓存到本地）、<b>自定义组</b>在下（内容在本页弹窗里维护）。
+    规则一行一条：裸域名（后缀匹配，含单个顶级域如 cn）/ domain: / full: / regexp:，# 开头是注释。
+    改组信息（名称/标签/开关）后点页面下方「合并并应用」生效；关掉的组不参与合并。
+</p>
+
+<ul class="nav nav-tabs" data-tabs="tabs" id="ruletabs">
+    <li class="active"><a data-toggle="tab" href="#tab-direct">直连</a></li>
+    <li><a data-toggle="tab" href="#tab-proxy">代理</a></li>
+    <li><a data-toggle="tab" href="#tab-block">阻止</a></li>
+</ul>
+<div class="tab-content content-box tab-content" style="padding-top: 12px;">
+    <div id="tab-direct" class="tab-pane fade in active">
+        <h4 style="margin-top: 0;">在线组（直连）</h4>
+        <table id="grid-remote-direct" class="table table-condensed table-hover table-striped" data-editDialog="DialogRemoteDirect">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
+                    <th data-column-id="name" data-type="string">名称</th>
+                    <th data-column-id="tags" data-type="string">标签</th>
+                    <th data-column-id="url" data-type="string" data-formatter="urlFmt">在线地址</th>
+                    <th data-column-id="ops" data-width="12em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容（成功自动合并），「查看缓存」看上次拉到的内容。拉取失败保留旧缓存。</p>
+
+        <h4 style="margin-top: 18px;">自定义组（直连）</h4>
+        <table id="grid-local-direct" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalDirect">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
+                    <th data-column-id="name" data-type="string">名称</th>
+                    <th data-column-id="tags" data-type="string">标签</th>
+                    <th data-column-id="content" data-width="9em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        <p class="text-muted">新建组后点行内「修改内容」填写规则（弹窗编辑，保存后自动合并）。</p>
+    </div>
+    <div id="tab-proxy" class="tab-pane fade">
+        <h4 style="margin-top: 0;">在线组（代理）</h4>
+        <table id="grid-remote-proxy" class="table table-condensed table-hover table-striped" data-editDialog="DialogRemoteProxy">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
+                    <th data-column-id="name" data-type="string">名称</th>
+                    <th data-column-id="tags" data-type="string">标签</th>
+                    <th data-column-id="url" data-type="string" data-formatter="urlFmt">在线地址</th>
+                    <th data-column-id="ops" data-width="12em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容（成功自动合并），「查看缓存」看上次拉到的内容。拉取失败保留旧缓存。</p>
+
+        <h4 style="margin-top: 18px;">自定义组（代理）</h4>
+        <table id="grid-local-proxy" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalProxy">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
+                    <th data-column-id="name" data-type="string">名称</th>
+                    <th data-column-id="tags" data-type="string">标签</th>
+                    <th data-column-id="content" data-width="9em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        <p class="text-muted">新建组后点行内「修改内容」填写规则（弹窗编辑，保存后自动合并）。</p>
+    </div>
+    <div id="tab-block" class="tab-pane fade">
+        <h4 style="margin-top: 0;">在线组（阻止）</h4>
+        <table id="grid-remote-block" class="table table-condensed table-hover table-striped" data-editDialog="DialogRemoteBlock">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
+                    <th data-column-id="name" data-type="string">名称</th>
+                    <th data-column-id="tags" data-type="string">标签</th>
+                    <th data-column-id="url" data-type="string" data-formatter="urlFmt">在线地址</th>
+                    <th data-column-id="ops" data-width="12em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容（成功自动合并），「查看缓存」看上次拉到的内容。拉取失败保留旧缓存。</p>
+
+        <h4 style="margin-top: 18px;">自定义组（阻止）</h4>
+        <table id="grid-local-block" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalBlock">
+            <thead>
+                <tr>
+                    <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
+                    <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
+                    <th data-column-id="name" data-type="string">名称</th>
+                    <th data-column-id="tags" data-type="string">标签</th>
+                    <th data-column-id="content" data-width="9em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
+                    <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td>
+                        <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
+                        <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        <p class="text-muted">新建组后点行内「修改内容」填写规则（弹窗编辑，保存后自动合并）。</p>
+    </div>
+</div>
+<div id="remoteMsg" style="margin-top: 6px;"></div>
+
+<div class="content-box" style="margin-top: 15px;">
+    <h4 style="margin-top: 0;">合并并应用</h4>
     <div>
         <button class="btn btn-primary btn-sm" id="mergeRulesAct" type="button">合并并应用</button>
-        <span class="text-muted" style="margin-left: 10px;">内置文件当前条数：<span id="mergedStats"></span></span>
+        <span class="text-muted" style="margin-left: 10px;">合并产物当前条数：<span id="mergedStats"></span></span>
     </div>
     <div id="mergeMsg" style="margin-top: 6px;"></div>
-</div>
-
-<div class="content-box">
-    <h4 style="margin-top: 0;">本地组</h4>
-    <table id="grid-groups-local" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalGroup">
-        <thead>
-            <tr>
-                <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
-                <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
-                <th data-column-id="name" data-type="string">名称</th>
-                <th data-column-id="type" data-width="7em" data-type="string" data-formatter="typeFmt">类型</th>
-                <th data-column-id="tags" data-type="string">标签</th>
-                <th data-column-id="content" data-width="9em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
-                <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-            <tr>
-                <td></td>
-                <td>
-                    <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
-                    <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
-                </td>
-            </tr>
-        </tfoot>
-    </table>
-    <p class="text-muted">新建组后点行内「修改内容」填写规则（弹窗编辑，保存后自动合并）；改组信息（名称/类型/开关）后点上方「合并并应用」生效。</p>
-</div>
-
-<div class="content-box" style="margin-top: 15px;">
-    <h4 style="margin-top: 0;">在线组</h4>
-    <table id="grid-groups-remote" class="table table-condensed table-hover table-striped" data-editDialog="DialogRemoteGroup">
-        <thead>
-            <tr>
-                <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
-                <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
-                <th data-column-id="name" data-type="string">名称</th>
-                <th data-column-id="type" data-width="7em" data-type="string" data-formatter="typeFmt">类型</th>
-                <th data-column-id="tags" data-type="string">标签</th>
-                <th data-column-id="url" data-type="string" data-formatter="urlFmt">在线地址</th>
-                <th data-column-id="ops" data-width="12em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
-                <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-            <tr>
-                <td></td>
-                <td>
-                    <button data-action="add" type="button" class="btn btn-xs btn-default"><span class="fa fa-plus"></span></button>
-                    <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o"></span></button>
-                </td>
-            </tr>
-        </tfoot>
-    </table>
-    <div id="remoteMsg" style="margin-top: 6px;"></div>
-    <p class="text-muted">新建组填好在线地址后，点行内「拉取」获取内容（成功后自动合并）；「查看缓存」看上次拉取到的内容。拉取失败保留旧缓存。</p>
-</div>
-
-<div class="content-box" style="margin-top: 15px;">
-    <h4 style="margin-top: 0;">合并结果预览</h4>
-    <p class="text-muted">sync_*.txt 由规则组合并生成，不要直接编辑（改组即可）。</p>
-    <div class="form-group">
-        <select id="previewFileSelect" class="form-control" style="max-width: 300px;"></select>
+    <div style="margin-top: 12px;">
+        <div class="form-group">
+            <select id="previewFileSelect" class="form-control" style="max-width: 300px;"></select>
+        </div>
+        <textarea id="previewContent" rows="12" class="form-control" style="font-family: monospace;" readonly></textarea>
+        <p class="text-muted" style="margin-top: 6px;">sync_*.txt 由规则组合并生成，不要直接编辑（改组即可）。</p>
     </div>
-    <textarea id="previewContent" rows="12" class="form-control" style="font-family: monospace;" readonly></textarea>
 </div>
 
 <div class="modal fade" id="groupContentModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -298,5 +457,9 @@
     </div>
 </div>
 
-{{ partial("layout_partials/base_dialog",['fields':rulegroupLocalForm,'id':'DialogLocalGroup','label':lang._('编辑本地组')])}}
-{{ partial("layout_partials/base_dialog",['fields':rulegroupRemoteForm,'id':'DialogRemoteGroup','label':lang._('编辑在线组')])}}
+{{ partial("layout_partials/base_dialog",['fields':rulegroupLocalForm,'id':'DialogLocalDirect','label':lang._('编辑直连自定义组')])}}
+{{ partial("layout_partials/base_dialog",['fields':rulegroupRemoteForm,'id':'DialogRemoteDirect','label':lang._('编辑直连在线组')])}}
+{{ partial("layout_partials/base_dialog",['fields':rulegroupLocalForm,'id':'DialogLocalProxy','label':lang._('编辑代理自定义组')])}}
+{{ partial("layout_partials/base_dialog",['fields':rulegroupRemoteForm,'id':'DialogRemoteProxy','label':lang._('编辑代理在线组')])}}
+{{ partial("layout_partials/base_dialog",['fields':rulegroupLocalForm,'id':'DialogLocalBlock','label':lang._('编辑阻止自定义组')])}}
+{{ partial("layout_partials/base_dialog",['fields':rulegroupRemoteForm,'id':'DialogRemoteBlock','label':lang._('编辑阻止在线组')])}}

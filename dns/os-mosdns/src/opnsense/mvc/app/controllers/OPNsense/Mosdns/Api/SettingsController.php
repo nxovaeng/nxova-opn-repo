@@ -14,47 +14,94 @@ class SettingsController extends ApiMutableModelControllerBase
     protected static $internalModelName = 'mosdns';
     protected static $internalModelClass = '\OPNsense\Mosdns\Mosdns';
 
-    /* ---- rule groups (canonical plain-txt domain lists) ---- */
+    /* ---- rule groups (canonical plain-txt domain lists) ----
+       One rulegroups array, split along two dimensions: source
+       (local = custom content / remote = fetched from a URL) and type
+       (direct / proxy / block). The rules page has one tab per type,
+       each with a remote grid on top and a local grid below; both
+       fields are forced server-side via search filters / add overlays,
+       so the dialogs themselves carry neither field. */
+
+    private function searchGroupsBy($source, $type)
+    {
+        return $this->searchBase('rulegroups.group', null, null, function ($record) use ($source, $type) {
+            return (string)$record->source === $source && (string)$record->type === $type;
+        });
+    }
+
+    private function addGroupBy($source, $type)
+    {
+        return $this->addBase('group', 'rulegroups.group', ['source' => $source, 'type' => $type]);
+    }
 
     public function searchGroupsAction()
     {
         return $this->searchBase('rulegroups.group');
     }
 
-    /* the rules page shows local and remote groups as two separate grids;
-       both live in the same rulegroups array, split by the source field */
-    public function searchLocalGroupsAction()
+    public function searchLocalDirectGroupsAction()
     {
-        return $this->searchBase('rulegroups.group', null, null, function ($record) {
-            return (string)$record->source !== 'remote';
-        });
+        return $this->searchGroupsBy('local', 'direct');
     }
 
-    public function searchRemoteGroupsAction()
+    public function searchLocalProxyGroupsAction()
     {
-        return $this->searchBase('rulegroups.group', null, null, function ($record) {
-            return (string)$record->source === 'remote';
-        });
+        return $this->searchGroupsBy('local', 'proxy');
     }
 
-    public function addLocalGroupAction()
+    public function searchLocalBlockGroupsAction()
     {
-        return $this->addBase('group', 'rulegroups.group', ['source' => 'local']);
+        return $this->searchGroupsBy('local', 'block');
     }
 
-    public function addRemoteGroupAction()
+    public function searchRemoteDirectGroupsAction()
     {
-        return $this->addBase('group', 'rulegroups.group', ['source' => 'remote']);
+        return $this->searchGroupsBy('remote', 'direct');
+    }
+
+    public function searchRemoteProxyGroupsAction()
+    {
+        return $this->searchGroupsBy('remote', 'proxy');
+    }
+
+    public function searchRemoteBlockGroupsAction()
+    {
+        return $this->searchGroupsBy('remote', 'block');
+    }
+
+    public function addLocalDirectGroupAction()
+    {
+        return $this->addGroupBy('local', 'direct');
+    }
+
+    public function addLocalProxyGroupAction()
+    {
+        return $this->addGroupBy('local', 'proxy');
+    }
+
+    public function addLocalBlockGroupAction()
+    {
+        return $this->addGroupBy('local', 'block');
+    }
+
+    public function addRemoteDirectGroupAction()
+    {
+        return $this->addGroupBy('remote', 'direct');
+    }
+
+    public function addRemoteProxyGroupAction()
+    {
+        return $this->addGroupBy('remote', 'proxy');
+    }
+
+    public function addRemoteBlockGroupAction()
+    {
+        return $this->addGroupBy('remote', 'block');
     }
 
     public function getGroupAction($uuid = null)
     {
         return $this->getBase('group', 'rulegroups.group', $uuid);
-    }
-
-    public function addGroupAction()
-    {
-        return $this->addBase('group', 'rulegroups.group');
     }
 
     public function setGroupAction($uuid)

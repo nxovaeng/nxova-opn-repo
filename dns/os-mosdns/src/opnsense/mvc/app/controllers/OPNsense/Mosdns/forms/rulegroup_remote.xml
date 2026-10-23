@@ -12,12 +12,6 @@
         <help>组名，如「办公室直连」「AI 代理」。会写入合并文件的标题行做标记。</help>
     </field>
     <field>
-        <id>mosdns.rulegroups.group.type</id>
-        <label>类型</label>
-        <type>dropdown</type>
-        <help>直连 / 代理 / 阻止。合并时按类型分别汇入 sync_direct / sync_proxy / sync_block.txt。</help>
-    </field>
-    <field>
         <id>mosdns.rulegroups.group.tags</id>
         <label>标签</label>
         <type>text</type>
@@ -27,6 +21,6 @@
         <id>mosdns.rulegroups.group.url</id>
         <label>在线地址</label>
         <type>text</type>
-        <help>纯 txt 地址，一行一条规则（裸域名 / domain: / full:，# 开头为注释）。可托管到 Vercel 等静态托管，家里和办公室填同一个地址即可复用。拉取后缓存在本地，断网时用上次缓存合并。</help>
+        <help>纯 txt 地址，一行一条规则（裸域名 / domain: / full: / regexp:，# 开头为注释）。对话框上方有预设清单下拉可选（Loyalsoldier 维护的国内外常用名单，含双源）。也可自托管到 Vercel 等静态托管，家里和办公室填同一个地址即可复用。拉取后缓存在本地，断网时用上次缓存合并。</help>
     </field>
 </form>
