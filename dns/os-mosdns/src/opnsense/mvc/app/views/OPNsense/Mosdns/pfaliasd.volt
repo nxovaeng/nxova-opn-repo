@@ -71,6 +71,17 @@
         }
         refreshSvc();
 
+        // Flush button sits right of the 启动时清空表 (flush_tables) input:
+        // wrap the input in a flex row, append the button, a hint and the
+        // result line inside the same form cell.
+        var $ft = $('input[id$=".flush_tables"]').first();
+        if ($ft.length) {
+            $ft.wrap('<div style="display:flex; gap:6px; align-items:center;"></div>');
+            $ft.css('flex', '1');
+            $ft.after('<button type="button" class="btn btn-warning btn-sm" id="flushAliasAct" style="flex:none;"><b>清空别名表</b></button>');
+            $ft.closest('td').append('<div class="text-muted" style="margin-top:4px;">立即清空目标别名表及 pf-aliasd 的 TTL 记录，改了分流规则想马上生效时用；新的解析会重新填充。</div><div id="flushMsg" style="margin-top:2px;"></div>');
+        }
+
         $("#flushAliasAct").click(function() {
             stdDialogConfirm('清空别名表',
                 '确定要立即清空别名表及 pf-aliasd 里的 TTL 记录吗？新的解析会重新填充。',
@@ -111,16 +122,6 @@
             </tr>
         </tbody>
     </table>
-</div>
-
-<div class="col-md-12" style="margin-top: 20px;">
-    <div class="content-box">
-        <button class="btn btn-warning" id="flushAliasAct" type="button">
-            <b>清空别名表</b>
-        </button>
-        <span id="flushMsg" class="text-muted" style="margin-left: 10px;"></span>
-        <div class="text-muted" style="margin-top: 8px;">立即清空 mosdns 同步的别名表（目标表加上启动清空表）及 pf-aliasd 里的 TTL 记录，改了分流规则想马上生效时用；新的解析会重新填充。</div>
-    </div>
 </div>
 
 <div class="col-md-12" style="margin-top: 20px;">
