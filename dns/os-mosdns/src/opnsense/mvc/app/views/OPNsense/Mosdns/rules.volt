@@ -112,7 +112,7 @@
             ajaxCall("/api/mosdns/service/listRules", {}, function(data, status) {
                 var byName = {};
                 $.each(data['files'] || [], function(i, f) { byName[f['name']] = f; });
-                var order = ['sync_direct.txt', 'sync_proxy.txt', 'sync_block.txt'];
+                var order = ['custom_direct.txt', 'custom_proxy.txt', 'custom_block.txt', 'sync_direct.txt', 'sync_proxy.txt', 'sync_block.txt'];
                 var html = $.map(order, function(n) {
                     var f = byName[n];
                     return n.replace('.txt', '') + ' <b>' + (f ? f['count'] : 0) + '</b>';
@@ -142,7 +142,7 @@
             if (!data || data['result'] !== 'ok') return null;
             var f = data['files'] || {};
             var parts = [];
-            $.each(['direct', 'proxy', 'block'], function(i, t) {
+            $.each(['custom_direct', 'custom_proxy', 'custom_block', 'sync_direct', 'sync_proxy', 'sync_block'], function(i, t) {
                 if (f[t]) parts.push(t + ' ' + f[t]['count'] + ' 条（' + (f[t]['groups'] || []).length + ' 组）');
             });
             var txt = '已合并：' + parts.join('，') + '。';
@@ -245,7 +245,7 @@
             });
         });
 
-        refreshFileStats('sync_direct.txt');
+        refreshFileStats('custom_direct.txt');
     });
 </script>
 

@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/mosdns</mount>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <description>MosDNS dynamic DNS forwarder with pf table sync</description>
     <items>
         <general>
@@ -52,15 +52,6 @@
                 <Required>Y</Required>
                 <ValidationMessage>Specify at least one local (direct) upstream, comma separated.</ValidationMessage>
             </local_upstreams>
-            <direct_files type="TextField">
-                <default>/usr/local/etc/mosdns/rule/sync_direct.txt</default>
-            </direct_files>
-            <proxy_files type="TextField">
-                <default>/usr/local/etc/mosdns/rule/sync_proxy.txt</default>
-            </proxy_files>
-            <block_files type="TextField">
-                <default>/usr/local/etc/mosdns/rule/sync_block.txt</default>
-            </block_files>
         </forward>
         <pfalias>
             <enabled type="BooleanField">

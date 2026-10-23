@@ -17,22 +17,4 @@
         <type>text</type>
         <help>直连（国内）域名的上游，逗号分隔。如 223.5.5.5,119.29.29.29。</help>
     </field>
-    <field>
-        <id>mosdns.forward.direct_files</id>
-        <label>直连域名文件</label>
-        <type>text</type>
-        <help>走本地上游解析的域名列表文件，逗号分隔。在“规则”菜单里编辑。</help>
-    </field>
-    <field>
-        <id>mosdns.forward.proxy_files</id>
-        <label>代理域名文件</label>
-        <type>text</type>
-        <help>走远端上游解析的域名列表文件，逗号分隔。在“规则”菜单里编辑。</help>
-    </field>
-    <field>
-        <id>mosdns.forward.block_files</id>
-        <label>阻止域名文件</label>
-        <type>text</type>
-        <help>要阻止的域名列表文件（返回 NXDOMAIN），逗号分隔。在“规则”菜单里编辑。</help>
-    </field>
 </form>

@@ -7,9 +7,6 @@
 {% set pfalias_enabled = pfalias.enabled|default('1') == '1' %}
 {% set remote_upstreams = forward.remote_upstreams|default('') %}
 {% set local_upstreams = forward.local_upstreams|default('') %}
-{% set direct_files = forward.direct_files|default('') %}
-{% set proxy_files = forward.proxy_files|default('') %}
-{% set block_files = forward.block_files|default('') %}
 {% set remote_socks5 = forward.remote_socks5|default('') %}
 log:
     level: info
@@ -33,27 +30,36 @@ plugins:
 {% for addr in local_upstreams.split(',') if addr.strip() %}
             - addr: {{ addr.strip() }}
 {% endfor %}
-    - tag: direct_domain_set
+    - tag: custom_direct_domain_set
       type: domain_set
       args:
         files:
-{% for f in direct_files.split(',') if f.strip() %}
-            - {{ f.strip() }}
-{% endfor %}
-    - tag: proxy_domain_set
+            - /usr/local/etc/mosdns/rule/custom_direct.txt
+    - tag: custom_proxy_domain_set
       type: domain_set
       args:
         files:
-{% for f in proxy_files.split(',') if f.strip() %}
-            - {{ f.strip() }}
-{% endfor %}
-    - tag: block_domain_set
+            - /usr/local/etc/mosdns/rule/custom_proxy.txt
+    - tag: custom_block_domain_set
       type: domain_set
       args:
         files:
-{% for f in block_files.split(',') if f.strip() %}
-            - {{ f.strip() }}
-{% endfor %}
+            - /usr/local/etc/mosdns/rule/custom_block.txt
+    - tag: sync_direct_domain_set
+      type: domain_set
+      args:
+        files:
+            - /usr/local/etc/mosdns/rule/sync_direct.txt
+    - tag: sync_proxy_domain_set
+      type: domain_set
+      args:
+        files:
+            - /usr/local/etc/mosdns/rule/sync_proxy.txt
+    - tag: sync_block_domain_set
+      type: domain_set
+      args:
+        files:
+            - /usr/local/etc/mosdns/rule/sync_block.txt
 {% if pfalias_enabled %}
     - tag: sync_to_pf
       type: pf_alias
@@ -70,19 +76,44 @@ plugins:
     - tag: main_sequence
       type: sequence
       args:
+        # priority: custom block > custom direct > custom proxy (pf sync) >
+        #           sync block > mode over sync sets > mode default
 {% if block_enabled %}
         - exec: reject 3
           matches:
-            - qname $block_domain_set
+            - qname $custom_block_domain_set
+        - exec: return
+          matches:
+            - has_resp
+{% endif %}
+        - exec: $forward_local
+          matches:
+            - qname $custom_direct_domain_set
+        - exec: return
+          matches:
+            - has_resp
+        - exec: $forward_remote
+          matches:
+            - qname $custom_proxy_domain_set
+{% if pfalias_enabled %}
+        - exec: $sync_to_pf
+{% endif %}
+        - exec: return
+          matches:
+            - has_resp
+{% if block_enabled %}
+        - exec: reject 3
+          matches:
+            - qname $sync_block_domain_set
         - exec: return
           matches:
             - has_resp
 {% endif %}
 {% if mode == 'whitelist' %}
-        # whitelist: direct set -> local; everything else -> remote + pf sync
+        # whitelist: sync direct set -> local; everything else -> remote + pf sync
         - exec: $forward_local
           matches:
-            - qname $direct_domain_set
+            - qname $sync_direct_domain_set
         - exec: return
           matches:
             - has_resp
@@ -91,10 +122,10 @@ plugins:
         - exec: $sync_to_pf
 {% endif %}
 {% elif mode == 'blacklist' %}
-        # blacklist: proxy set -> remote + pf sync; everything else -> local (no sync)
+        # blacklist: sync proxy set -> remote + pf sync; everything else -> local
         - exec: $forward_remote
           matches:
-            - qname $proxy_domain_set
+            - qname $sync_proxy_domain_set
 {% if pfalias_enabled %}
         - exec: $sync_to_pf
 {% endif %}
@@ -103,16 +134,16 @@ plugins:
             - has_resp
         - exec: $forward_local
 {% else %}
-        # custom: direct -> local; proxy -> remote + sync; fallback per custom_default_route
+        # custom: sync direct -> local; sync proxy -> remote + sync; fallback per custom_default_route
         - exec: $forward_local
           matches:
-            - qname $direct_domain_set
+            - qname $sync_direct_domain_set
         - exec: return
           matches:
             - has_resp
         - exec: $forward_remote
           matches:
-            - qname $proxy_domain_set
+            - qname $sync_proxy_domain_set
 {% if pfalias_enabled %}
         - exec: $sync_to_pf
 {% endif %}
