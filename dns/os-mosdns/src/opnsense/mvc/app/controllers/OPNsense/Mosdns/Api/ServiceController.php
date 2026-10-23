@@ -45,11 +45,15 @@ class ServiceController extends ApiMutableServiceControllerBase
     private function findGroup($uuid)
     {
         $mdl = $this->getModel();
-        if ($mdl === null || !isset($mdl->rulegroups)) {
+        if ($mdl === null) {
             return null;
         }
         foreach ($mdl->rulegroups->group->iterateItems() as $key => $group) {
-            if ($key === $uuid) {
+            if ((string)$key === (string)$uuid) {
+                return $group;
+            }
+            $ref = (string)$group->__reference;
+            if ($ref !== '' && substr($ref, -strlen((string)$uuid)) === (string)$uuid) {
                 return $group;
             }
         }
@@ -60,7 +64,7 @@ class ServiceController extends ApiMutableServiceControllerBase
     {
         $list = [];
         $mdl = $this->getModel();
-        if ($mdl !== null && isset($mdl->rulegroups)) {
+        if ($mdl !== null) {
             foreach ($mdl->rulegroups->group->iterateItems() as $uuid => $g) {
                 $list[] = [
                     'uuid' => $uuid,
