@@ -36,32 +36,33 @@
             add: '/api/xray/settings/addNode/',
             del: '/api/xray/settings/delNode/',
             toggle: '/api/xray/settings/toggleNode/',
-            formatters: {
-                protocolFmt: function(column, row) {
-                    var p = row.protocol || '';
-                    return '<span class="label ' + (protoColors[p] || 'label-default') + '">' + escHtml(p) + '</span>';
-                },
-                sourceFmt: function(column, row) {
-                    if (!row.sub_id || row.sub_id === 'manual') {
-                        return '<span class="label label-default">手动</span>';
+            options: {
+                formatters: {
+                    protocolFmt: function(column, row) {
+                        var p = row.protocol || '';
+                        return '<span class="label ' + (protoColors[p] || 'label-default') + '">' + escHtml(p) + '</span>';
+                    },
+                    sourceFmt: function(column, row) {
+                        if (!row.sub_id || row.sub_id === 'manual') {
+                            return '<span class="label label-default">手动</span>';
+                        }
+                        return '<span class="label label-default">订阅</span>';
+                    },
+                    latencyFmt: function(column, row) {
+                        var rtt = window.__pings[row.uuid];
+                        if (rtt === undefined) return '<span class="text-muted">—</span>';
+                        if (rtt < 0) return '<span class="label label-danger">超时</span>';
+                        var cls = rtt < 150 ? 'label-success' : (rtt < 300 ? 'label-warning' : 'label-danger');
+                        return '<span class="label ' + cls + '">' + rtt + ' ms</span>';
+                    },
+                    activeFmt: function(column, row) {
+                        if (row.uuid === window.__activeUuid) {
+                            return '<i class="fa fa-star text-warning" title="活动节点"></i>';
+                        }
+                        return '<button type="button" class="btn btn-xs btn-link set-active" data-uuid="' + row.uuid + '" title="设为活动节点"><i class="fa fa-star-o"></i></button>';
                     }
-                    return '<span class="label label-default">订阅</span>';
-                },
-                latencyFmt: function(column, row) {
-                    var rtt = window.__pings[row.uuid];
-                    if (rtt === undefined) return '<span class="text-muted">—</span>';
-                    if (rtt < 0) return '<span class="label label-danger">超时</span>';
-                    var cls = rtt < 150 ? 'label-success' : (rtt < 300 ? 'label-warning' : 'label-danger');
-                    return '<span class="label ' + cls + '">' + rtt + ' ms</span>';
-                },
-                activeFmt: function(column, row) {
-                    if (row.uuid === window.__activeUuid) {
-                        return '<i class="fa fa-star text-warning" title="活动节点"></i>';
-                    }
-                    return '<button type="button" class="btn btn-xs btn-link set-active" data-uuid="' + row.uuid + '" title="设为活动节点"><i class="fa fa-star-o"></i></button>';
                 }
-            }
-        });
+            }        });
         $("#grid-inbounds").UIBootgrid({
             search: '/api/xray/settings/searchInbounds',
             get: '/api/xray/settings/getInbound/',
@@ -77,30 +78,32 @@
             add: '/api/xray/settings/addRule/',
             del: '/api/xray/settings/delRule/',
             toggle: '/api/xray/settings/toggleRule/',
-            formatters: {
-                typeFmt: function(column, row) {
-                    return typeNames[row.type] || row.type || '';
-                },
-                outboundFmt: function(column, row) {
-                    var t = row.outbound_tag || '';
-                    if (t === 'direct') return '<span class="label label-success">直连</span>';
-                    if (t === 'block') return '<span class="label label-danger">拦截</span>';
-                    if (t === '') return '<span class="label label-primary">默认节点</span>';
-                    return '<span class="label label-info">' + escHtml(t) + '</span>';
+            options: {
+                formatters: {
+                    typeFmt: function(column, row) {
+                        return typeNames[row.type] || row.type || '';
+                    },
+                    outboundFmt: function(column, row) {
+                        var t = row.outbound_tag || '';
+                        if (t === 'direct') return '<span class="label label-success">直连</span>';
+                        if (t === 'block') return '<span class="label label-danger">拦截</span>';
+                        if (t === '') return '<span class="label label-primary">默认节点</span>';
+                        return '<span class="label label-info">' + escHtml(t) + '</span>';
+                    }
                 }
-            }
-        });
+            }        });
         $("#grid-subscriptions").UIBootgrid({
             search: '/api/xray/settings/searchSubscriptions',
             get: '/api/xray/settings/getSubscription/',
             add: '/api/xray/settings/addSubscription/',
             del: '/api/xray/settings/delSubscription/',
-            formatters: {
-                subUpdateFmt: function(column, row) {
-                    return '<button type="button" class="btn btn-xs btn-default sub-update" data-uuid="' + row.uuid + '" title="拉取订阅并替换其节点"><i class="fa fa-refresh"></i> 更新</button>';
+            options: {
+                formatters: {
+                    subUpdateFmt: function(column, row) {
+                        return '<button type="button" class="btn btn-xs btn-default sub-update" data-uuid="' + row.uuid + '" title="拉取订阅并替换其节点"><i class="fa fa-refresh"></i> 更新</button>';
+                    }
                 }
-            }
-        });
+            }        });
 
         // ---- helpers ----
         function fetchAll(url) {

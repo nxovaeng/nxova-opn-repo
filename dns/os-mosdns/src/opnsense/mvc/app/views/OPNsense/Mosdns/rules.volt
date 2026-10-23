@@ -67,7 +67,7 @@
                 add: '/api/mosdns/settings/addRemote' + cap(t) + 'Group/',
                 del: '/api/mosdns/settings/delGroup/',
                 toggle: '/api/mosdns/settings/toggleGroup/',
-                formatters: { urlFmt: urlFmt, opsFmt: opsFmt }
+                options: { formatters: { urlFmt: urlFmt, opsFmt: opsFmt } }
             });
             $("#grid-local-" + t).UIBootgrid({
                 search: '/api/mosdns/settings/searchLocal' + cap(t) + 'Groups',
@@ -76,7 +76,7 @@
                 add: '/api/mosdns/settings/addLocal' + cap(t) + 'Group/',
                 del: '/api/mosdns/settings/delGroup/',
                 toggle: '/api/mosdns/settings/toggleGroup/',
-                formatters: { contentFmt: contentFmt }
+                options: { formatters: { contentFmt: contentFmt } }
             });
         });
 
