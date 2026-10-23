@@ -33,10 +33,8 @@
     function presetOptions(type) {
         var out = [];
         $.each(PRESET_DEFS[type] || [], function(i, d) {
-            out.push({label: d[0] + '（GitHub）', name: d[1],
+            out.push({label: d[0], name: d[1],
                       url: 'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/' + d[2]});
-            out.push({label: d[0] + '（jsdelivr）', name: d[1],
-                      url: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/' + d[2]});
         });
         return out;
     }
@@ -234,9 +232,10 @@
             ajaxCall("/api/mosdns/service/fetchGroup/" + uuid, {}, function(data, status) {
                 if (data['result'] === 'ok') {
                     var txt = mergeSummaryText(data['merge']);
-                    var droppedTxt = ((data['dropped'] || 0) > 0 ? '（已移除 ' + data['dropped'] + ' 条不支持的行' : '')
-                                     + ((data['converted'] || 0) > 0 ? (droppedTxt === '' ? '（' : '，') + '转换 ' + data['converted'] + ' 条通配符' : '')
-                                     + (((data['dropped'] || 0) > 0 || (data['converted'] || 0) > 0) ? '）' : '');
+                    var cleanNotes = [];
+                    if ((data['dropped'] || 0) > 0) cleanNotes.push('已移除 ' + data['dropped'] + ' 条不支持的行');
+                    if ((data['converted'] || 0) > 0) cleanNotes.push('转换 ' + data['converted'] + ' 条通配符为 domain:');
+                    var droppedTxt = cleanNotes.length ? '（' + cleanNotes.join('，') + '）' : '';
                     $m.removeClass("text-muted text-danger").addClass("text-success")
                       .text('已拉取 ' + (data['count'] || 0) + ' 条并合并' + droppedTxt + '，mosdns 已重启。' + (txt ? ' ' + txt : ''));
                 } else if (data['errors'] && data['errors'].length) {

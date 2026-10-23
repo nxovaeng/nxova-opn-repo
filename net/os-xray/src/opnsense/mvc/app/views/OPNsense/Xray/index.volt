@@ -236,7 +236,6 @@
                 var msg = data['status'] == 'ok' ? "配置已应用。" : (data['status_msg'] || "应用失败。");
                 var cls = data['status'] == 'ok' ? "alert-success" : "alert-danger";
                 $("#responseMsg").removeClass("hidden alert-success alert-danger alert-info").addClass(cls).html(escHtml(msg));
-                refreshStatus();
                 updateServiceControlUI('xray');
             });
         });
@@ -266,12 +265,6 @@
         }
         $("#refreshLogAct").click(refreshLog);
 
-        function refreshStatus() {
-            ajaxCall(url="/api/xray/service/status", sendData={}, callback=function(data, status) {
-                $("#serviceStatus").text("状态：" + (data['status'] || status));
-            });
-        }
-        refreshStatus();
         updateServiceControlUI('xray');
 
         // ---- rule templates ----
@@ -514,7 +507,6 @@
         <button class="btn btn-primary" id="reconfigureAct" type="button">
             <b>应用</b> <i id="reconfigureAct_progress"></i>
         </button>
-        <span id="serviceStatus" class="text-muted" style="margin-left: 10px;"></span>
     </div>
     <div class="col-md-12" style="margin-top: 10px;">
         <div id="responseMsg" class="alert hidden" role="alert"></div>

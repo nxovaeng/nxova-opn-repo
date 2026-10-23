@@ -1,26 +1,26 @@
 <form>
     <field>
-        <id>mosdns.rulegroups.group.enabled</id>
+        <id>group.enabled</id>
         <label>启用</label>
         <type>checkbox</type>
         <help>关掉的组不参与合并，可临时停用而不删除。</help>
     </field>
     <field>
-        <id>mosdns.rulegroups.group.name</id>
+        <id>group.name</id>
         <label>名称</label>
         <type>text</type>
         <help>组名，如「办公室直连」「AI 代理」。会写入合并文件的标题行做标记。</help>
     </field>
     <field>
-        <id>mosdns.rulegroups.group.tags</id>
+        <id>group.tags</id>
         <label>标签</label>
         <type>text</type>
         <help>逗号分隔的自由标签，如 家里,办公室,AI。仅做标记和筛选，不影响匹配。</help>
     </field>
     <field>
-        <id>mosdns.rulegroups.group.url</id>
+        <id>group.url</id>
         <label>在线地址</label>
         <type>text</type>
-        <help>纯 txt 地址，一行一条规则（裸域名 / domain: / full: / regexp:，# 开头为注释）。对话框上方有预设清单下拉可选（Loyalsoldier 维护的国内外常用名单，含双源）。也可自托管到 Vercel 等静态托管，家里和办公室填同一个地址即可复用。拉取后缓存在本地，断网时用上次缓存合并。</help>
+        <help>纯 txt 地址，一行一条规则（裸域名 / domain: / full: / regexp:，# 开头为注释）。对话框上方有预设清单下拉可选（Loyalsoldier 维护的国内外常用名单）。也可自托管到 Vercel 等静态托管，家里和办公室填同一个地址即可复用。拉取后缓存在本地，断网时用上次缓存合并。</help>
     </field>
 </form>

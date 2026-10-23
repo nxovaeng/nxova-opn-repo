@@ -1,18 +1,18 @@
 <form>
     <field>
-        <id>mosdns.rulegroups.group.enabled</id>
+        <id>group.enabled</id>
         <label>启用</label>
         <type>checkbox</type>
         <help>关掉的组不参与合并，可临时停用而不删除。</help>
     </field>
     <field>
-        <id>mosdns.rulegroups.group.name</id>
+        <id>group.name</id>
         <label>名称</label>
         <type>text</type>
         <help>组名，如「办公室直连」「AI 代理」。会写入合并文件的标题行做标记。</help>
     </field>
     <field>
-        <id>mosdns.rulegroups.group.tags</id>
+        <id>group.tags</id>
         <label>标签</label>
         <type>text</type>
         <help>逗号分隔的自由标签，如 家里,办公室,AI。仅做标记和筛选，不影响匹配。</help>

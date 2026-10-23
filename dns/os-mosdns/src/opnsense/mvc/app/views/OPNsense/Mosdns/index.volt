@@ -46,17 +46,10 @@
                     cls = "alert-danger";
                 }
                 $("#responseMsg").removeClass("hidden alert-success alert-danger alert-info").addClass(cls).html(msg);
-                refreshStatus();
                 updateServiceControlUI('mosdns');
             });
         });
 
-        function refreshStatus() {
-            ajaxCall(url="/api/mosdns/service/status", sendData={}, callback=function(data, status) {
-                $("#serviceStatus").text("{{ lang._('Status') }}: " + (data['status'] || status));
-            });
-        }
-        refreshStatus();
         updateServiceControlUI('mosdns');
     });
 </script>
@@ -125,7 +118,6 @@
         <button class="btn btn-primary" id="reconfigureAct" type="button">
             <b>{{ lang._('Apply') }}</b> <i id="reconfigureAct_progress"></i>
         </button>
-        <span id="serviceStatus" class="text-muted" style="margin-left: 10px;"></span>
     </div>
     <div class="col-md-12" style="margin-top: 10px;">
         <div id="responseMsg" class="alert hidden" role="alert"></div>

@@ -1,23 +1,23 @@
 <form>
     <field>
-        <id>xray.rules.rule.enabled</id>
+        <id>rule.enabled</id>
         <label>启用</label>
         <type>checkbox</type>
     </field>
     <field>
-        <id>xray.rules.rule.type</id>
+        <id>rule.type</id>
         <label>类型</label>
         <type>dropdown</type>
         <help>domain 按域名匹配（支持 geosite:分类，如 geosite:cn）；ip 按 IP/CIDR 匹配（支持 geoip:cn、geoip:private）；source 按来源地址匹配（按设备分流）；port 按目标端口匹配。</help>
     </field>
     <field>
-        <id>xray.rules.rule.values</id>
+        <id>rule.values</id>
         <label>值</label>
         <type>text</type>
         <help>逗号分隔。如 google.com,youtube.com；或 192.168.1.0/24；端口如 53,443 或 1000-2000。</help>
     </field>
     <field>
-        <id>xray.rules.rule.outbound_tag</id>
+        <id>rule.outbound_tag</id>
         <label>出站</label>
         <type>text</type>
         <help>节点标签；填 direct 直连、block 拒绝；留空走默认节点。</help>
