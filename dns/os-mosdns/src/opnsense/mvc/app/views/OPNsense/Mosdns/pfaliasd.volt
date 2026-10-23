@@ -70,6 +70,28 @@
             });
         }
         refreshSvc();
+
+        $("#flushAliasAct").click(function() {
+            stdDialogConfirm("{{ lang._('Flush alias tables') }}",
+                "{{ lang._('Flush the pf alias tables and their TTL records in pf-aliasd right now? New DNS resolutions will refill them.') }}",
+                "{{ lang._('Flush') }}", "{{ lang._('Cancel') }}", function() {
+                var $m = $("#flushMsg");
+                $m.removeClass("text-danger text-success").addClass("text-muted").text("{{ lang._('Flushing...') }}");
+                ajaxCall(url="/api/mosdns/service/pfaliasdFlush", sendData={}, callback=function(data, status) {
+                    if (data['result'] === 'ok') {
+                        var parts = $.map(data['tables'] || [], function(t) {
+                            var n = (t['before'] === null || t['before'] === undefined) ? '?' : t['before'];
+                            var note = t['daemon'] === 'ok' ? '' : "{{ lang._(' (daemon not responding; table swept via pfctl only)') }}";
+                            return t['table'] + ': ' + n + "{{ lang._(' entries cleared') }}" + note;
+                        });
+                        $m.removeClass("text-muted text-danger").addClass("text-success").text(parts.join('; '));
+                    } else {
+                        $m.removeClass("text-muted").addClass("text-danger")
+                          .text("{{ lang._('Flush failed: ') }}" + (data['error'] || data['output'] || '?'));
+                    }
+                });
+            });
+        });
     });
 </script>
 
@@ -89,6 +111,16 @@
             </tr>
         </tbody>
     </table>
+</div>
+
+<div class="col-md-12" style="margin-top: 20px;">
+    <div class="content-box">
+        <button class="btn btn-warning" id="flushAliasAct" type="button">
+            <b>{{ lang._('Flush alias tables') }}</b>
+        </button>
+        <span id="flushMsg" class="text-muted" style="margin-left: 10px;"></span>
+        <div class="text-muted" style="margin-top: 8px;">{{ lang._('Immediately empty the alias tables mosdns syncs (target table plus any startup-flush tables) together with pf-aliasd\'s TTL records, so rule changes take effect at once. New resolutions refill the tables.') }}</div>
+    </div>
 </div>
 
 <div class="col-md-12" style="margin-top: 20px;">

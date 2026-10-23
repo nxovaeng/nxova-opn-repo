@@ -290,4 +290,38 @@ class ServiceController extends ApiMutableServiceControllerBase
         $raw = trim((new Backend())->configdRun('mosdns pfaliasd restart'));
         return ['status' => 'ok', 'output' => $raw];
     }
+
+    /**
+     * Flush the managed alias tables right now: the daemon drops its TTL
+     * records and the tracked pf entries, and a pfctl sweep clears any
+     * untracked leftovers. New resolutions refill the tables.
+     */
+    public function pfaliasdFlushAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['result' => 'failed'];
+        }
+        $mdl = $this->getModel();
+        $socket = trim((string)$mdl->pfaliasd->socket_path);
+        if ($socket === '') {
+            $socket = '/var/run/pf-aliasd.sock';
+        }
+        $tables = [];
+        $target = trim((string)$mdl->pfalias->table);
+        if ($target !== '') {
+            $tables[] = $target;
+        }
+        foreach (explode(',', (string)$mdl->pfaliasd->flush_tables) as $extra) {
+            $extra = trim($extra);
+            if ($extra !== '' && !in_array($extra, $tables, true)) {
+                $tables[] = $extra;
+            }
+        }
+        if (empty($tables)) {
+            return ['result' => 'failed', 'error' => 'no alias tables configured'];
+        }
+        $raw = trim((new Backend())->configdpRun('mosdns pfaliasd flush', [$socket, implode(',', $tables)]));
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : ['result' => 'failed', 'output' => $raw];
+    }
 }
