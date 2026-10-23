@@ -21,16 +21,16 @@
                 <default>whitelist</default>
                 <Required>Y</Required>
                 <OptionValues>
-                    <whitelist>Whitelist (default route via proxy)</whitelist>
-                    <blacklist>Blacklist (default route direct)</blacklist>
-                    <custom>Custom (mixed, with fallback)</custom>
+                    <whitelist>白名单（默认走代理）</whitelist>
+                    <blacklist>黑名单（默认直连）</blacklist>
+                    <custom>自定义（名单分流 + 默认走向）</custom>
                 </OptionValues>
             </mode>
             <custom_default_route type="OptionField">
                 <default>proxy</default>
                 <OptionValues>
-                    <direct>direct</direct>
-                    <proxy>proxy</proxy>
+                    <direct>直连</direct>
+                    <proxy>代理</proxy>
                 </OptionValues>
             </custom_default_route>
             <block_enabled type="BooleanField">

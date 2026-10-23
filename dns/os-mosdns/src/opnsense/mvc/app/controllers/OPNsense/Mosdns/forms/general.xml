@@ -21,7 +21,7 @@
         <id>mosdns.general.mode</id>
         <label>分流模式</label>
         <type>dropdown</type>
-        <help>白名单：非直连域名走代理；黑名单：只有代理名单里的域名走代理；自定义：混合，下面设默认走向。</help>
+        <help>决定「规则」页名单怎么生效（阻止名单开启时在所有模式下最先拦截；自定义组优先于同步组）：白名单=命中直连组的域名直连、其余默认走代理；黑名单=命中代理组的域名走代理、其余默认直连；自定义=直连组、代理组分别生效，未命中的按下面「自定义默认走向」。名单在「规则」页管理。</help>
     </field>
     <field>
         <id>mosdns.general.custom_default_route</id>

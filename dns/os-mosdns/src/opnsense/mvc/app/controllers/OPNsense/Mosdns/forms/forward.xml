@@ -3,7 +3,7 @@
         <id>mosdns.forward.remote_upstreams</id>
         <label>代理上游</label>
         <type>text</type>
-        <help>代理域名的上游，逗号分隔。支持 tcp://、tls://、https://（DoH）。如 tcp://1.1.1.1:53,https://1.1.1.1/dns-query。</help>
+        <help>走代理的域名用这些上游解析。一行一个，点 + 添加；每行可从下拉选常用 DNS，也可自定义（格式校验）。支持 IP、IP:端口、tcp://、tls://、https://（DoH）。经下方 SOCKS5 出去。</help>
     </field>
     <field>
         <id>mosdns.forward.remote_socks5</id>
@@ -15,6 +15,6 @@
         <id>mosdns.forward.local_upstreams</id>
         <label>直连上游</label>
         <type>text</type>
-        <help>直连（国内）域名的上游，逗号分隔。如 223.5.5.5,119.29.29.29。</help>
+        <help>直连的域名用这些上游解析。一行一个，点 + 添加；每行可从下拉选常用 DNS，也可自定义（格式校验）。如 223.5.5.5、119.29.29.29。</help>
     </field>
 </form>
