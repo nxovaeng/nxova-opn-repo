@@ -244,19 +244,34 @@
             });
         });
 
-        // ---- remote fetch (row button) ----
+        // ---- remote fetch (row button): spinner on the button, all fetch
+        // buttons disabled meanwhile, elapsed seconds in the message (the
+        // fetch is one server-side call, so no byte progress exists) ----
         $(document).on('click', '.grp-fetch', function() {
             var uuid = $(this).data('uuid');
+            var $btn = $(this);
             var $m = $("#remoteMsg");
+            var started = Date.now();
+            $('.grp-fetch').prop('disabled', true);
+            var btnHtml = $btn.html();
+            $btn.html('<i class="fa fa-spinner fa-pulse"></i> 拉取中');
             $m.removeClass("text-danger text-success").addClass("text-muted").text("拉取中…");
+            var timer = setInterval(function() {
+                var sec = Math.round((Date.now() - started) / 1000);
+                $m.text('拉取中… 已 ' + sec + ' 秒（大列表较慢；预设里选 jsdelivr 源通常更快）');
+            }, 1000);
             ajaxCall("/api/mosdns/service/fetchGroup/" + uuid, {}, function(data, status) {
+                clearInterval(timer);
+                $('.grp-fetch').prop('disabled', false);
+                $btn.html(btnHtml);
+                var cost = Math.round((Date.now() - started) / 1000);
                 if (data['result'] === 'ok') {
                     var cleanNotes = [];
                     if ((data['dropped'] || 0) > 0) cleanNotes.push('已移除 ' + data['dropped'] + ' 条不支持的行');
                     if ((data['converted'] || 0) > 0) cleanNotes.push('转换 ' + data['converted'] + ' 条通配符为 domain:');
                     var droppedTxt = cleanNotes.length ? '（' + cleanNotes.join('，') + '）' : '';
                     $m.removeClass("text-muted text-danger").addClass("text-success")
-                      .text('已拉取 ' + (data['count'] || 0) + ' 条，缓存已更新' + droppedTxt + '。点页面下方「合并并应用」后生效。');
+                      .text('已拉取 ' + (data['count'] || 0) + ' 条，缓存已更新' + droppedTxt + '，耗时 ' + cost + ' 秒。点页面下方「合并并应用」后生效。');
                 } else if (data['errors'] && data['errors'].length) {
                     $m.removeClass("text-muted").addClass("text-danger").text('拉取内容校验失败（保留旧缓存）：' + data['errors'].join('；'));
                 } else {
