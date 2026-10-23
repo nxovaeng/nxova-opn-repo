@@ -47,12 +47,19 @@
             var u = escHtml(row.url);
             return '<span title="' + u + '">' + (row.url.length > 42 ? u.substring(0, 42) + '…' : u) + '</span>';
         }
+        function countText(row) {
+            return (row.content_count === null || row.content_count === undefined)
+                ? '<span class="text-muted">—</span>'
+                : '<b>' + row.content_count + '</b> 条';
+        }
         function contentFmt(column, row) {
-            return '<button type="button" class="btn btn-xs btn-primary grp-content" data-mode="edit" data-uuid="' + row.uuid + '">'
-                 + '<span class="fa fa-pencil"></span> 修改内容</button>';
+            return countText(row)
+                 + ' <button type="button" class="btn btn-xs btn-primary grp-content" data-mode="edit" data-uuid="' + row.uuid + '">'
+                 + '<span class="fa fa-pencil"></span> 编辑内容</button>';
         }
         function opsFmt(column, row) {
-            return '<button type="button" class="btn btn-xs btn-default grp-fetch" data-uuid="' + row.uuid + '">'
+            return countText(row)
+                 + ' <button type="button" class="btn btn-xs btn-default grp-fetch" data-uuid="' + row.uuid + '">'
                  + '<span class="fa fa-refresh"></span> 拉取</button> '
                  + '<button type="button" class="btn btn-xs btn-default grp-content" data-mode="view" data-uuid="' + row.uuid + '">'
                  + '<span class="fa fa-eye"></span> 查看缓存</button>';
@@ -182,7 +189,7 @@
         function openGroupContent(uuid, mode) {
             gcUuid = uuid;
             var edit = (mode === 'edit');
-            $("#gcTitle").text(edit ? '修改内容' : '查看缓存');
+            $("#gcTitle").text(edit ? '编辑内容' : '查看缓存');
             $("#gcSave").toggle(edit);
             $("#gcText").prop('readonly', !edit);
             $("#gcMsg").removeClass("text-danger text-success").text('');
@@ -193,7 +200,7 @@
                 var g = (gdata && gdata['group']) || {};
                 var nm = g['name'];
                 if (nm && typeof nm === 'object') nm = '';
-                $("#gcTitle").text((edit ? '修改内容' : '查看缓存') + (nm ? ' - ' + nm : ''));
+                $("#gcTitle").text((edit ? '编辑内容' : '查看缓存') + (nm ? ' - ' + nm : ''));
             });
             ajaxCall("/api/mosdns/service/getGroupContent/" + uuid, {}, function(data, status) {
                 if (data['result'] !== 'ok') {
@@ -280,7 +287,7 @@
                     <th data-column-id="name" data-type="string">名称</th>
                     <th data-column-id="tags" data-type="string">标签</th>
                     <th data-column-id="url" data-type="string" data-formatter="urlFmt">在线地址</th>
-                    <th data-column-id="ops" data-width="12em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
+                    <th data-column-id="ops" data-width="17em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>
@@ -305,7 +312,7 @@
                     <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
                     <th data-column-id="name" data-type="string">名称</th>
                     <th data-column-id="tags" data-type="string">标签</th>
-                    <th data-column-id="content" data-width="9em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
+                    <th data-column-id="content" data-width="12em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>
@@ -320,7 +327,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「修改内容」填写规则（弹窗编辑，保存后自动合并）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑，保存后自动合并）。</p>
     </div>
     <div id="tab-proxy" class="tab-pane fade">
         <h4 style="margin-top: 0;">在线组（代理）</h4>
@@ -332,7 +339,7 @@
                     <th data-column-id="name" data-type="string">名称</th>
                     <th data-column-id="tags" data-type="string">标签</th>
                     <th data-column-id="url" data-type="string" data-formatter="urlFmt">在线地址</th>
-                    <th data-column-id="ops" data-width="12em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
+                    <th data-column-id="ops" data-width="17em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>
@@ -357,7 +364,7 @@
                     <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
                     <th data-column-id="name" data-type="string">名称</th>
                     <th data-column-id="tags" data-type="string">标签</th>
-                    <th data-column-id="content" data-width="9em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
+                    <th data-column-id="content" data-width="12em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>
@@ -372,7 +379,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「修改内容」填写规则（弹窗编辑，保存后自动合并）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑，保存后自动合并）。</p>
     </div>
     <div id="tab-block" class="tab-pane fade">
         <h4 style="margin-top: 0;">在线组（阻止）</h4>
@@ -384,7 +391,7 @@
                     <th data-column-id="name" data-type="string">名称</th>
                     <th data-column-id="tags" data-type="string">标签</th>
                     <th data-column-id="url" data-type="string" data-formatter="urlFmt">在线地址</th>
-                    <th data-column-id="ops" data-width="12em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
+                    <th data-column-id="ops" data-width="17em" data-type="string" data-formatter="opsFmt" data-sortable="false">内容</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>
@@ -409,7 +416,7 @@
                     <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
                     <th data-column-id="name" data-type="string">名称</th>
                     <th data-column-id="tags" data-type="string">标签</th>
-                    <th data-column-id="content" data-width="9em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
+                    <th data-column-id="content" data-width="12em" data-type="string" data-formatter="contentFmt" data-sortable="false">内容</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>
@@ -424,7 +431,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「修改内容」填写规则（弹窗编辑，保存后自动合并）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑，保存后自动合并）。</p>
     </div>
 </div>
 <div id="remoteMsg" style="margin-top: 6px;"></div>
@@ -450,7 +457,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="gcTitle">修改内容</h4>
+                <h4 class="modal-title" id="gcTitle">编辑内容</h4>
             </div>
             <div class="modal-body">
                 <p id="gcMeta" class="text-muted"></p>

@@ -560,6 +560,27 @@ def cmd_test(domain):
     print(json.dumps(result, ensure_ascii=False))
 
 
+def cmd_group_counts():
+    """{uuid: rule count} for every stored group (local .txt + remote
+    .cache.txt), so the grids can show a plain count per group."""
+    counts = {}
+    if os.path.isdir(GROUPS_DIR):
+        for name in os.listdir(GROUPS_DIR):
+            if name.endswith('.cache.txt'):
+                uuid = name[:-len('.cache.txt')]
+            elif name.endswith('.txt'):
+                uuid = name[:-len('.txt')]
+            else:
+                continue
+            try:
+                with open(os.path.join(GROUPS_DIR, name), encoding='utf-8',
+                          errors='replace') as f:
+                    counts[uuid] = count_rules(f.read())
+            except OSError:
+                pass
+    print(json.dumps({'result': 'ok', 'counts': counts}, ensure_ascii=False))
+
+
 def main():
     if len(sys.argv) < 2:
         print('usage: rule_tool.py list|get|set|test ...', file=sys.stderr)
@@ -581,6 +602,8 @@ def main():
         cmd_delete_group(sys.argv[2])
     elif cmd == 'merge' and len(sys.argv) == 3:
         cmd_merge(sys.argv[2])
+    elif cmd == 'group_counts':
+        cmd_group_counts()
     elif cmd == 'export' and len(sys.argv) == 3:
         cmd_export(sys.argv[2])
     elif cmd == 'validate':

@@ -24,9 +24,24 @@ class SettingsController extends ApiMutableModelControllerBase
 
     private function searchGroupsBy($source, $type)
     {
-        return $this->searchBase('rulegroups.group', null, null, function ($record) use ($source, $type) {
+        $result = $this->searchBase('rulegroups.group', null, null, function ($record) use ($source, $type) {
             return (string)$record->source === $source && (string)$record->type === $type;
         });
+        // attach each group's stored rule count (content column shows it)
+        $counts = [];
+        $raw = trim((string)(new Backend())->configdRun('mosdns rules group_counts'));
+        $data = json_decode($raw, true);
+        if (is_array($data) && isset($data['counts']) && is_array($data['counts'])) {
+            $counts = $data['counts'];
+        }
+        if (isset($result['rows']) && is_array($result['rows'])) {
+            foreach ($result['rows'] as &$row) {
+                $uuid = $row['uuid'] ?? null;
+                $row['content_count'] = ($uuid !== null && isset($counts[$uuid])) ? $counts[$uuid] : null;
+            }
+            unset($row);
+        }
+        return $result;
     }
 
     private function addGroupBy($source, $type)
