@@ -1,7 +1,9 @@
 Xray-core routing engine with web UI manager
 
-NOTE: the canonical location of this plugin is the nxovazro/opn-repo
-repository, which is actively used. The copy here is kept in sync as a
-mirror; do not fork it independently.
+Native OPNsense MVC plugin for the stock xray-core binary. Nodes
+(structured credentials + share-link import), subscriptions, inbounds
+and fine-grained routing rules are managed from the UI; config and the
+rc.d service use dedicated names (/usr/local/etc/xray-os/, xray_os) so
+nothing clashes with the official xray package.
 
 WWW: https://github.com/nxovaeng/nxova-opn-repo
