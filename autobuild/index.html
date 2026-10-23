@@ -3,22 +3,17 @@
 <head><meta charset="utf-8"><title>nxova-opn-repo pkg repo</title></head>
 <body>
 <h1>nxova-opn-repo - OPNsense 软件源</h1>
-<p>mosdns DNS 分流 (mosdns -&gt; pf 表 -&gt; 策略路由) 插件与配套守护进程。</p>
+<p>基于域名的分流套件：mosdns DNS 分流 -&gt; pf 表 -&gt; 策略路由 -&gt; xray-core 出口。各插件独立启停。</p>
 <h2>在 OPNsense 上添加软件源</h2>
-<pre>cat &gt; /usr/local/etc/pkg/repos/nxova-opn.conf &lt;&lt;'EOF'
-nxova-opn: {
-  url: "https://opnrepo.zro.qzz.io",
-  enabled: yes
-}
-EOF
+<pre>fetch -o /usr/local/etc/pkg/repos/nxova-opn.conf https://raw.githubusercontent.com/nxovaeng/nxova-opn-repo/main/autobuild/nxova-opn.conf
 pkg update -r nxova-opn
-pkg install -r nxova-opn os-mosdns</pre>
+pkg install -r nxova-opn os-mosdns os-xray os-tun2socks</pre>
 <h2>包含内容</h2>
 <ul>
-  <li><b>os-mosdns</b> - MosDNS 原生 MVC 插件 (Services -&gt; MosDNS -&gt; Settings)</li>
-  <li><b>/usr/local/bin/mosdns</b> - mosdns-pf fork (含 pf_alias 插件)，随包安装</li>
-  <li><b>/usr/local/bin/pf-aliasd</b> - pf 表同步守护进程，随包安装</li>
+  <li><b>os-mosdns</b> - mosdns DNS 分流引擎（规则组：直连/代理/阻止），随包带 mosdns-pf 二进制与 pf-aliasd（解析结果同步进 pf 表，默认表名 proxy_group）</li>
+  <li><b>os-xray</b> - xray-core 管理（节点/订阅/入站/路由规则），配置与服务独立命名，与官方包零冲突</li>
+  <li><b>os-tun2socks</b> - hev-socks5-tunnel 透明桥，把策略路由流量送进本地 SOCKS5</li>
 </ul>
-<p>安装后在 WebUI 里启用两个服务，旧 mosdns-controller 如在运行请先停掉。</p>
+<p>版本格式 <i>&lt;构建日期&gt;.&lt;CI 轮次&gt;</i>（如 2026.10.23.31），CI 推送后自动打包发布，<code>pkg upgrade -r nxova-opn</code> 直接升级。源码与说明：<a href="https://github.com/nxovaeng/nxova-opn-repo">github.com/nxovaeng/nxova-opn-repo</a></p>
 </body>
 </html>

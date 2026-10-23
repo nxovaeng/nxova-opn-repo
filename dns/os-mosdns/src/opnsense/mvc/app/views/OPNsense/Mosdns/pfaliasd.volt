@@ -10,6 +10,7 @@
         };
         mapDataToFormUI(data_get_map).done(function(data) {
             $('.selectpicker').selectpicker('refresh');
+            injectFlushButton();
         });
 
         $("#savePfaliasdAct").click(function() {
@@ -71,18 +72,23 @@
         }
         refreshSvc();
 
-        // Flush button sits right of the 启动时清空表 (flush_tables) input:
-        // wrap the input in a flex row, append the button, a hint and the
-        // result line inside the same form cell.
-        var $ft = $('input[id$=".flush_tables"]').first();
-        if ($ft.length) {
-            $ft.wrap('<div style="display:flex; gap:6px; align-items:center;"></div>');
-            $ft.css('flex', '1');
-            $ft.after('<button type="button" class="btn btn-warning btn-sm" id="flushAliasAct" style="flex:none;"><b>清空别名表</b></button>');
-            $ft.closest('td').append('<div class="text-muted" style="margin-top:4px;">立即清空目标别名表及 pf-aliasd 的 TTL 记录，改了分流规则想马上生效时用；新的解析会重新填充。</div><div id="flushMsg" style="margin-top:2px;"></div>');
+        // Flush button on its own line under the 启动时清空表 (flush_tables)
+        // input, hint/result kept apart from the field's help column.
+        // Enabled only while flush_tables names at least one table --
+        // with none named there is no managed table to flush.
+        function injectFlushButton() {
+            var $ft = $('input[id$=".flush_tables"]').first();
+            if (!$ft.length || $('#flushAliasAct').length) return;
+            var $btn = $('<button type="button" class="btn btn-warning btn-sm" id="flushAliasAct"><b>清空别名表</b></button>');
+            var $box = $('<div style="margin-top: 6px;"></div>').append($btn, '<span id="flushMsg" style="margin-left: 10px;"></span>');
+            var $hint = $('<div class="text-muted" style="margin-top: 4px;">上面填了表名才可用。立即清空这些别名表及 pf-aliasd 的 TTL 记录，改了分流规则想马上生效时用；新的解析会重新填充。</div>');
+            $ft.closest('td').append($box, $hint);
+            var syncState = function() { $btn.prop('disabled', $.trim($ft.val() || '') === ''); };
+            $ft.on('input change', syncState);
+            syncState();
         }
 
-        $("#flushAliasAct").click(function() {
+        $(document).on('click', '#flushAliasAct', function() {
             stdDialogConfirm('清空别名表',
                 '确定要立即清空别名表及 pf-aliasd 里的 TTL 记录吗？新的解析会重新填充。',
                 '清空', '取消', function() {
