@@ -118,6 +118,13 @@
             $url.before($sel);
         });
 
+        function reloadAllGrids() {
+            $.each(['direct', 'proxy', 'block'], function(i, t) {
+                $('#grid-remote-' + t).bootgrid('reload');
+                $('#grid-local-' + t).bootgrid('reload');
+            });
+        }
+
         // ---- merged files: stats + preview ----
         function refreshFileStats(selectName) {
             ajaxCall("/api/mosdns/service/listRules", {}, function(data, status) {
@@ -234,6 +241,7 @@
                     $m.removeClass("text-muted").addClass("text-danger").text('保存失败：' + (data['output'] || data['error'] || '未知错误'));
                 }
                 refreshFileStats();
+                reloadAllGrids();
             });
         });
 
@@ -257,6 +265,7 @@
                     $m.removeClass("text-muted").addClass("text-danger").text('拉取失败（保留旧缓存）：' + (data['error'] || '未知错误'));
                 }
                 refreshFileStats();
+                reloadAllGrids();
             });
         });
 

@@ -37,7 +37,7 @@ class SettingsController extends ApiMutableModelControllerBase
         if (isset($result['rows']) && is_array($result['rows'])) {
             foreach ($result['rows'] as &$row) {
                 $uuid = $row['uuid'] ?? null;
-                $row['content_count'] = ($uuid !== null && isset($counts[$uuid])) ? $counts[$uuid] : null;
+                $row['content_count'] = ($uuid !== null && isset($counts[$uuid])) ? $counts[$uuid] : 0;
             }
             unset($row);
         }
