@@ -18,7 +18,7 @@ daemon 或机器重启后，内存堆丢失，表里残留的 IP 就再也没人
 因此启动时用 `-tables` 指定管理的表，逐个清空后再开始服务：
 
 ```sh
-pf-aliasd -tables GFW_Proxy,DIRECT
+pf-aliasd -tables proxy_group,DIRECT
 ```
 
 - 表不存在（还没在 OPNsense 里建别名/Apply）只记 warning，不退出。
@@ -40,7 +40,7 @@ pf-aliasd -tables GFW_Proxy,DIRECT
 |---|---|---|
 | `-socket` | `/var/run/pf-aliasd.sock` | Unix SOCK_SEQPACKET socket 路径 |
 | `-dev` | `/dev/pf` | PF 字符设备路径 |
-| `-tables` | 空 | 启动时清空的表名，逗号分隔，如 `GFW_Proxy,DIRECT` |
+| `-tables` | 空 | 启动时清空的表名，逗号分隔，如 `proxy_group,DIRECT` |
 | `-gc` | `2s` | TTL 过期 GC 扫描间隔 |
 | `-batch` | `256` | 单次 GC 最多驱逐的过期 IP 数 |
 | `-mode` | `0660` | socket 文件权限 |

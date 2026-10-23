@@ -21,7 +21,7 @@
         ],
         proxy: [
             ['代理域名 proxy-list', 'proxy-list', 'proxy-list.txt'],
-            ['GFW 列表 gfw', 'gfw', 'gfw.txt']
+            ['代理列表（gfw）', 'gfw', 'gfw.txt']
         ],
         block: [
             ['广告拒绝 reject-list', 'reject-list', 'reject-list.txt'],

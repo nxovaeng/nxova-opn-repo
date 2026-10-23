@@ -60,7 +60,7 @@
                 <Required>Y</Required>
             </enabled>
             <table type="TextField">
-                <default>GFW_Proxy</default>
+                <default>proxy_group</default>
                 <Required>Y</Required>
                 <ValidationMessage>Target pf table name (OPNsense External alias).</ValidationMessage>
                 <Mask>/^[A-Za-z0-9_]{1,31}$/</Mask>

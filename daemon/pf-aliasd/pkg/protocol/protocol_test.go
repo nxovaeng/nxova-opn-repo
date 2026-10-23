@@ -11,7 +11,7 @@ func TestEncodeDecodeAdd(t *testing.T) {
 		net.ParseIP("2606:4700:4700::1111"),
 	}
 
-	orig := NewAddMessage(1234, "gfw_proxy", 300, ips)
+	orig := NewAddMessage(1234, "proxy_group", 300, ips)
 	data, err := orig.Encode()
 	if err != nil {
 		t.Fatalf("Encode failed: %v", err)
@@ -28,8 +28,8 @@ func TestEncodeDecodeAdd(t *testing.T) {
 	if decoded.Header.Seq != 1234 {
 		t.Errorf("Expected Seq 1234, got %d", decoded.Header.Seq)
 	}
-	if decoded.Table != "gfw_proxy" {
-		t.Errorf("Expected table 'gfw_proxy', got '%s'", decoded.Table)
+	if decoded.Table != "proxy_group" {
+		t.Errorf("Expected table 'proxy_group', got '%s'", decoded.Table)
 	}
 	if decoded.TTL != 300 {
 		t.Errorf("Expected TTL 300, got %d", decoded.TTL)

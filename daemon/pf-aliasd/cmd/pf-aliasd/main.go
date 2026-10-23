@@ -26,7 +26,7 @@ var (
 	gcInterval = flag.Duration("gc", 2*time.Second, "Interval for TTL expiration GC sweeps")
 	gcBatch    = flag.Int("batch", 256, "Max expired IPs to evict in a single GC batch")
 	socketMode = flag.String("mode", "0660", "Octal file mode permissions for Unix socket")
-	// Comma-separated pf table names to flush on startup, e.g. "GFW_Proxy,DIRECT".
+	// Comma-separated pf table names to flush on startup, e.g. "proxy_group,DIRECT".
 	// Tables are "persist"ent across filter reloads, and the in-memory TTL heap
 	// is lost on restart, so without this stale entries would leak forever.
 	flushTables = flag.String("tables", "", "Comma-separated pf table names to flush on startup")

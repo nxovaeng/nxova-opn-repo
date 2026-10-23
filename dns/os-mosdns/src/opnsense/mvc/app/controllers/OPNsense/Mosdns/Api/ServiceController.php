@@ -28,6 +28,14 @@ class ServiceController extends ApiMutableServiceControllerBase
         $merge = $this->runMerge();
         $ret = parent::reconfigureAction();
         if (isset($ret['status']) && $ret['status'] == 'ok') {
+            $created = $this->ensureAliasTable();
+            if ($created) {
+                $ret['status_msg'] = trim(($ret['status_msg'] ?? '') .
+                    ' 已自动创建别名 ' . $created . '（外部/高级），pf 表已生成。');
+            } elseif ($created === false) {
+                $ret['status_msg'] = trim(($ret['status_msg'] ?? '') .
+                    ' 警告：自动创建别名失败，请到防火墙 → 别名手动新建同名“外部（高级）”别名。');
+            }
             (new Backend())->configdRun('mosdns pfaliasd restart');
             if (!empty($merge['warnings'])) {
                 $ret['status_msg'] = trim(($ret['status_msg'] ?? '') .
@@ -35,6 +43,47 @@ class ServiceController extends ApiMutableServiceControllerBase
             }
         }
         return $ret;
+    }
+
+    /**
+     * Make sure an "External (advanced)" firewall alias exists for the pf
+     * sync target table. A pf table only exists once the ruleset defines
+     * it, and an External alias is exactly that definition (core never
+     * manages its content -- pf-aliasd does). A missing table used to mean
+     * silent sync failure unless the user created the alias by hand, so
+     * Apply creates it when missing. An existing alias is never touched.
+     *
+     * Returns the created table name, null when nothing was needed, or
+     * false on failure.
+     */
+    private function ensureAliasTable()
+    {
+        $mdl = $this->getModel();
+        if ($mdl === null || (string)$mdl->pfalias->enabled !== '1') {
+            return null;
+        }
+        $table = trim((string)$mdl->pfalias->table);
+        if ($table === '') {
+            return null;
+        }
+        try {
+            $aliasMdl = new \OPNsense\Firewall\Alias();
+            foreach ($aliasMdl->aliases->alias->iterateItems() as $item) {
+                if ((string)$item->name === $table) {
+                    return null;
+                }
+            }
+            $node = $aliasMdl->aliases->alias->Add();
+            $node->enabled = '1';
+            $node->name = $table;
+            $node->type = 'external';
+            $node->description = 'os-mosdns pf-aliasd sync target (auto-created on Apply)';
+            $aliasMdl->serializeToConfig();
+            (new Backend())->configdRun('filter reload');
+            return $table;
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /* ------------------------------------------------------------------ */

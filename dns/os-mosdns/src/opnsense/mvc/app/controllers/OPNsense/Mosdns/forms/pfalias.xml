@@ -9,7 +9,7 @@
         <id>mosdns.pfalias.table</id>
         <label>pf 表名</label>
         <type>text</type>
-        <help>目标 pf 表名（一般是防火墙→别名里的“外部（高级）”类型），如 GFW_Proxy。</help>
+        <help>目标 pf 表名，如 proxy_group。点「应用」时若防火墙→别名里不存在同名的“外部（高级）”别名，会自动创建（pf 表随之生成），不用手动建；已存在的别名不会被改动。</help>
     </field>
     <field>
         <id>mosdns.pfalias.min_ttl</id>
