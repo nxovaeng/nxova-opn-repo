@@ -72,16 +72,13 @@ build_plugin() {
         chmod +x "${PLUGINS_SRC}/${_src}/src/bin/"*
     fi
     cd "${PLUGINS_SRC}/${_src}"
-    # CI 自动加版本: PLUGIN_VERSION=<date>.<run_number>, 如 2026.10.19.42
-    # run_number 单调递增, 保证 pkg upgrade 能认出新包; 仓库里的 Makefile 保持干净日期
+    # CI 自动版本: PLUGIN_VERSION=<构建日期>.<run_number>, 如 2026.10.23.42
+    # 日期取构建当天（不读仓库 Makefile 里写死的日期，免得长期不更新）;
+    # run_number 单调递增, 保证 pkg upgrade 能认出新包
     if [ -n "${PLUGIN_BUILD}" ]; then
-        _ver=$(awk '/^PLUGIN_VERSION[ \t]*=/{print $2}' Makefile)
-        case "${_ver}" in
-            *.*.*.*) echo "Version already has build suffix: ${_ver}" ;;
-            *) _newver="${_ver}.${PLUGIN_BUILD}"
-               sed -i '' "s/^PLUGIN_VERSION.*/PLUGIN_VERSION=     ${_newver}/" Makefile
-               echo "Version bumped: ${_ver} -> ${_newver}" ;;
-        esac
+        _newver="$(date +%Y.%m.%d).${PLUGIN_BUILD}"
+        sed -i '' "s/^PLUGIN_VERSION.*/PLUGIN_VERSION=     ${_newver}/" Makefile
+        echo "Version set: ${_newver}"
     fi
     make package PLUGIN_DEVEL=
     cp ./work/pkg/*.pkg "${PUBLISH_DIR}/"
