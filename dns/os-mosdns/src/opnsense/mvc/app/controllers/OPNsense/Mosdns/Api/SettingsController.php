@@ -18,53 +18,53 @@ class SettingsController extends ApiMutableModelControllerBase
 
     public function searchGroupsAction()
     {
-        return $this->searchBase('rulegroups');
+        return $this->searchBase('rulegroups.group');
     }
 
     /* the rules page shows local and remote groups as two separate grids;
        both live in the same rulegroups array, split by the source field */
     public function searchLocalGroupsAction()
     {
-        return $this->searchBase('rulegroups', null, null, function ($record) {
+        return $this->searchBase('rulegroups.group', null, null, function ($record) {
             return (string)$record->source !== 'remote';
         });
     }
 
     public function searchRemoteGroupsAction()
     {
-        return $this->searchBase('rulegroups', null, null, function ($record) {
+        return $this->searchBase('rulegroups.group', null, null, function ($record) {
             return (string)$record->source === 'remote';
         });
     }
 
     public function addLocalGroupAction()
     {
-        return $this->addBase('group', 'rulegroups', ['source' => 'local']);
+        return $this->addBase('group', 'rulegroups.group', ['source' => 'local']);
     }
 
     public function addRemoteGroupAction()
     {
-        return $this->addBase('group', 'rulegroups', ['source' => 'remote']);
+        return $this->addBase('group', 'rulegroups.group', ['source' => 'remote']);
     }
 
     public function getGroupAction($uuid = null)
     {
-        return $this->getBase('group', 'rulegroups', $uuid);
+        return $this->getBase('group', 'rulegroups.group', $uuid);
     }
 
     public function addGroupAction()
     {
-        return $this->addBase('group', 'rulegroups');
+        return $this->addBase('group', 'rulegroups.group');
     }
 
     public function setGroupAction($uuid)
     {
-        return $this->setBase('group', 'rulegroups', $uuid);
+        return $this->setBase('group', 'rulegroups.group', $uuid);
     }
 
     public function delGroupAction($uuid)
     {
-        $result = $this->delBase('rulegroups', $uuid);
+        $result = $this->delBase('rulegroups.group', $uuid);
         if (($result['result'] ?? '') !== 'failed') {
             // drop the group's content/cache files as well
             (new Backend())->configdpRun('mosdns rules delete_group', [$uuid]);
@@ -74,6 +74,6 @@ class SettingsController extends ApiMutableModelControllerBase
 
     public function toggleGroupAction($uuid, $enabled = null)
     {
-        return $this->toggleBase('rulegroups', $uuid, $enabled);
+        return $this->toggleBase('rulegroups.group', $uuid, $enabled);
     }
 }
