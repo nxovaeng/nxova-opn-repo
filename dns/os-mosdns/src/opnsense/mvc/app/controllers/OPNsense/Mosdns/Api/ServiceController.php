@@ -79,6 +79,9 @@ class ServiceController extends ApiMutableServiceControllerBase
             $node->type = 'external';
             $node->description = 'os-mosdns pf-aliasd sync target (auto-created on Apply)';
             $aliasMdl->serializeToConfig();
+            // serializeToConfig only stages into the in-memory config;
+            // without an explicit save the alias vanishes with the request.
+            \OPNsense\Core\Config::getInstance()->save();
             (new Backend())->configdRun('filter reload');
             return $table;
         } catch (\Throwable $e) {
