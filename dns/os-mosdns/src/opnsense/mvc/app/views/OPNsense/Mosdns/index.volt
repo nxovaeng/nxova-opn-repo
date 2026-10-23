@@ -47,6 +47,7 @@
                 }
                 $("#responseMsg").removeClass("hidden alert-success alert-danger alert-info").addClass(cls).html(msg);
                 refreshStatus();
+                updateServiceControlUI('mosdns');
             });
         });
 
@@ -56,43 +57,7 @@
             });
         }
         refreshStatus();
-    });
-</script>
-
-<div id="svc-btns" class="btn-group pull-right" role="group" aria-label="mosdns" style="display:none;">
-    <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('启动') }}">
-        <i class="fa fa-play fa-fw"></i>
-    </button>
-    <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="{{ lang._('重启') }}">
-        <i class="fa fa-refresh fa-fw"></i>
-    </button>
-    <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('停止') }}">
-        <i class="fa fa-square fa-fw"></i>
-    </button>
-</div>
-<script>
-    $(document).ready(function() {
-        // 移到页面标题同一行（OPNsense 内置风格）
-        var $h1 = $('h1').first();
-        if ($h1.length) { $('#svc-btns').show().detach().appendTo($h1); }
-        else { $('#svc-btns').show(); }
-        function refreshSvc() {
-            ajaxCall(url="/api/mosdns/service/status", sendData={}, callback=function(data, status) {
-                var running = data['status'] == 'running';
-                $("#svc-start").prop("disabled", running).toggleClass("btn-success", !running).toggleClass("btn-default", running);
-                $("#svc-stop").prop("disabled", !running);
-                $("#svc-restart").prop("disabled", !running);
-            });
-        }
-        function svcAct(act) {
-            ajaxCall(url="/api/mosdns/service/" + act, sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvc, 1500);
-            });
-        }
-        $("#svc-start").click(function() { svcAct('start'); });
-        $("#svc-restart").click(function() { svcAct('restart'); });
-        $("#svc-stop").click(function() { svcAct('stop'); });
-        refreshSvc();
+        updateServiceControlUI('mosdns');
     });
 </script>
 

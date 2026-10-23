@@ -237,6 +237,7 @@
                 var cls = data['status'] == 'ok' ? "alert-success" : "alert-danger";
                 $("#responseMsg").removeClass("hidden alert-success alert-danger alert-info").addClass(cls).html(escHtml(msg));
                 refreshStatus();
+                updateServiceControlUI('xray');
             });
         });
 
@@ -271,6 +272,7 @@
             });
         }
         refreshStatus();
+        updateServiceControlUI('xray');
 
         // ---- rule templates ----
         function addTemplateRules(templates) {
@@ -326,53 +328,6 @@
         }
         $(document).on('change', '#DialogNode select', cascadeNode);
         $(document).on('shown.bs.modal', '#DialogNode', function() { setTimeout(cascadeNode, 60); });
-    });
-</script>
-
-<div id="svc-btns" class="btn-group pull-right" role="group" aria-label="xray" style="display:none;">
-    <button id="svc-start" type="button" class="btn btn-default btn-xs" title="启动">
-        <i class="fa fa-play fa-fw"></i>
-    </button>
-    <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="重启">
-        <i class="fa fa-refresh fa-fw"></i>
-    </button>
-    <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="停止">
-        <i class="fa fa-square fa-fw"></i>
-    </button>
-</div>
-<script>
-    $(document).ready(function() {
-        var $h1 = $('h1').first();
-        if ($h1.length) { $('#svc-btns').show().detach().appendTo($h1); }
-        else { $('#svc-btns').show(); }
-    });
-</script>
-<script>
-    $(document).ready(function() {
-        function refreshSvcStatus() {
-            ajaxCall(url="/api/xray/service/status", sendData={}, callback=function(data, status) {
-                var running = data['status'] == 'running';
-                $("#svc-start").prop("disabled", running).toggleClass("btn-success", !running).toggleClass("btn-default", running);
-                $("#svc-stop").prop("disabled", !running);
-                $("#svc-restart").prop("disabled", !running);
-            });
-        }
-        $("#svc-start").click(function() {
-            ajaxCall(url="/api/xray/service/start", sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvcStatus, 1500);
-            });
-        });
-        $("#svc-restart").click(function() {
-            ajaxCall(url="/api/xray/service/restart", sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvcStatus, 1500);
-            });
-        });
-        $("#svc-stop").click(function() {
-            ajaxCall(url="/api/xray/service/stop", sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvcStatus, 1500);
-            });
-        });
-        refreshSvcStatus();
     });
 </script>
 

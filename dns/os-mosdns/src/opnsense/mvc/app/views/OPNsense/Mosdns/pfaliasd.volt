@@ -44,49 +44,32 @@
             });
         });
 
+        // pf-aliasd is a companion daemon inside the mosdns module (it has no
+        // own /api/<module>/service/* endpoints), so render core-style controls
+        // into the standard #service_status_container from its custom endpoints.
         function refreshSvc() {
             ajaxCall(url="/api/mosdns/service/pfaliasdStatus", sendData={}, callback=function(data, status) {
                 var running = data['status'] == 'running';
-                $("#svc-start").prop("disabled", running).toggleClass("btn-success", !running).toggleClass("btn-default", running);
-                $("#svc-stop").prop("disabled", !running);
-                $("#svc-restart").prop("disabled", !running);
+                var html = '<span class="label label-opnsense label-opnsense-sm ' + (running ? 'label-success' : 'label-danger') + '">'
+                         + '<i class="fa fa-' + (running ? 'play' : 'stop') + ' fa-fw"></i></span> ';
+                if (running) {
+                    html += '<span id="pfSvcRestart" class="btn btn-sm btn-default" title="{{ lang._('Restart') }}"><i class="fa fa-repeat fa-fw"></i></span>';
+                    html += '<span id="pfSvcStop" class="btn btn-sm btn-default" title="{{ lang._('Stop') }}"><i class="fa fa-stop fa-fw"></i></span>';
+                } else {
+                    html += '<span id="pfSvcStart" class="btn btn-sm btn-default" title="{{ lang._('Start') }}"><i class="fa fa-play fa-fw"></i></span>';
+                }
+                $('#service_status_container').html(html);
+                $('#pfSvcStart').click(function() { svcAct('pfaliasdStart'); });
+                $('#pfSvcRestart').click(function() { svcAct('pfaliasdRestart'); });
+                $('#pfSvcStop').click(function() { svcAct('pfaliasdStop'); });
             });
         }
-        $("#svc-start").click(function() {
-            ajaxCall(url="/api/mosdns/service/pfaliasdStart", sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvc, 1500);
+        function svcAct(act) {
+            ajaxCall(url="/api/mosdns/service/" + act, sendData={}, callback=function(data, status) {
+                setTimeout(refreshSvc, 1200);
             });
-        });
-        $("#svc-restart").click(function() {
-            ajaxCall(url="/api/mosdns/service/pfaliasdRestart", sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvc, 1500);
-            });
-        });
-        $("#svc-stop").click(function() {
-            ajaxCall(url="/api/mosdns/service/pfaliasdStop", sendData={}, callback=function(data, status) {
-                setTimeout(refreshSvc, 1500);
-            });
-        });
+        }
         refreshSvc();
-    });
-</script>
-
-<div id="svc-btns" class="btn-group pull-right" role="group" aria-label="pf-aliasd" style="display:none;">
-    <button id="svc-start" type="button" class="btn btn-default btn-xs" title="{{ lang._('启动') }}">
-        <i class="fa fa-play fa-fw"></i>
-    </button>
-    <button id="svc-restart" type="button" class="btn btn-default btn-xs" title="{{ lang._('重启') }}">
-        <i class="fa fa-refresh fa-fw"></i>
-    </button>
-    <button id="svc-stop" type="button" class="btn btn-default btn-xs" title="{{ lang._('停止') }}">
-        <i class="fa fa-square fa-fw"></i>
-    </button>
-</div>
-<script>
-    $(document).ready(function() {
-        var $h1 = $('h1').first();
-        if ($h1.length) { $('#svc-btns').show().detach().appendTo($h1); }
-        else { $('#svc-btns').show(); }
     });
 </script>
 
