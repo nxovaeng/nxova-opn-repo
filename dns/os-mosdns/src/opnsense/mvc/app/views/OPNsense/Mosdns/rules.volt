@@ -62,7 +62,7 @@
             ajaxCall("/api/mosdns/service/listRules", {}, function(data, status) {
                 var byName = {};
                 $.each(data['files'] || [], function(i, f) { byName[f['name']] = f; });
-                var order = ['custom-direct.txt', 'custom-proxy.txt', 'custom-block.txt'];
+                var order = ['sync_direct.txt', 'sync_proxy.txt', 'sync_block.txt'];
                 var html = $.map(order, function(n) {
                     var f = byName[n];
                     return n.replace('custom-', '').replace('.txt', '') + ' <b>' + (f ? f['count'] : 0) + '</b>';
@@ -193,7 +193,7 @@
             });
         });
 
-        refreshFileStats('custom-direct.txt');
+        refreshFileStats('sync_direct.txt');
     });
 </script>
 
@@ -201,7 +201,7 @@
     <p class="text-muted" style="margin-bottom: 8px;">
         规则组是<b>纯 txt 域名清单</b>（一行一条：裸域名 / domain: / full:，# 开头是注释），带类型、标签标记，是唯一的规则源。
         本地组在本页维护内容；在线组只填一个纯 txt 地址（可托管到 Vercel 等静态托管），家里和办公室填同一个地址就能复用同一份规则。
-        保存或应用时，启用的组会被合并进 mosdns 的内置文件 custom-direct / custom-proxy / custom-block.txt 并导出共享清单；
+        保存或应用时，启用的组会被合并进 mosdns 的 sync_direct / sync_proxy / sync_block.txt 并导出共享清单；
         xray 等其他工具读同一份清单和 txt，按各自格式转换使用。关掉的组不参与合并，可临时停用。
     </p>
     <div>
@@ -271,7 +271,7 @@
 
 <div class="content-box" style="margin-top: 15px;">
     <h4 style="margin-top: 0;">合并结果预览</h4>
-    <p class="text-muted">custom-*.txt 由规则组合并生成，不要直接编辑（改组即可）；cn.txt / gfw.txt 是权威名单，只读。</p>
+    <p class="text-muted">sync_*.txt 由规则组合并生成，不要直接编辑（改组即可）。</p>
     <div class="form-group">
         <select id="previewFileSelect" class="form-control" style="max-width: 300px;"></select>
     </div>

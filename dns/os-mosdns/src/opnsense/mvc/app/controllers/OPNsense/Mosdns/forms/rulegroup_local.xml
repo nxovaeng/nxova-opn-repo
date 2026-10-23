@@ -15,7 +15,7 @@
         <id>mosdns.rulegroups.group.type</id>
         <label>类型</label>
         <type>dropdown</type>
-        <help>直连 / 代理 / 阻止。合并时按类型分别汇入 custom-direct / custom-proxy / custom-block.txt。</help>
+        <help>直连 / 代理 / 阻止。合并时按类型分别汇入 sync_direct / sync_proxy / sync_block.txt。</help>
     </field>
     <field>
         <id>mosdns.rulegroups.group.tags</id>
