@@ -28,6 +28,7 @@
             </mode>
             <custom_default_route type="OptionField">
                 <default>proxy</default>
+                <Required>Y</Required>
                 <OptionValues>
                     <direct>直连</direct>
                     <proxy>代理</proxy>

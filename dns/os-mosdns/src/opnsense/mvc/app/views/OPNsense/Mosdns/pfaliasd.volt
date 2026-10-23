@@ -72,22 +72,22 @@
         refreshSvc();
 
         $("#flushAliasAct").click(function() {
-            stdDialogConfirm("{{ lang._('Flush alias tables') }}",
-                "{{ lang._('Flush the pf alias tables and their TTL records in pf-aliasd right now? New DNS resolutions will refill them.') }}",
-                "{{ lang._('Flush') }}", "{{ lang._('Cancel') }}", function() {
+            stdDialogConfirm('清空别名表',
+                '确定要立即清空别名表及 pf-aliasd 里的 TTL 记录吗？新的解析会重新填充。',
+                '清空', '取消', function() {
                 var $m = $("#flushMsg");
-                $m.removeClass("text-danger text-success").addClass("text-muted").text("{{ lang._('Flushing...') }}");
+                $m.removeClass("text-danger text-success").addClass("text-muted").text('清空中…');
                 ajaxCall(url="/api/mosdns/service/pfaliasdFlush", sendData={}, callback=function(data, status) {
                     if (data['result'] === 'ok') {
                         var parts = $.map(data['tables'] || [], function(t) {
                             var n = (t['before'] === null || t['before'] === undefined) ? '?' : t['before'];
-                            var note = t['daemon'] === 'ok' ? '' : "{{ lang._(' (daemon not responding; table swept via pfctl only)') }}";
-                            return t['table'] + ': ' + n + "{{ lang._(' entries cleared') }}" + note;
+                            var note = t['daemon'] === 'ok' ? '' : '（守护未响应，仅用 pfctl 清了表）';
+                            return t['table'] + '：清掉 ' + n + ' 条' + note;
                         });
                         $m.removeClass("text-muted text-danger").addClass("text-success").text(parts.join('; '));
                     } else {
                         $m.removeClass("text-muted").addClass("text-danger")
-                          .text("{{ lang._('Flush failed: ') }}" + (data['error'] || data['output'] || '?'));
+                          .text('清空失败：' + (data['error'] || data['output'] || '?'));
                     }
                 });
             });
@@ -116,10 +116,10 @@
 <div class="col-md-12" style="margin-top: 20px;">
     <div class="content-box">
         <button class="btn btn-warning" id="flushAliasAct" type="button">
-            <b>{{ lang._('Flush alias tables') }}</b>
+            <b>清空别名表</b>
         </button>
         <span id="flushMsg" class="text-muted" style="margin-left: 10px;"></span>
-        <div class="text-muted" style="margin-top: 8px;">{{ lang._('Immediately empty the alias tables mosdns syncs (target table plus any startup-flush tables) together with pf-aliasd\'s TTL records, so rule changes take effect at once. New resolutions refill the tables.') }}</div>
+        <div class="text-muted" style="margin-top: 8px;">立即清空 mosdns 同步的别名表（目标表加上启动清空表）及 pf-aliasd 里的 TTL 记录，改了分流规则想马上生效时用；新的解析会重新填充。</div>
     </div>
 </div>
 
