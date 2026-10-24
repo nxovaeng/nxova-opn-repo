@@ -7,7 +7,7 @@
 # os-tun2socks: xjasonlyu/tun2socks daemon.
 # Arguments are managed by the plugin template in /etc/rc.conf.d/tun2socks.
 # Unlike hev, tun2socks does NOT assign the TUN address itself, so
-# start_postcmd waits for the device and assigns it (v4 /15, v6 /128).
+# start_postcmd waits for the device and assigns it (v4 /15, v6 /64).
 
 . /etc/rc.subr
 
@@ -47,7 +47,7 @@ tun2socks_poststart()
     fi
     if [ -n "${tun2socks_ipv6}" ]; then
         ifconfig "${_dev}" inet6 "${tun2socks_ipv6}" -alias >/dev/null 2>&1 || true
-        ifconfig "${_dev}" inet6 "${tun2socks_ipv6}" prefixlen 128 up
+        ifconfig "${_dev}" inet6 "${tun2socks_ipv6}" prefixlen 64 up
     fi
 }
 
