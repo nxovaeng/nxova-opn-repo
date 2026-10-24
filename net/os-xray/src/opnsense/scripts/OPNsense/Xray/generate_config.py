@@ -469,7 +469,12 @@ def main():
         r = subprocess.run([XRAY_BIN, '-test', '-c', tmp],
                            capture_output=True, text=True, timeout=30)
         if r.returncode != 0:
-            err = f'xray -test failed:\n{r.stderr[-2000:]}'
+            # xray may report on stdout, stderr, or both; capture both,
+            # otherwise the persisted error is empty exactly when the
+            # detail is needed (seen on cloudopn: 'xray -test failed:'
+            # with nothing after it).
+            detail = ((r.stdout or '') + (r.stderr or ''))[-2000:]
+            err = f'xray -test failed:\n{detail}'
             print(err, file=sys.stderr)
             persist_validation_error(err + '\n')
             try:
