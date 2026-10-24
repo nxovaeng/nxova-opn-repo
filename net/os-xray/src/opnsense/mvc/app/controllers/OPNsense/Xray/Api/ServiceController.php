@@ -19,12 +19,19 @@ class ServiceController extends ApiMutableServiceControllerBase
     /**
      * Regenerate xray config from the model (Python generator, runs
      * `xray -test` for validation), then start/restart the service.
+     *
+     * Order matters: template reload FIRST, then generate. The generator
+     * reads model.json, which is dumped by the template; generating
+     * before the reload (the old order) built the config from the
+     * PREVIOUS model.json, so the first Apply after any model change
+     * started stale config and only the second Apply picked it up.
      */
     public function reconfigureAction()
     {
         $ret = ['status' => 'failed'];
         if ($this->request->isPost()) {
             $backend = new Backend();
+            $backend->configdpRun('template reload', ['OPNsense/Xray']);
             $gen = trim($backend->configdRun('xray generate_config'));
             if ($gen !== 'OK') {
                 $ret['status_msg'] = $gen !== '' ? $gen : 'config generation failed';

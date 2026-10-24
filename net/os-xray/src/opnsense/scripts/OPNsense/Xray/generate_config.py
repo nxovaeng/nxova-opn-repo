@@ -46,6 +46,31 @@ def load_model():
         return json.load(f)
 
 
+def iter_items(section):
+    """Normalize an ArrayField section from the template dump.
+
+    The OPNsense template engine dumps config.xml to a dict where a
+    repeating tag is: missing when 0 items, a single dict (carrying
+    @uuid) when 1 item, a list of dicts (each carrying @uuid) when 2+
+    items. It NEVER produces a uuid-keyed dict, which is what the old
+    code assumed: .items() on a list crashes, and on a single dict it
+    iterates field names. Returns [(uuid, fields), ...] in document
+    order. (The core's own helpers.toList exists for exactly this
+    shape variance; model.json is a raw dump without it.)
+    """
+    if section is None:
+        return []
+    if isinstance(section, dict):
+        return [(section.get('@uuid') or 'single', section)]
+    if isinstance(section, list):
+        out = []
+        for i, item in enumerate(section):
+            if isinstance(item, dict):
+                out.append((item.get('@uuid') or f'item-{i}', item))
+        return out
+    return []
+
+
 def sniffing_obj():
     # object form (never the bool!) - see sniffing bool bug in old controller
     return {
@@ -84,7 +109,7 @@ def build_inbounds(model):
             'settings': {'address': '127.0.0.1'},
         },
     ]
-    for _uuid, ib in (model.get('inbounds') or {}).get('inbound', {}).items():
+    for _uuid, ib in iter_items((model.get('inbounds') or {}).get('inbound')):
         if ib.get('enabled') != '1':
             continue
         entry = {
@@ -200,12 +225,12 @@ def build_outbound_from_fields(nd):
 
 
 def build_outbounds(model):
-    nodes = (model.get('nodes') or {}).get('node', {})
+    nodes = iter_items((model.get('nodes') or {}).get('node'))
     active = (model.get('general') or {}).get('active_node', '')
     outbounds = []
     active_out = None
     seen_tags = set()
-    for uuid, nd in nodes.items():
+    for uuid, nd in nodes:
         if nd.get('enabled') != '1':
             continue
         ob = None
@@ -308,7 +333,7 @@ def build_routing(model):
     })
     user_rules = [
         (uuid, r) for uuid, r in
-        ((model.get('rules') or {}).get('rule', {}) or {}).items()
+        iter_items((model.get('rules') or {}).get('rule'))
         if r.get('enabled') == '1'
     ]
     # sort is stable: equal order values keep model insertion order
