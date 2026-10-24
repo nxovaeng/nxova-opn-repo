@@ -10,9 +10,11 @@ Usage: generate_config.py [--preview]
 Write discipline (P0-1/P0-2):
   - The write path takes a flock on /var/run/xray-os-gen.lock so two
     concurrent Applies (or Apply vs subscription refresh) cannot interleave.
-  - Config is written to config.json.tmp, fsynced, validated with
+  - Config is written to config.json.tmp.json, fsynced, validated with
     `xray -test -c <tmp>`, and only then atomically renamed over
-    config.json. A failed test leaves the previous good config.json
+    config.json. (The temp name keeps a .json suffix because xray
+    sniffs the config format from the extension; config.json.tmp
+    failed every test with 'Failed to get format'.) A failed test leaves the previous good config.json
     untouched (the old code wrote first and tested after, so a failed
     test left a broken config.json that killed the next service start).
   - Test/build failures persist to last_validation_error (shown as a
@@ -454,7 +456,10 @@ def main():
     # (finally below) so a later in-process call cannot self-deadlock
     lock_fd = acquire_gen_lock()
     try:
-        tmp = CONFIG_JSON + '.tmp'
+        # NOTE: the temp file MUST end in .json: xray sniffs the config
+        # format from the filename extension, and config.json.tmp failed
+        # every test with 'Failed to get format' (seen on cloudopn).
+        tmp = CONFIG_JSON + '.tmp.json'
         with open(tmp, 'w') as f:
             f.write(text + '\n')
             f.flush()
