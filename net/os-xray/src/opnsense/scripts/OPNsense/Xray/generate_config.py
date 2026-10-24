@@ -40,7 +40,8 @@ MODEL_JSON = os.path.join(CONF_DIR, 'model.json')
 CONFIG_JSON = os.path.join(CONF_DIR, 'config.json')
 VALIDATION_ERROR = os.path.join(CONF_DIR, 'last_validation_error')
 LOCK_FILE = '/var/run/xray-os-gen.lock'
-XRAY_BIN = '/usr/local/bin/xray'
+XRAY_BIN = '/usr/local/bin/xray-os'
+XRAY_ASSET_DIR = '/usr/local/share/xray-os'
 API_PORT = 10085
 
 
@@ -501,8 +502,12 @@ def main():
             clear_validation_error()
             print('OK')
             return
+        # validate with the same asset dir the runtime uses, otherwise a
+        # config that passes here could fail on start (or vice versa)
+        _env = dict(os.environ)
+        _env['XRAY_LOCATION_ASSET'] = XRAY_ASSET_DIR
         r = subprocess.run([XRAY_BIN, '-test', '-c', tmp],
-                           capture_output=True, text=True, timeout=30)
+                           capture_output=True, text=True, timeout=30, env=_env)
         if r.returncode != 0:
             # xray may report on stdout, stderr, or both; capture both,
             # otherwise the persisted error is empty exactly when the

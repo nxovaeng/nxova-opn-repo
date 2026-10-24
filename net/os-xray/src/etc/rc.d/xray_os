@@ -5,6 +5,8 @@
 # KEYWORD: shutdown
 #
 # os-xray: Xray-core proxy engine with custom config.
+# Binary is the plugin-bundled /usr/local/bin/xray-os (XTLS release,
+# renamed to avoid clashing with the official xray-core package).
 # Uses /usr/local/etc/xray-os/config.json (NOT the official xray-core confdir).
 # Enable flag is managed by the plugin template in /etc/rc.conf.d/xray_os.
 
@@ -14,16 +16,14 @@ name=xray_os
 rcvar=xray_os_enable
 
 pidfile=/var/run/xray_os.pid
-procname=/usr/local/bin/xray
+procname=/usr/local/bin/xray-os
 command=/usr/sbin/daemon
 command_args="-p ${pidfile} ${procname} run -c /usr/local/etc/xray-os/config.json"
 
 load_rc_config $name
 
-# geosite:/geoip: routing rules need the geo data files shipped with the
-# official xray-core package (PLUGIN_DEPENDS). Point xray at them when present.
-if [ -d /usr/local/share/xray ]; then
-    export XRAY_LOCATION_ASSET=${XRAY_LOCATION_ASSET:-/usr/local/share/xray}
-fi
+# geosite:/geoip: routing rules use the geo data files bundled with this
+# plugin (XTLS release, installed to /usr/local/share/xray-os).
+export XRAY_LOCATION_ASSET=${XRAY_LOCATION_ASSET:-/usr/local/share/xray-os}
 
 run_rc_command "$1"

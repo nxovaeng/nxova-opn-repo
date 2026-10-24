@@ -8,7 +8,7 @@
 #   tun2socks         : 从 xjasonlyu/tun2socks 官方 release 下载
 # 插件:
 #   dns/os-mosdns     : mosdns + pf-aliasd (src/bin/)
-#   net/os-xray       : 无捆绑二进制 (PLUGIN_DEPENDS=xray-core 官方包)
+#   net/os-xray       : xray-core 自带打包 (XTLS release, 二进制重命名 xray-os, 数据文件随包发)
 #   net/os-tun2socks  : tun2socks (src/bin/)
 #
 # plugins.mk 规则: src/<path> -> /usr/local/<path>, 所以 /usr/local/bin 的
@@ -23,6 +23,7 @@ PLUGINS_BRANCH="${PLUGINS_BRANCH:-master}"
 PLUGINS_SRC="/tmp/opnsense-plugins"
 MOSDNS_RELEASE="${MOSDNS_RELEASE:-v5.3.4-pf1}"
 T2S_VERSION="${T2S_VERSION:-2.7.0}"
+XRAY_VERSION="${XRAY_VERSION:-v26.10.21}"
 
 echo "=========================================================="
 echo " nxova-opn-repo 插件构建 (FreeBSD $(uname -r))"
@@ -53,6 +54,21 @@ if [ ! -x "${DIST_DIR}/bin/tun2socks" ]; then
     chmod +x "${DIST_DIR}/bin/tun2socks"
     rm -rf "${_t2s_tmp}"
 fi
+
+if [ ! -x "${DIST_DIR}/bin/xray-os" ] || [ ! -f "${DIST_DIR}/share/xray-os/geosite.dat" ]; then
+    echo "==> 下载 xray-core (${XRAY_VERSION})"
+    _xray_tmp="$(mktemp -d)"
+    fetch -o "${_xray_tmp}/xray.zip" \
+        "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-freebsd-64.zip"
+    # FreeBSD tar 即 bsdtar, 原生解 zip; 包内二进制名 xray, 数据文件 geosite.dat/geoip.dat
+    # 二进制重命名 xray-os, 数据文件进 share/xray-os, 避与官方 xray-core 包冲突
+    bsdtar -xf "${_xray_tmp}/xray.zip" -C "${_xray_tmp}"
+    mkdir -p "${DIST_DIR}/bin" "${DIST_DIR}/share/xray-os"
+    cp "${_xray_tmp}/xray" "${DIST_DIR}/bin/xray-os"
+    cp "${_xray_tmp}/geosite.dat" "${_xray_tmp}/geoip.dat" "${DIST_DIR}/share/xray-os/"
+    chmod +x "${DIST_DIR}/bin/xray-os"
+    rm -rf "${_xray_tmp}"
+fi
 ls -la "${DIST_DIR}/bin"
 
 # --- 2. clone opnsense/plugins -------------------------------------------
@@ -66,6 +82,7 @@ mkdir -p "${PUBLISH_DIR}"
 build_plugin() {
     _src="$1"   # 仓库内插件目录, 如 dns/os-mosdns
     _bins="$2"  # 注入 src/bin 的二进制, 空格分隔, 如 "mosdns pf-aliasd"
+    _share="$3"  # 可选: 注入 src/share/xray-os 的目录 (仅 os-xray 用)
     echo "==> 构建 ${_src}"
     rm -rf "${PLUGINS_SRC}/${_src}"
     cp -R "${WORKSPACE_DIR}/${_src}" "${PLUGINS_SRC}/${_src}"
@@ -75,6 +92,10 @@ build_plugin() {
             cp "${DIST_DIR}/bin/${_b}" "${PLUGINS_SRC}/${_src}/src/bin/"
         done
         chmod +x "${PLUGINS_SRC}/${_src}/src/bin/"*
+    fi
+    if [ -n "${_share}" ]; then
+        mkdir -p "${PLUGINS_SRC}/${_src}/src/share/xray-os"
+        cp "${_share}/"* "${PLUGINS_SRC}/${_src}/src/share/xray-os/"
     fi
     cd "${PLUGINS_SRC}/${_src}"
     # CI 自动版本: PLUGIN_VERSION=<构建日期>.<run_number>, 如 2026.10.23.42
@@ -91,7 +112,7 @@ build_plugin() {
 }
 
 build_plugin "dns/os-mosdns" "mosdns pf-aliasd"
-build_plugin "net/os-xray" ""
+build_plugin "net/os-xray" "xray-os" "${DIST_DIR}/share/xray-os"
 build_plugin "net/os-tun2socks" "tun2socks"
 
 # --- 4. pkg repo ----------------------------------------------------------
