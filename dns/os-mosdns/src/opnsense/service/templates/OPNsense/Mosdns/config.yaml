@@ -5,6 +5,7 @@
 {% set pfalias = _m.pfalias|default({}) %}
 {% set pfaliasd = _m.pfaliasd|default({}) %}
 {% set pfalias_enabled = pfalias.enabled|default('1') == '1' %}
+{% set rule_groups = helpers.toList('OPNsense.mosdns.rulegroups.group') %}
 {% set remote_upstreams = forward.remote_upstreams|default('') %}
 {% set local_upstreams = forward.local_upstreams|default('') %}
 {% set remote_socks5 = forward.remote_socks5|default('') %}
@@ -30,36 +31,51 @@ plugins:
 {% for addr in local_upstreams.split(',') if addr.strip() %}
             - addr: {{ addr.strip() }}
 {% endfor %}
+{# domain_set unions any number of files itself, so each enabled group's
+   file is listed directly -- there is no merge step. Local groups read
+   groups/<uuid>.txt, remote groups their groups/<uuid>.cache.txt. #}
     - tag: custom_direct_domain_set
       type: domain_set
       args:
         files:
-            - /usr/local/etc/mosdns/rule/custom_direct.txt
+{% for g in rule_groups if g.enabled|default('1') != '0' and g.source|default('local') == 'local' and g.type|default('direct') == 'direct' %}
+            - /usr/local/etc/mosdns/rule/groups/{{ g['@uuid'] }}.txt
+{% endfor %}
     - tag: custom_proxy_domain_set
       type: domain_set
       args:
         files:
-            - /usr/local/etc/mosdns/rule/custom_proxy.txt
+{% for g in rule_groups if g.enabled|default('1') != '0' and g.source|default('local') == 'local' and g.type|default('direct') == 'proxy' %}
+            - /usr/local/etc/mosdns/rule/groups/{{ g['@uuid'] }}.txt
+{% endfor %}
     - tag: custom_block_domain_set
       type: domain_set
       args:
         files:
-            - /usr/local/etc/mosdns/rule/custom_block.txt
+{% for g in rule_groups if g.enabled|default('1') != '0' and g.source|default('local') == 'local' and g.type|default('direct') == 'block' %}
+            - /usr/local/etc/mosdns/rule/groups/{{ g['@uuid'] }}.txt
+{% endfor %}
     - tag: sync_direct_domain_set
       type: domain_set
       args:
         files:
-            - /usr/local/etc/mosdns/rule/sync_direct.txt
+{% for g in rule_groups if g.enabled|default('1') != '0' and g.source|default('local') == 'remote' and g.type|default('direct') == 'direct' %}
+            - /usr/local/etc/mosdns/rule/groups/{{ g['@uuid'] }}.cache.txt
+{% endfor %}
     - tag: sync_proxy_domain_set
       type: domain_set
       args:
         files:
-            - /usr/local/etc/mosdns/rule/sync_proxy.txt
+{% for g in rule_groups if g.enabled|default('1') != '0' and g.source|default('local') == 'remote' and g.type|default('direct') == 'proxy' %}
+            - /usr/local/etc/mosdns/rule/groups/{{ g['@uuid'] }}.cache.txt
+{% endfor %}
     - tag: sync_block_domain_set
       type: domain_set
       args:
         files:
-            - /usr/local/etc/mosdns/rule/sync_block.txt
+{% for g in rule_groups if g.enabled|default('1') != '0' and g.source|default('local') == 'remote' and g.type|default('direct') == 'block' %}
+            - /usr/local/etc/mosdns/rule/groups/{{ g['@uuid'] }}.cache.txt
+{% endfor %}
 {% if pfalias_enabled %}
     - tag: sync_to_pf
       type: pf_alias

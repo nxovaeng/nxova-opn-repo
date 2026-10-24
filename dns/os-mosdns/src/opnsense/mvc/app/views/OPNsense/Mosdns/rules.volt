@@ -125,63 +125,22 @@
             });
         }
 
-        // ---- merged files: table (label / file / count / merged time /
-        // preview button); content loads on demand into a modal ----
-        function refreshFileStats() {
-            ajaxCall("/api/mosdns/service/listRules", {}, function(data, status) {
-                var byName = {};
-                $.each(data['files'] || [], function(i, f) { byName[f['name']] = f; });
-                var meta = [
-                    ['custom_direct.txt', '自定义直连'], ['custom_proxy.txt', '自定义代理'], ['custom_block.txt', '自定义阻止'],
-                    ['sync_direct.txt', '同步直连'], ['sync_proxy.txt', '同步代理'], ['sync_block.txt', '同步阻止']
-                ];
-                var rows = $.map(meta, function(pair) {
-                    var f = byName[pair[0]] || {};
-                    return '<tr><td>' + pair[1] + '</td><td><code>' + pair[0] + '</code></td>'
-                         + '<td>' + (f['count'] || 0) + ' 条</td>'
-                         + '<td>' + fmtTime(f['mtime']) + '</td>'
-                         + '<td><button type="button" class="btn btn-xs btn-default merged-preview" data-name="' + pair[0] + '" data-label="' + pair[1] + '">预览</button></td></tr>';
-                });
-                $('#mergedFilesBody').html(rows.join(''));
-            });
-        }
-
-        $(document).on('click', '.merged-preview', function() {
-            var name = $(this).data('name');
-            $('#mpTitle').text('预览合并文件：' + $(this).data('label') + '（' + name + '）');
-            $('#mpText').val('加载中…');
-            $('#mergedPreviewModal').modal('show');
-            ajaxCall("/api/mosdns/service/getRule/" + name, {}, function(data, status) {
-                $('#mpText').val(data['content'] || '（空）');
-            });
-        });
-
-        function mergeSummaryText(data) {
-            if (!data || data['result'] !== 'ok') return null;
-            var f = data['files'] || {};
-            var parts = [];
-            $.each(['custom_direct', 'custom_proxy', 'custom_block', 'sync_direct', 'sync_proxy', 'sync_block'], function(i, t) {
-                if (f[t]) parts.push(t + ' ' + f[t]['count'] + ' 条（' + (f[t]['groups'] || []).length + ' 组）');
-            });
-            var txt = '已合并：' + parts.join('，') + '。';
-            if (data['warnings'] && data['warnings'].length) {
-                txt += ' 警告：' + data['warnings'].join('；');
-            }
-            return txt;
-        }
-
-        $("#mergeRulesAct").click(function() {
-            var $m = $("#mergeMsg");
-            $m.removeClass("text-danger text-success").addClass("text-muted").text("合并中…");
-            ajaxCall("/api/mosdns/service/mergeRules", {}, function(data, status) {
-                var txt = mergeSummaryText(data);
-                if (txt) {
-                    $m.removeClass("text-muted text-danger").addClass((data['warnings'] || []).length ? "text-danger" : "text-success")
-                      .text(txt + ' mosdns 已重启。');
+        $("#applyRulesAct").click(function() {
+            var $m = $("#applyMsg");
+            $m.removeClass("text-danger text-success").addClass("text-muted").text("应用中…");
+            ajaxCall("/api/mosdns/service/applyRules", {}, function(data, status) {
+                if (data && data['result'] === 'ok') {
+                    var txt = '已应用，mosdns 已重启。';
+                    if (data['warnings'] && data['warnings'].length) {
+                        txt += ' 警告：' + data['warnings'].join('；');
+                        $m.removeClass("text-muted").addClass("text-danger").text(txt);
+                    } else {
+                        $m.removeClass("text-muted text-danger").addClass("text-success").text(txt);
+                    }
                 } else {
-                    $m.removeClass("text-muted").addClass("text-danger").text("合并失败：" + (data['output'] || data['error'] || '未知错误'));
+                    $m.removeClass("text-muted").addClass("text-danger")
+                      .text("应用失败：" + ((data && (data['output'] || data['error'])) || '未知错误'));
                 }
-                refreshFileStats();
             });
         });
 
@@ -233,13 +192,12 @@
             ajaxCall("/api/mosdns/service/setGroupContent/" + gcUuid, {content: $("#gcText").val()}, function(data, status) {
                 if (data['result'] === 'saved') {
                     $m.removeClass("text-muted text-danger").addClass("text-success")
-                      .text('已保存到文件。点页面下方「合并并应用」后合并生效（会重启 mosdns）。');
+                      .text('已保存到文件。点页面下方「应用」后生效（会重启 mosdns）。');
                 } else if (data['errors'] && data['errors'].length) {
                     $m.removeClass("text-muted").addClass("text-danger").text('校验失败：' + data['errors'].join('；'));
                 } else {
                     $m.removeClass("text-muted").addClass("text-danger").text('保存失败：' + (data['output'] || data['error'] || '未知错误'));
                 }
-                refreshFileStats();
                 reloadAllGrids();
             });
         });
@@ -271,18 +229,16 @@
                     if ((data['converted'] || 0) > 0) cleanNotes.push('转换 ' + data['converted'] + ' 条通配符为 domain:');
                     var droppedTxt = cleanNotes.length ? '（' + cleanNotes.join('，') + '）' : '';
                     $m.removeClass("text-muted text-danger").addClass("text-success")
-                      .text('已拉取 ' + (data['count'] || 0) + ' 条，缓存已更新' + droppedTxt + '，耗时 ' + cost + ' 秒。点页面下方「合并并应用」后生效。');
+                      .text('已拉取 ' + (data['count'] || 0) + ' 条，缓存已更新' + droppedTxt + '，耗时 ' + cost + ' 秒。点页面下方「应用」后生效。');
                 } else if (data['errors'] && data['errors'].length) {
                     $m.removeClass("text-muted").addClass("text-danger").text('拉取内容校验失败（保留旧缓存）：' + data['errors'].join('；'));
                 } else {
                     $m.removeClass("text-muted").addClass("text-danger").text('拉取失败（保留旧缓存）：' + (data['error'] || '未知错误'));
                 }
-                refreshFileStats();
                 reloadAllGrids();
             });
         });
 
-        refreshFileStats('custom_direct.txt');
     });
 </script>
 
@@ -290,7 +246,7 @@
     规则组只做 mosdns 的粗粒度分流：哪些域名<b>直连</b>、哪些走<b>代理</b>、哪些<b>阻止</b>，按类别分开管理。
     每类里<b>在线组</b>在上（填一个纯 txt 地址，或从预设清单里选；拉取后缓存到本地）、<b>自定义组</b>在下（内容在本页弹窗里维护）。
     规则一行一条：裸域名（后缀匹配）/ domain: / full: / regexp:，# 开头是注释；单个顶级域名（如 cn）不支持。在线列表同步时会清洗：通配符 *.x 转 domain:x，其余不支持的行（含顶级域名行）直接移除并计数。
-    编辑内容、拉取、改组信息（名称/标签/开关）都只存文件，点页面下方「合并并应用」才统一合并并重启 mosdns 生效；关掉的组不参与合并。
+    编辑内容、拉取、改组信息（名称/标签/开关）都只存文件，点页面下方「应用」才重写配置并重启 mosdns 生效；关掉的组不参与。
 </p>
 
 <ul class="nav nav-tabs" data-tabs="tabs" id="ruletabs">
@@ -324,7 +280,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「合并并应用」才生效。</p>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「应用」才生效。</p>
 
         <h4 style="margin-top: 18px;">自定义组（直连）</h4>
         <table id="grid-local-direct" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalDirect">
@@ -349,7 +305,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「合并并应用」才生效）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「应用」才生效）。</p>
     </div>
     <div id="tab-proxy" class="tab-pane fade">
         <h4 style="margin-top: 0;">在线组（代理）</h4>
@@ -376,7 +332,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「合并并应用」才生效。</p>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「应用」才生效。</p>
 
         <h4 style="margin-top: 18px;">自定义组（代理）</h4>
         <table id="grid-local-proxy" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalProxy">
@@ -401,7 +357,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「合并并应用」才生效）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「应用」才生效）。</p>
     </div>
     <div id="tab-block" class="tab-pane fade">
         <h4 style="margin-top: 0;">在线组（阻止）</h4>
@@ -428,7 +384,7 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「合并并应用」才生效。</p>
+        <p class="text-muted">新建组时可从预设清单下拉选地址；建好后点行内「拉取」获取内容到缓存，「查看缓存」看上次拉到的内容。拉取失败保留旧缓存；拉取只更新缓存，点页底「应用」才生效。</p>
 
         <h4 style="margin-top: 18px;">自定义组（阻止）</h4>
         <table id="grid-local-block" class="table table-condensed table-hover table-striped" data-editDialog="DialogLocalBlock">
@@ -453,42 +409,18 @@
                 </tr>
             </tfoot>
         </table>
-        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「合并并应用」才生效）。</p>
+        <p class="text-muted">新建组后点行内「编辑内容」填写域名规则（弹窗编辑；保存只写文件，点页底「应用」才生效）。</p>
     </div>
 </div>
 <div id="remoteMsg" style="margin-top: 6px;"></div>
 
 <div class="content-box" style="margin-top: 15px;">
-    <h4 style="margin-top: 0;">合并并应用</h4>
+    <h4 style="margin-top: 0;">应用</h4>
     <div>
-        <button class="btn btn-primary btn-sm" id="mergeRulesAct" type="button">合并并应用</button>
-        <span class="text-muted" style="margin-left: 10px;">把启用的组按类别合并成下面六个文件，并重启 mosdns 生效。</span>
+        <button class="btn btn-primary btn-sm" id="applyRulesAct" type="button">应用</button>
+        <span class="text-muted" style="margin-left: 10px;">按当前启用的组重写 mosdns 配置并重启生效：没有合并步骤，各组文件直接列进配置由 mosdns 加载，改哪组都只需点这一次。</span>
     </div>
-    <div id="mergeMsg" style="margin-top: 6px;"></div>
-    <table class="table table-striped table-condensed table-hover" style="margin-top: 12px;">
-        <thead>
-            <tr><th style="width: 16%;">合并文件</th><th style="width: 22%;">文件名</th><th style="width: 12%;">条数</th><th style="width: 28%;">合并更新时间</th><th></th></tr>
-        </thead>
-        <tbody id="mergedFilesBody"></tbody>
-    </table>
-    <p class="text-muted">六个文件由规则组合并生成（自定义组 → custom_*，在线组 → sync_*），不要直接编辑，改组即可；内容点「预览」查看。</p>
-</div>
-
-<div class="modal fade" id="mergedPreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="mpTitle">预览</h4>
-            </div>
-            <div class="modal-body">
-                <textarea id="mpText" rows="18" class="form-control" style="font-family: monospace;" readonly></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-            </div>
-        </div>
-    </div>
+    <div id="applyMsg" style="margin-top: 6px;"></div>
 </div>
 
 <div class="modal fade" id="groupContentModal" tabindex="-1" role="dialog" aria-hidden="true">

@@ -23,9 +23,10 @@ class ServiceController extends ApiMutableServiceControllerBase
      */
     public function reconfigureAction()
     {
-        // saving/applying settings also re-merges the rule groups into the
-        // built-in custom-*.txt files and refreshes the shared groups.json
-        $merge = $this->runMerge();
+        // No merge exists: the generated config lists each enabled rule
+        // group's file directly. Applying only has to make sure those
+        // files exist (prepare) and refresh the shared groups.json.
+        $prep = $this->runPrepare();
         $ret = parent::reconfigureAction();
         if (isset($ret['status']) && $ret['status'] == 'ok') {
             $created = $this->ensureAliasTable();
@@ -40,9 +41,9 @@ class ServiceController extends ApiMutableServiceControllerBase
             // are independent (only the menu groups them). The daemon has
             // its own Apply (reconfigurePfaliasdAction below); a mosdns
             // config change does not need a daemon restart.
-            if (!empty($merge['warnings'])) {
+            if (!empty($prep['warnings'])) {
                 $ret['status_msg'] = trim(($ret['status_msg'] ?? '') .
-                    ' 规则合并警告：' . implode('；', $merge['warnings']));
+                    ' 规则警告：' . implode('；', $prep['warnings']));
             }
         }
         return $ret;
@@ -121,8 +122,10 @@ class ServiceController extends ApiMutableServiceControllerBase
     }
 
     /* ------------------------------------------------------------------ */
-    /* Rule groups: canonical plain-txt lists. mosdns merges the enabled  */
-    /* groups into custom-*.txt; other tools (xray) read groups.json.     */
+    /* Rule groups: canonical plain-txt lists. The generated mosdns      */
+    /* config lists each enabled group's file in its domain_set (mosdns  */
+    /* unions them itself -- no merge step); other tools read            */
+    /* groups.json.                                                      */
     /* ------------------------------------------------------------------ */
 
     private function findGroup($uuid)
@@ -163,30 +166,37 @@ class ServiceController extends ApiMutableServiceControllerBase
         return $list;
     }
 
-    private function runMerge()
+    private function runPrepare()
     {
         $tmp = tempnam('/tmp', 'mosdns-groups-');
         file_put_contents($tmp, json_encode($this->groupsManifest()));
-        $raw = trim((new Backend())->configdpRun('mosdns rules merge', [$tmp]));
+        $raw = trim((new Backend())->configdpRun('mosdns rules prepare', [$tmp]));
         @unlink($tmp);
         $data = json_decode($raw, true);
         return is_array($data) ? $data : ['result' => 'failed', 'output' => $raw];
     }
 
     /**
-     * Merge enabled groups into custom-*.txt (+ export groups.json), then
-     * restart mosdns so the merged lists take effect.
+     * Apply the rule groups: ensure their files exist, regenerate the
+     * mosdns config (its domain_set file lists come from the model), and
+     * restart mosdns. No merging -- mosdns unions the group files itself.
      */
-    public function mergeRulesAction()
+    public function applyRulesAction()
     {
         if (!$this->request->isPost()) {
             return ['result' => 'failed'];
         }
-        $merge = $this->runMerge();
-        if (($merge['result'] ?? '') === 'ok') {
-            (new Backend())->configdRun('mosdns restart');
+        $prep = $this->runPrepare();
+        if (($prep['result'] ?? '') !== 'ok') {
+            return $prep;
         }
-        return $merge;
+        $backend = new Backend();
+        $tpl = trim($backend->configdpRun('template reload', ['OPNsense/Mosdns']));
+        if ($tpl !== 'OK') {
+            return ['result' => 'failed', 'error' => '模板生成失败：' . $tpl];
+        }
+        $backend->configdRun('mosdns restart');
+        return $prep;
     }
 
     /**
@@ -205,9 +215,9 @@ class ServiceController extends ApiMutableServiceControllerBase
     }
 
     /**
-     * Save a local group's content (validated by rule_tool), then merge
-     * and restart so the change is live immediately.
-     * Body: {content: "..."}.
+     * Save a local group's content (validated by rule_tool). Body:
+     * {content: "..."}. Writing only touches the group's file; the
+     * change goes live at the next Apply (applyRulesAction).
      */
     public function setGroupContentAction($uuid)
     {
@@ -233,16 +243,16 @@ class ServiceController extends ApiMutableServiceControllerBase
             }
             return ['result' => 'failed', 'output' => $result];
         }
-        // Deliberately no merge/restart here: editing only writes the
-        // group's file. Merging + mosdns restart happens once, when the
-        // user clicks Merge & Apply (mergeRulesAction).
+        // Deliberately no restart here: editing only writes the group's
+        // file. It goes live once, when the user clicks Apply
+        // (applyRulesAction: template reload + mosdns restart).
         return ['result' => 'saved'];
     }
 
     /**
      * Fetch a remote group's URL into its cache (sanitized; a failed fetch
      * keeps the old cache). Like editing, this only updates the file --
-     * merging + mosdns restart is Merge & Apply's job.
+     * it goes live at the next Apply (applyRulesAction).
      */
     public function fetchGroupAction($uuid)
     {
@@ -267,56 +277,9 @@ class ServiceController extends ApiMutableServiceControllerBase
     }
 
     /**
-     * List rule files with stats.
-     */
-    public function listRulesAction()
-    {
-        $raw = trim((new Backend())->configdRun('mosdns rules list'));
-        $data = json_decode($raw, true);
-        return ['result' => 'ok', 'files' => is_array($data) ? $data : []];
-    }
-
-    /**
-     * Get a rule file's content.
-     */
-    public function getRuleAction($name)
-    {
-        $name = basename($name);
-        $raw = (new Backend())->configdpRun('mosdns rules get', [$name]);
-        return ['result' => 'ok', 'name' => $name, 'content' => $raw];
-    }
-
-    /**
-     * Save a rule file (custom-*.txt only). Body: {content: "..."}.
-     * Content is validated by rule_tool.py before install; on validation
-     * failure the live file is untouched and errors are returned.
-     * mosdns loads rule files at startup, so restart it to apply.
-     */
-    public function setRuleAction($name)
-    {
-        if (!$this->request->isPost()) {
-            return ['result' => 'failed'];
-        }
-        $name = basename($name);
-        $content = $this->request->getPost('content', 'string', '');
-        $tmp = tempnam('/tmp', 'mosdns-rule-');
-        file_put_contents($tmp, $content);
-        $result = trim((new Backend())->configdpRun('mosdns rules install', [$name, $tmp]));
-        @unlink($tmp);
-        if ($result === 'OK') {
-            // rule files are read at mosdns startup; restart to reload them
-            (new Backend())->configdRun('mosdns restart');
-            return ['result' => 'saved'];
-        }
-        $data = json_decode($result, true);
-        if (is_array($data) && !empty($data['errors'])) {
-            return ['result' => 'failed', 'errors' => $data['errors']];
-        }
-        return ['result' => 'failed', 'output' => $result];
-    }
-
-    /**
-     * Test a domain against the current rules/mode. Returns the routing decision.
+     * Test a domain against the current rule groups/mode (the simulator
+     * reads the same group files the generated config lists). Returns
+     * the routing decision.
      */
     public function testDomainAction()
     {
@@ -324,7 +287,10 @@ class ServiceController extends ApiMutableServiceControllerBase
         if ($domain === '') {
             return ['result' => 'failed', 'error' => 'empty domain'];
         }
-        $raw = trim((new Backend())->configdpRun('mosdns rules test', [$domain]));
+        $tmp = tempnam('/tmp', 'mosdns-groups-');
+        file_put_contents($tmp, json_encode($this->groupsManifest()));
+        $raw = trim((new Backend())->configdpRun('mosdns rules test', [$domain, $tmp]));
+        @unlink($tmp);
         $data = json_decode($raw, true);
         if (!is_array($data)) {
             return ['result' => 'failed', 'error' => $raw];
