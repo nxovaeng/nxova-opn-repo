@@ -12,6 +12,19 @@
         window.__pings = {};
         window.__activeUuid = '';
 
+        // ---- validation error banner (P0-2) ----
+        function refreshValidationBanner() {
+            ajaxCall(url="/api/xray/service/getValidationError", sendData={}, callback=function(data, status) {
+                var err = (data['error'] || '').trim();
+                if (err) {
+                    $("#validationBanner").removeClass("hidden").text("上次配置生成失败（旧配置仍在运行）：" + err);
+                } else {
+                    $("#validationBanner").addClass("hidden").text("");
+                }
+            });
+        }
+        refreshValidationBanner();
+
         // ---- general settings ----
         mapDataToFormUI({'frm_GeneralSettings': "/api/xray/settings/get"}).done(function() {
             $('.selectpicker').selectpicker('refresh');
@@ -181,9 +194,20 @@
             $r.removeClass("text-success text-danger").text("更新中…");
             updateSub(uuid, function(data) {
                 if (data['result'] === 'saved') {
-                    $r.addClass("text-success").text("订阅已更新，新增 " + (data['added'] || 0) + " 个节点，点底部「应用」生效。");
+                    var msg = "订阅已更新，新增 " + (data['added'] || 0) + " 个，更新 " + (data['updated'] || 0) + " 个，删除 " + (data['removed'] || 0) + " 个。";
+                    if (data['reloaded']) {
+                        msg += "命中配置的节点有变化，已自动重载生效。";
+                    } else if (data['warning']) {
+                        msg += data['warning'];
+                    } else if (data['reload_error']) {
+                        msg += data['reload_error'];
+                    } else {
+                        msg += "点底部「应用」生效。";
+                    }
+                    $r.addClass("text-success").text(msg);
                     $("#grid-nodes").bootgrid("reload");
                     updateActiveUI();
+                    refreshValidationBanner();
                 } else {
                     $r.addClass("text-danger").text("更新失败：" + (data['error'] || '拉取或解析失败'));
                 }
@@ -194,12 +218,17 @@
             fetchAll('/api/xray/settings/searchSubscriptions').done(function(rows) {
                 if (!rows.length) { $r.text("没有订阅。"); return; }
                 $r.removeClass("text-success text-danger").text("更新中…（0/" + rows.length + "）");
-                var ok = 0, total = 0, chain = $.Deferred().resolve();
+                var ok = 0, total = 0, anyReloaded = false, anyWarning = '';
+                var chain = $.Deferred().resolve();
                 $.each(rows, function(i, row) {
                     chain = chain.then(function() {
                         var d = $.Deferred();
                         updateSub(row.uuid, function(data) {
-                            if (data['result'] === 'saved') { ok++; total += (data['added'] || 0); }
+                            if (data['result'] === 'saved') {
+                                ok++; total += (data['added'] || 0);
+                                if (data['reloaded']) { anyReloaded = true; }
+                                if (data['warning']) { anyWarning = data['warning']; }
+                            }
                             $r.text("更新中…（" + (i + 1) + "/" + rows.length + "）");
                             d.resolve();
                         });
@@ -207,9 +236,14 @@
                     });
                 });
                 chain.done(function() {
-                    $r.addClass("text-success").text("全部更新完成：" + ok + "/" + rows.length + " 个订阅，共 " + total + " 个节点，点底部「应用」生效。");
+                    var msg = "全部更新完成：" + ok + "/" + rows.length + " 个订阅，共 " + total + " 个节点。";
+                    if (anyReloaded) { msg += "命中配置的改动已自动重载生效。"; }
+                    else if (anyWarning) { msg += anyWarning; }
+                    else { msg += "点底部「应用」生效。"; }
+                    $r.addClass("text-success").text(msg);
                     $("#grid-nodes").bootgrid("reload");
                     updateActiveUI();
+                    refreshValidationBanner();
                 });
             });
         });
@@ -240,6 +274,7 @@
                 var cls = data['status'] == 'ok' ? "alert-success" : "alert-danger";
                 $("#responseMsg").removeClass("hidden alert-success alert-danger alert-info").addClass(cls).html(escHtml(msg));
                 updateServiceControlUI('xray');
+                refreshValidationBanner();
             });
         });
 
@@ -327,6 +362,7 @@
     });
 </script>
 
+<div id="validationBanner" class="alert alert-danger hidden" role="alert" style="white-space: pre-wrap;"></div>
 <ul class="nav nav-tabs" data-tabs="tabs" id="maintabs">
     <li class="active"><a data-toggle="tab" href="#nodes">节点</a></li>
     <li><a data-toggle="tab" href="#inbounds">入站</a></li>
@@ -390,7 +426,7 @@
         </div>
 
         <div class="panel panel-default">
-            <div class="panel-heading"><b>订阅管理</b> <span class="text-muted">— 更新会拉取订阅并替换该订阅的全部节点</span></div>
+            <div class="panel-heading"><b>订阅管理</b> <span class="text-muted">— 更新会拉取订阅并按指纹同步该订阅的节点（更新已有的、新增没有的、删除订阅里已消失的）；命中活动节点或规则的改动会自动重载生效</span></div>
             <div class="panel-body">
                 <table id="grid-subscriptions" class="table table-condensed table-hover table-striped" data-editDialog="DialogSubscription">
                     <thead>
@@ -453,13 +489,14 @@
             <button class="btn btn-default btn-xs" id="addTemplateCN" type="button">＋ 国内直连（geosite/geoip）</button>
             <button class="btn btn-default btn-xs" id="addTemplateAds" type="button">＋ 广告拦截</button>
         </p>
-        <p class="text-muted">规则按表格顺序自上而下匹配，命中即止；都没命中走活动节点。出站留空 = 默认节点，也可以填某个节点标签做定向分流。设置里开启「共享规则组」后，MosDNS「规则」页的规则组会在应用时自动转换并排在本表规则之后（阻止 &gt; 直连 &gt; 代理）。</p>
+        <p class="text-muted">规则按「顺序」值自小到大匹配，命中即止；都没命中走活动节点。系统规则（DNS、53 端口、私网直连）永远排在最前。出站留空 = 默认节点，也可以填某个节点标签做定向分流。设置里开启「共享规则组」后，MosDNS「规则」页的规则组会在应用时自动转换并排在本表规则之后（阻止 &gt; 直连 &gt; 代理）。</p>
         <table id="grid-rules" class="table table-condensed table-hover table-striped" data-editDialog="DialogRule">
             <thead>
                 <tr>
                     <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
                     <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
                     <th data-column-id="type" data-type="string" data-width="6em" data-formatter="typeFmt">类型</th>
+                    <th data-column-id="order" data-type="numeric" data-width="5em">顺序</th>
                     <th data-column-id="values" data-type="string">匹配值</th>
                     <th data-column-id="outbound_tag" data-type="string" data-formatter="outboundFmt">出站</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>

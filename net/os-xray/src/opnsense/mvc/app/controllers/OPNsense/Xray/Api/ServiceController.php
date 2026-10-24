@@ -67,6 +67,17 @@ class ServiceController extends ApiMutableServiceControllerBase
     }
 
     /**
+     * Last config generation / validation error, if any (P0-2).
+     * Written by generate_config.py on failure, cleared on success.
+     */
+    public function getValidationErrorAction()
+    {
+        $backend = new Backend();
+        $raw = trim($backend->configdRun('xray show_validation_error'));
+        return ['result' => 'ok', 'error' => $raw];
+    }
+
+    /**
      * Tail the xray log.
      */
     public function logAction()
