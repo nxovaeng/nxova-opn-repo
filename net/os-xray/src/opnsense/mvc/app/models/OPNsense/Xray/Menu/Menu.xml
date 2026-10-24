@@ -2,6 +2,8 @@
     <Services>
         <Xray VisibleName="Xray" cssClass="fa fa-paper-plane fa-fw" Order="300">
             <Settings VisibleName="设置" url="/ui/xray" Order="10"/>
+            <Nodes VisibleName="节点" url="/ui/xray/index/nodes" Order="20"/>
+            <Routing VisibleName="路由规则" url="/ui/xray/index/routing" Order="30"/>
         </Xray>
     </Services>
 </menu>

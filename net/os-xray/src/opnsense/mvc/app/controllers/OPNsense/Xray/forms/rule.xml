@@ -20,6 +20,6 @@
         <id>rule.outbound_tag</id>
         <label>出站</label>
         <type>text</type>
-        <help>节点标签；填 direct 直连、block 拒绝；留空走默认节点。</help>
+        <help>对话框里是联动下拉框：默认节点、直连、拦截，或当前某个节点的标签（节点增删后重新打开对话框即刷新）；留空走默认节点。</help>
     </field>
 </form>
