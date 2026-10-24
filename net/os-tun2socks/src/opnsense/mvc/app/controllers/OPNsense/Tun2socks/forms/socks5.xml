@@ -12,12 +12,6 @@
         <help>上游 SOCKS5 服务器端口（xray 侧 hev-socks-in 默认 10808）。</help>
     </field>
     <field>
-        <id>tun2socks.socks5.udp_mode</id>
-        <label>UDP 模式</label>
-        <type>dropdown</type>
-        <help>UDP 流量的转发方式：udp 为原生 UDP associate（推荐，延迟低）；tcp 为 UDP over TCP（上游不支持 UDP associate 时用）。</help>
-    </field>
-    <field>
         <id>tun2socks.socks5.username</id>
         <label>用户名</label>
         <type>text</type>

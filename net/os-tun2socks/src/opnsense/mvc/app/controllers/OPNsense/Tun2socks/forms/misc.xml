@@ -9,24 +9,6 @@
         <id>tun2socks.misc.log_file</id>
         <label>日志文件</label>
         <type>text</type>
-        <help>守护进程日志文件路径（默认 /var/log/hev-socks5-tunnel.log，可在“日志”菜单查看）。</help>
-    </field>
-    <field>
-        <id>tun2socks.misc.task_stack_size</id>
-        <label>任务栈大小</label>
-        <type>text</type>
-        <help>可选，每个任务的栈大小（字节）。留空用默认；连接数大时可设 8192 或 16384。</help>
-    </field>
-    <field>
-        <id>tun2socks.misc.connect_timeout</id>
-        <label>连接超时</label>
-        <type>text</type>
-        <help>可选，向上游建连的超时（毫秒）。留空用默认；常用 5000。</help>
-    </field>
-    <field>
-        <id>tun2socks.misc.read_write_timeout</id>
-        <label>读写超时</label>
-        <type>text</type>
-        <help>可选，读写空闲超时（毫秒）。留空用默认；常用 5000-10000。</help>
+        <help>守护进程日志文件路径（默认 /var/log/tun2socks.log，可在“日志”菜单查看）。</help>
     </field>
 </form>

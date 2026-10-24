@@ -17,7 +17,7 @@ class ServiceController extends ApiMutableServiceControllerBase
     protected static $internalServiceEnabled = 'tunnel.enabled';
 
     /**
-     * Tail the hev-socks5-tunnel log (last 100 lines).
+     * Tail the tun2socks log (last 100 lines).
      */
     public function logAction()
     {

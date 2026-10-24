@@ -4,8 +4,10 @@
 # REQUIRE: NETWORKING
 # KEYWORD: shutdown
 #
-# os-tun2socks: hev-socks5-tunnel tun2socks daemon.
-# Enable flag is managed by the plugin template in /etc/rc.conf.d/tun2socks.
+# os-tun2socks: xjasonlyu/tun2socks daemon.
+# Arguments are managed by the plugin template in /etc/rc.conf.d/tun2socks.
+# Unlike hev, tun2socks does NOT assign the TUN address itself, so
+# start_postcmd waits for the device and assigns it (v4 /15, v6 /128).
 
 . /etc/rc.subr
 
@@ -13,9 +15,40 @@ name=tun2socks
 rcvar=tun2socks_enable
 
 pidfile=/var/run/tun2socks.pid
-procname=/usr/local/bin/hev-socks5-tunnel
+procname=/usr/local/bin/tun2socks
 command=/usr/sbin/daemon
-command_args="-p ${pidfile} ${procname} /usr/local/etc/hev-socks5-tunnel/config.yaml"
 
 load_rc_config $name
+
+# command_args is expanded here, AFTER load_rc_config, so the template
+# values are populated (assigning it before would bake in empty strings).
+command_args="-p ${pidfile} -o ${tun2socks_logfile:-/var/log/tun2socks.log} ${procname} --device tun://${tun2socks_device:-tun_hev} --proxy ${tun2socks_proxy:-socks5://127.0.0.1:10808} --mtu ${tun2socks_mtu:-1500} --loglevel ${tun2socks_loglevel:-info}"
+
+start_postcmd=tun2socks_poststart
+
+tun2socks_poststart()
+{
+    _dev="${tun2socks_device:-tun_hev}"
+    # tun2socks creates the device on start; wait up to ~5s for it.
+    _i=0
+    while [ ${_i} -lt 50 ]; do
+        if ifconfig "${_dev}" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.1
+        _i=$((_i + 1))
+    done
+    if [ -n "${tun2socks_ipv4}" ]; then
+        # -alias first: re-adding the same address on restart fails
+        # with "File exists"; removing it (no-op when absent) keeps
+        # restart idempotent while real errors stay loud.
+        ifconfig "${_dev}" inet "${tun2socks_ipv4}" -alias >/dev/null 2>&1 || true
+        ifconfig "${_dev}" inet "${tun2socks_ipv4}/15" up
+    fi
+    if [ -n "${tun2socks_ipv6}" ]; then
+        ifconfig "${_dev}" inet6 "${tun2socks_ipv6}" -alias >/dev/null 2>&1 || true
+        ifconfig "${_dev}" inet6 "${tun2socks_ipv6}" prefixlen 128 up
+    fi
+}
+
 run_rc_command "$1"

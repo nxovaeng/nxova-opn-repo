@@ -1,9 +1,10 @@
-hev-socks5-tunnel tun2socks daemon
+tun2socks daemon (xjasonlyu/tun2socks)
 
-Native OPNsense MVC plugin (no Go controller). Manages hev-socks5-tunnel,
-which forwards traffic arriving on a TUN interface through an upstream
-SOCKS5 proxy. Typically paired with os-mosdns: resolved proxy domains are
-injected into a pf table, policy-routed into the TUN device, and
-hev-socks5-tunnel hands them to a local xray-core outbound.
+Native OPNsense MVC plugin (no Go controller). Manages tun2socks
+(gVisor TCP/IP stack), which forwards traffic arriving on a TUN
+interface through an upstream SOCKS5 proxy. Typically paired with
+os-mosdns: resolved proxy domains are injected into a pf table,
+policy-routed into the TUN device, and tun2socks hands them to a
+local xray-core outbound.
 
 WWW: https://github.com/nxovaeng/nxova-opn-repo

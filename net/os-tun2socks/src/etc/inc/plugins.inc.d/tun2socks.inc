@@ -9,7 +9,7 @@ function tun2socks_services()
 {
     $services = array();
     $services[] = array(
-        'description' => gettext('tun2socks (hev-socks5-tunnel) daemon'),
+        'description' => gettext('tun2socks daemon'),
         'configd' => array(
             'restart' => array('tun2socks restart'),
             'start' => array('tun2socks start'),

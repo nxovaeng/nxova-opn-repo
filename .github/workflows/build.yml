@@ -29,7 +29,7 @@ jobs:
           go-version: '1.26'
           cache: true
 
-      # 只编自有代码 pf-aliasd; mosdns/hev-socks5-tunnel 由 build.sh 从 release 下载
+      # 只编自有代码 pf-aliasd; mosdns/tun2socks 由 build.sh 从 release 下载
       - name: Cross-compile pf-aliasd (FreeBSD)
         run: |
           mkdir -p dist/bin

@@ -29,10 +29,4 @@
         <type>text</type>
         <help>可选，TUN 接口的虚拟 IPv6 地址。留空则不启用 IPv6。</help>
     </field>
-    <field>
-        <id>tun2socks.tunnel.multi_queue</id>
-        <label>多队列</label>
-        <type>checkbox</type>
-        <help>在 TUN 接口上启用多队列（多核 CPU 转发性能更好，单核可不管）。</help>
-    </field>
 </form>

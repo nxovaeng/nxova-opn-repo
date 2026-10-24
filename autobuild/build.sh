@@ -5,11 +5,11 @@
 # 二进制来源:
 #   pf-aliasd        : $DIST_DIR/bin/pf-aliasd (ubuntu 上 Go 交叉编译, 自有代码常变)
 #   mosdns            : 从 nxovaeng/mosdns-pf release 下载 (调通后很少更新)
-#   hev-socks5-tunnel : 从 heiher/hev-socks5-tunnel 官方 release 下载
+#   tun2socks         : 从 xjasonlyu/tun2socks 官方 release 下载
 # 插件:
 #   dns/os-mosdns     : mosdns + pf-aliasd (src/bin/)
 #   net/os-xray       : 无捆绑二进制 (PLUGIN_DEPENDS=xray-core 官方包)
-#   net/os-tun2socks  : hev-socks5-tunnel (src/bin/)
+#   net/os-tun2socks  : tun2socks (src/bin/)
 #
 # plugins.mk 规则: src/<path> -> /usr/local/<path>, 所以 /usr/local/bin 的
 # 目标源路径是 src/bin (不是 src/usr/local/bin).
@@ -22,7 +22,7 @@ PUBLISH_DIR="${PUBLISH_DIR:-${WORKSPACE_DIR}/public}"
 PLUGINS_BRANCH="${PLUGINS_BRANCH:-master}"
 PLUGINS_SRC="/tmp/opnsense-plugins"
 MOSDNS_RELEASE="${MOSDNS_RELEASE:-v5.3.4-pf1}"
-HEV_VERSION="${HEV_VERSION:-2.19.0}"
+T2S_VERSION="${T2S_VERSION:-2.7.0}"
 
 echo "=========================================================="
 echo " nxova-opn-repo 插件构建 (FreeBSD $(uname -r))"
@@ -42,11 +42,16 @@ if [ ! -x "${DIST_DIR}/bin/mosdns" ]; then
     chmod +x "${DIST_DIR}/bin/mosdns"
 fi
 
-if [ ! -x "${DIST_DIR}/bin/hev-socks5-tunnel" ]; then
-    echo "==> 下载 hev-socks5-tunnel (${HEV_VERSION})"
-    fetch -o "${DIST_DIR}/bin/hev-socks5-tunnel" \
-        "https://github.com/heiher/hev-socks5-tunnel/releases/download/${HEV_VERSION}/hev-socks5-tunnel-freebsd-x86_64"
-    chmod +x "${DIST_DIR}/bin/hev-socks5-tunnel"
+if [ ! -x "${DIST_DIR}/bin/tun2socks" ]; then
+    echo "==> 下载 tun2socks (${T2S_VERSION})"
+    _t2s_tmp="$(mktemp -d)"
+    fetch -o "${_t2s_tmp}/tun2socks.zip" \
+        "https://github.com/xjasonlyu/tun2socks/releases/download/v${T2S_VERSION}/tun2socks-freebsd-amd64.zip"
+    # FreeBSD tar 即 bsdtar, 原生解 zip; 包内二进制名 tun2socks-freebsd-amd64
+    bsdtar -xf "${_t2s_tmp}/tun2socks.zip" -C "${_t2s_tmp}"
+    cp "${_t2s_tmp}/tun2socks-freebsd-amd64" "${DIST_DIR}/bin/tun2socks"
+    chmod +x "${DIST_DIR}/bin/tun2socks"
+    rm -rf "${_t2s_tmp}"
 fi
 ls -la "${DIST_DIR}/bin"
 
@@ -87,7 +92,7 @@ build_plugin() {
 
 build_plugin "dns/os-mosdns" "mosdns pf-aliasd"
 build_plugin "net/os-xray" ""
-build_plugin "net/os-tun2socks" "hev-socks5-tunnel"
+build_plugin "net/os-tun2socks" "tun2socks"
 
 # --- 4. pkg repo ----------------------------------------------------------
 if [ -f "${WORKSPACE_DIR}/autobuild/index.html" ]; then

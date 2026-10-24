@@ -1,7 +1,7 @@
 <model>
     <mount>//OPNsense/tun2socks</mount>
-    <version>1.0.0</version>
-    <description>hev-socks5-tunnel tun2socks daemon</description>
+    <version>1.1.0</version>
+    <description>tun2socks daemon (xjasonlyu/tun2socks)</description>
     <items>
         <tunnel>
             <enabled type="BooleanField">
@@ -28,10 +28,6 @@
             <ipv6 type="TextField">
                 <default></default>
             </ipv6>
-            <multi_queue type="BooleanField">
-                <default>0</default>
-                <Required>Y</Required>
-            </multi_queue>
         </tunnel>
         <socks5>
             <address type="TextField">
@@ -43,14 +39,6 @@
                 <default>10808</default>
                 <Required>Y</Required>
             </port>
-            <udp_mode type="OptionField">
-                <default>udp</default>
-                <Required>Y</Required>
-                <OptionValues>
-                    <udp>UDP associate (native UDP)</udp>
-                    <tcp>UDP over TCP</tcp>
-                </OptionValues>
-            </udp_mode>
             <username type="TextField">
                 <default></default>
             </username>
@@ -70,21 +58,9 @@
                 </OptionValues>
             </log_level>
             <log_file type="TextField">
-                <default>/var/log/hev-socks5-tunnel.log</default>
+                <default>/var/log/tun2socks.log</default>
                 <Required>Y</Required>
             </log_file>
-            <task_stack_size type="TextField">
-                <default></default>
-                <Mask>/^[0-9]*$/</Mask>
-            </task_stack_size>
-            <connect_timeout type="TextField">
-                <default></default>
-                <Mask>/^[0-9]*$/</Mask>
-            </connect_timeout>
-            <read_write_timeout type="TextField">
-                <default></default>
-                <Mask>/^[0-9]*$/</Mask>
-            </read_write_timeout>
         </misc>
     </items>
 </model>
