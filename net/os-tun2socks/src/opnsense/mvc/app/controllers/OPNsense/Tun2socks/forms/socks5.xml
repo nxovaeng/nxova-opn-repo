@@ -3,19 +3,19 @@
         <id>tun2socks.socks5.address</id>
         <label>服务器地址</label>
         <type>text</type>
-        <help>上游 SOCKS5 服务器地址，一般填 127.0.0.1（本机 xray-core 的 hev-socks-in 入站）。</help>
+        <help>上游 SOCKS5 服务器地址，一般填 127.0.0.1（本机 xray-core 的 socks 入站）。</help>
     </field>
     <field>
         <id>tun2socks.socks5.port</id>
         <label>服务器端口</label>
         <type>text</type>
-        <help>上游 SOCKS5 服务器端口（xray 侧 hev-socks-in 默认 10808）。</help>
+        <help>上游 SOCKS5 服务器端口（xray 侧 socks 入站默认 10808）。</help>
     </field>
     <field>
         <id>tun2socks.socks5.username</id>
         <label>用户名</label>
         <type>text</type>
-        <help>可选，SOCKS5 认证用户名（xray 侧 hev-socks-in 默认无认证，留空）。</help>
+        <help>可选，SOCKS5 认证用户名（xray 侧 socks 入站默认无认证，留空）。</help>
     </field>
     <field>
         <id>tun2socks.socks5.password</id>
