@@ -8,13 +8,19 @@
         <id>rule.type</id>
         <label>类型</label>
         <type>dropdown</type>
-        <help>domain 按域名匹配（支持 geosite:分类，如 geosite:cn）；ip 按 IP/CIDR 匹配（支持 geoip:cn、geoip:private）；source 按来源地址匹配（按设备分流）；port 按目标端口匹配。</help>
+        <help>domain 按域名匹配（支持 geosite:分类，如 geosite:cn）；ip 按 IP/CIDR 匹配（支持 geoip:cn、geoip:private）；source 按来源地址匹配（按设备分流）；port 按目标端口匹配；inbound 按入站标签匹配（一个入站对应一个出站）；protocol 按嗅探到的协议匹配（如 bittorrent，需入站开启嗅探）。</help>
     </field>
     <field>
         <id>rule.values</id>
         <label>值</label>
         <type>text</type>
-        <help>逗号分隔。如 google.com,youtube.com；或 192.168.1.0/24；端口如 53,443 或 1000-2000。</help>
+        <help>逗号分隔。如 google.com,youtube.com；或 192.168.1.0/24；端口如 53,443 或 1000-2000；协议如 bittorrent。入站类型规则不用填这里，填下面的入站字段。</help>
+    </field>
+    <field>
+        <id>rule.inbound_tag</id>
+        <label>入站</label>
+        <type>text</type>
+        <help>仅入站类型规则用：对话框里是入站下拉框（固定入站 + 自定义入站）；其他类型规则忽略此字段，名/ip 规则不加 inbound。</help>
     </field>
     <field>
         <id>rule.outbound_tag</id>

@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/xray</mount>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <description>Xray-core routing engine manager (custom config, no conflict with official package)</description>
     <items>
         <general>
@@ -167,12 +167,16 @@
                         <ip>ip</ip>
                         <source>source</source>
                         <port>port</port>
+                        <inbound>inbound</inbound>
+                        <protocol>protocol</protocol>
                     </OptionValues>
                 </type>
                 <values type="TextField">
-                    <Required>Y</Required>
-                    <help>Comma separated match values.</help>
+                    <help>Comma separated match values. Empty is allowed for inbound-type rules (they match on inbound_tag instead); the generator skips rules whose condition is empty.</help>
                 </values>
+                <inbound_tag type="TextField">
+                    <help>Inbound tag, only for inbound-type rules (one inbound maps to one outbound). Other rule types ignore it.</help>
+                </inbound_tag>
                 <order type="IntegerField">
                     <default>100</default>
                     <help>匹配顺序：自小到大，值相同按添加顺序。系统规则（DNS、53 端口、私网）永远排在用户规则之前。</help>

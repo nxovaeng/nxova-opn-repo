@@ -23,7 +23,7 @@
         refreshValidationBanner();
 
         // ---- formatters ----
-        var typeNames = {domain: '域名', ip: 'IP', source: '来源', port: '端口'};
+        var typeNames = {domain: '域名', ip: 'IP', source: '来源', port: '端口', inbound: '入站', protocol: '协议'};
 
         // ---- grids ----
         $("#grid-rules").UIBootgrid({
@@ -37,6 +37,11 @@
                 formatters: {
                     typeFmt: function(column, row) {
                         return typeNames[row.type] || row.type || '';
+                    },
+                    valuesFmt: function(column, row) {
+                        // inbound-type rules carry no values; show their inbound tag instead
+                        if (row.type === 'inbound') return escHtml(row.inbound_tag || '');
+                        return escHtml(row.values || '');
                     },
                     outboundFmt: function(column, row) {
                         var t = row.outbound_tag || '';
@@ -148,6 +153,50 @@
             });
         }
         $(document).on('shown.bs.modal', '#DialogRule', function() { setTimeout(buildOutboundSelect, 60); });
+
+        // ---- rule dialog cascade + inbound dropdown (inbound is a rule TYPE, never a field on domain/IP rules) ----
+        function ruleField(name) {
+            return $('#DialogRule').find('input,select,textarea').filter(function() {
+                return this.id && (this.id === name || this.id.endsWith('.' + name));
+            });
+        }
+        function showRuleRow($f, show) { if ($f.length) $f.closest('tr').toggle(!!show); }
+        function buildInboundSelect() {
+            var $input = ruleField('inbound_tag');
+            if (!$input.length) return;
+            var cur = $input.val() || '';
+            var $sel = $('#ruleInboundSelect');
+            if (!$sel.length) {
+                $sel = $('<select class="form-control" id="ruleInboundSelect"></select>');
+                $input.hide().after($sel);
+                $sel.on('change', function() { $input.val($sel.val()); });
+            }
+            $sel.empty();
+            // fixed inbounds are built into the generator, not the model, so list them explicitly
+            ['hev-socks-in', 'dns-in', 'api'].forEach(function(t) {
+                $sel.append($('<option>').val(t).text(t));
+            });
+            fetchAll('/api/xray/settings/searchInbounds').done(function(rows) {
+                $.each(rows, function(i, r) {
+                    if (r.tag) $sel.append($('<option>').val(r.tag).text(r.tag));
+                });
+                if (cur && $sel.find('option').filter(function() { return $(this).val() === cur; }).length === 0) {
+                    $sel.append($('<option>').val(cur).text(cur + '（入站已不存在）'));
+                }
+                $sel.val(cur);
+            });
+        }
+        function cascadeRule() {
+            var isInbound = (ruleField('type').val() || '') === 'inbound';
+            showRuleRow(ruleField('values'), !isInbound);
+            showRuleRow(ruleField('inbound_tag'), isInbound);
+            if (isInbound) buildInboundSelect();
+        }
+        $(document).on('change', '#DialogRule select', function() {
+            var id = this.id || '';
+            if (id === 'type' || id.endsWith('.type')) cascadeRule();
+        });
+        $(document).on('shown.bs.modal', '#DialogRule', function() { setTimeout(cascadeRule, 60); });
     });
 </script>
 
@@ -171,7 +220,7 @@
                 <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">启用</th>
                 <th data-column-id="type" data-type="string" data-width="6em" data-formatter="typeFmt">类型</th>
                 <th data-column-id="order" data-type="numeric" data-width="5em">顺序</th>
-                <th data-column-id="values" data-type="string">匹配值</th>
+                <th data-column-id="values" data-type="string" data-formatter="valuesFmt">匹配值</th>
                 <th data-column-id="outbound_tag" data-type="string" data-formatter="outboundFmt">出站</th>
                 <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
             </tr>

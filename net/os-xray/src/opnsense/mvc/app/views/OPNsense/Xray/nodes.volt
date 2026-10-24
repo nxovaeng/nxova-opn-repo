@@ -223,6 +223,22 @@
             });
         });
 
+        // ---- outbound test (live config path via socks inbound, 204 + latency) ----
+        $("#testOutboundAct").click(function() {
+            var $btn = $(this);
+            var $r = $("#outboundTestResult");
+            $btn.prop("disabled", true);
+            $r.removeClass("text-success text-danger").text("测试中…");
+            ajaxCall(url="/api/xray/service/testOutbound", sendData={}, callback=function(data, status) {
+                $btn.prop("disabled", false);
+                if (data && data['ok']) {
+                    $r.addClass("text-success").text("通，" + (data['ms'] || 0) + " ms（经当前配置的默认出站）。");
+                } else {
+                    $r.addClass("text-danger").text("断：" + ((data && data['error']) || '探针失败'));
+                }
+            });
+        });
+
         // ---- apply ----
         $("#reconfigureAct").click(function() {
             $("#reconfigureAct_progress").addClass("fa fa-spinner fa-pulse");
@@ -282,10 +298,12 @@
                 <select id="activeNodeSelect" class="form-control input-sm" style="width: auto; display: inline-block;"></select>
                 <button class="btn btn-primary btn-sm" id="setActiveAct" type="button">切换</button>
                 <button class="btn btn-default btn-sm" id="pingNodesAct" type="button">全部测速</button>
+                <button class="btn btn-default btn-sm" id="testOutboundAct" type="button">测试出站</button>
             </div>
             <div style="line-height: 30px;">
                 当前活动节点：<b id="activeNodeTag">未设置</b>
                 <span id="pingResult" class="text-muted" style="margin-left: 10px;"></span>
+                <span id="outboundTestResult" style="margin-left: 10px;"></span>
             </div>
             <div class="clearfix"></div>
             <small class="text-muted">活动节点是未命中路由规则时的默认出站；切换后点底部「应用」生效。也可以点节点行里的 ☆ 直接设为活动。</small>

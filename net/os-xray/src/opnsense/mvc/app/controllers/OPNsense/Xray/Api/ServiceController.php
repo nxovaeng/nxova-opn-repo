@@ -74,6 +74,25 @@ class ServiceController extends ApiMutableServiceControllerBase
     }
 
     /**
+     * Probe the live default outbound path (see test_outbound.py).
+     * The script always exits 0 with one JSON object; pass it through.
+     */
+    public function testOutboundAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['ok' => false, 'http_code' => 0, 'ms' => 0, 'error' => '需要 POST'];
+        }
+        $backend = new Backend();
+        $raw = trim($backend->configdRun('xray test_outbound'));
+        $data = json_decode($raw, true);
+        if (is_array($data)) {
+            return $data;
+        }
+        return ['ok' => false, 'http_code' => 0, 'ms' => 0,
+                'error' => $raw !== '' ? $raw : '探针无输出'];
+    }
+
+    /**
      * Last config generation / validation error, if any (P0-2).
      * Written by generate_config.py on failure, cleared on success.
      */

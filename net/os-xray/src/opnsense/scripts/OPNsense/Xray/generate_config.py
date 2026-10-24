@@ -342,22 +342,48 @@ def build_routing(model):
     # sort is stable: equal order values keep model insertion order
     user_rules.sort(key=lambda kv: rule_order(kv[1]))
     for _uuid, r in user_rules:
-        values = [v.strip() for v in (r.get('values') or '').split(',') if v.strip()]
-        if not values:
-            continue
+        rtype = (r.get('type') or 'domain')
         entry = {
             'type': 'field',
             'outboundTag': r.get('outbound_tag') or 'proxy-default',
         }
-        rtype = (r.get('type') or 'domain')
-        if rtype == 'ip':
+        # One UI rule carries exactly ONE condition field. Within a
+        # single xray rule object, multiple conditions are ANDed, so
+        # writing different types into one field would not match as
+        # the user expects (user correction 2026-10-24; passwall splits
+        # combined entries at generation for the same reason). Domain
+        # and IP rules never get an inboundTag: inbound is its own
+        # rule type, not a field on other rules.
+        if rtype == 'inbound':
+            tag = (r.get('inbound_tag') or '').strip()
+            if not tag:
+                continue
+            entry['inboundTag'] = [tag]
+        elif rtype == 'protocol':
+            values = [v.strip() for v in (r.get('values') or '').split(',') if v.strip()]
+            if not values:
+                continue
+            entry['protocol'] = values
+        elif rtype == 'ip':
+            values = [v.strip() for v in (r.get('values') or '').split(',') if v.strip()]
+            if not values:
+                continue
             entry['ip'] = values
         elif rtype == 'source':
+            values = [v.strip() for v in (r.get('values') or '').split(',') if v.strip()]
+            if not values:
+                continue
             entry['source'] = values
         elif rtype == 'port':
+            values = [v.strip() for v in (r.get('values') or '').split(',') if v.strip()]
+            if not values:
+                continue
             # xray port matcher is one string: "53,80,443" or ranges "1000-2000"
             entry['port'] = ','.join(values)
         else:
+            values = [v.strip() for v in (r.get('values') or '').split(',') if v.strip()]
+            if not values:
+                continue
             entry['domain'] = [normalize_domain(v) for v in values]
         rules.append(entry)
     rules.append({
