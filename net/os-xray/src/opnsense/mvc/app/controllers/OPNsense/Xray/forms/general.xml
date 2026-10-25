@@ -13,15 +13,21 @@
     </field>
     <field>
         <id>xray.general.domain_strategy</id>
-        <label>域名策略</label>
+        <label>路由匹配策略</label>
         <type>dropdown</type>
-        <help>路由时的域名解析策略：AsIs 直接用域名匹配；IPIfNonMatch 匹配不到再查 IP；IPOnDemand 按需解析。</help>
+        <help>路由规则匹配时按域名还是先解析成 IP：AsIs 只按域名匹配；IPIfNonMatch 域名没匹配上再解析成 IP 按 IP 匹配；IPOnDemand 按需解析成 IP 匹配。</help>
     </field>
     <field>
         <id>xray.general.dns_servers</id>
         <label>DNS 服务器</label>
         <type>text</type>
         <help>逗号分隔。如 tcp://1.1.1.1:53,https://1.1.1.1/dns-query。xray 内部 DNS 查询用。</help>
+    </field>
+    <field>
+        <id>xray.general.dns_query_strategy</id>
+        <label>DNS 解析策略</label>
+        <type>dropdown</type>
+        <help>xray 内部 DNS 查询时解析哪种地址：UseIP 要 IPv4+IPv6，UseIPv4 只要 IPv4，UseIPv6 只要 IPv6。默认 UseIP（与之前写死的值一致，升级后行为不变）。</help>
     </field>
     <field>
         <id>xray.general.default_outbound</id>

@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/xray</mount>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <description>Xray-core routing engine manager (custom config, no conflict with official package)</description>
     <items>
         <general>
@@ -32,6 +32,14 @@
             <dns_servers type="TextField">
                 <default>tcp://1.1.1.1:53,tcp://8.8.8.8:53,https://1.1.1.1/dns-query</default>
             </dns_servers>
+            <dns_query_strategy type="OptionField">
+                <default>UseIP</default>
+                <OptionValues>
+                    <UseIP>UseIP（IPv4+IPv6）</UseIP>
+                    <UseIPv4>UseIPv4（仅 IPv4）</UseIPv4>
+                    <UseIPv6>UseIPv6（仅 IPv6）</UseIPv6>
+                </OptionValues>
+            </dns_query_strategy>
             <default_outbound type="OptionField">
                 <default>proxy-default</default>
                 <OptionValues>

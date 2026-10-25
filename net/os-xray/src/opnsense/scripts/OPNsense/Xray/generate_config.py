@@ -417,7 +417,7 @@ def build_config(model):
         'log': {'loglevel': general.get('log_level') or 'warning'},
         'dns': {
             'servers': dns_servers or ['tcp://1.1.1.1:53'],
-            'queryStrategy': 'UseIP',
+            'queryStrategy': general.get('dns_query_strategy') or 'UseIP',
         },
         # stats/api/policy (P0-6): prerequisite for traffic stats, the
         # handler API (balancer override, statsquery) and sane timeouts.
