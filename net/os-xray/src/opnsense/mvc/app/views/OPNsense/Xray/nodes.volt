@@ -127,23 +127,12 @@
             ajaxCall(url="/api/xray/settings/getActiveNode", sendData={}, callback=function(data, status) {
                 window.__activeUuid = (data && data['uuid']) || '';
                 var activeTag = (data && data['tag']) || '';
-                fetchAll('/api/xray/settings/searchNodes').done(function(rows) {
-                    var $sel = $("#activeNodeSelect");
-                    var cur = $sel.val();
-                    $sel.empty();
-                    $.each(rows, function(i, r) {
-                        $sel.append($('<option>').val(r.uuid).text(r.tag || r.uuid.substring(0, 8)));
-                    });
-                    if (window.__activeUuid) $sel.val(window.__activeUuid);
-                    else if (cur) $sel.val(cur);
-                    $("#activeNodeTag").text(activeTag || '未设置');
-                    $("#grid-nodes").bootgrid("reload");
-                });
+                $("#activeNodeTag").text(activeTag || '未设置');
+                $("#grid-nodes").bootgrid("reload");
             });
         }
         updateActiveUI();
 
-        $("#setActiveAct").click(function() { setActive($("#activeNodeSelect").val()); });
         $(document).on('click', '.set-active', function() { setActive($(this).data('uuid')); });
 
         // ---- import nodes ----
@@ -341,8 +330,6 @@
     <div id="nodes" class="tab-pane fade in active">
         <div class="alert alert-info" style="padding: 8px 12px; margin-bottom: 10px;">
             <div class="pull-right">
-                <select id="activeNodeSelect" class="form-control input-sm" style="width: auto; display: inline-block;"></select>
-                <button class="btn btn-primary btn-sm" id="setActiveAct" type="button">切换</button>
                 <button class="btn btn-default btn-sm" id="testOutboundAct" type="button">测试出站</button>
             </div>
             <div style="line-height: 30px;">
@@ -350,7 +337,7 @@
                 <span id="outboundTestResult" style="margin-left: 10px;"></span>
             </div>
             <div class="clearfix"></div>
-            <small class="text-muted">默认出站为“默认节点”时，未命中规则的流量走活动节点；切换后点底部「应用」生效。也可以点节点行里的 ☆ 直接设为活动。</small>
+            <small class="text-muted">默认出站为“默认节点”时，未命中规则的流量走活动节点；点节点行里的 ☆ 设为活动，设好后点底部「应用」生效。</small>
         </div>
         <table id="grid-nodes" class="table table-condensed table-hover table-striped" data-editDialog="DialogNode">
             <thead>
