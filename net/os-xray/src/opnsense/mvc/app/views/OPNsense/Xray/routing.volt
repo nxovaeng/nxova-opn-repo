@@ -248,7 +248,7 @@
         <button class="btn btn-default btn-xs" id="addTemplateCN" type="button">＋ 国内直连（geosite/geoip）</button>
         <button class="btn btn-default btn-xs" id="addTemplateAds" type="button">＋ 广告拦截</button>
     </p>
-    <p class="text-muted">规则按「顺序」值自小到大匹配，命中即止；都没命中走设置里的默认出站（默认活动节点）。系统规则（DNS、53 端口、私网直连）永远排在最前。出站是联动下拉框：默认节点、直连、拦截，或当前某个节点的标签（节点增删后重新打开对话框即刷新）。设置里开启「共享规则组」后，MosDNS「规则」页的规则组会在应用时自动转换并排在本表规则之后（阻止 &gt; 直连 &gt; 代理）。</p>
+    <p class="text-muted">规则按「顺序」值自小到大匹配，命中即止；都没命中走设置里的默认出站（默认活动节点）。系统规则（DNS、53 端口、私网直连）永远排在最前。出站是联动下拉框：默认节点、直连、拦截，或当前某个节点的标签（节点增删后重新打开对话框即刷新）。</p>
     <table id="grid-rules" class="table table-condensed table-hover table-striped" data-editDialog="DialogRule">
         <thead>
             <tr>
