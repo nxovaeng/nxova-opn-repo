@@ -274,7 +274,6 @@ def build_outbounds(model):
         outbounds.append({'tag': 'proxy-default', 'protocol': 'freedom'})
     outbounds.append({'tag': 'direct', 'protocol': 'freedom'})
     outbounds.append({'tag': 'block', 'protocol': 'blackhole'})
-    outbounds.append({'tag': 'dns-out', 'protocol': 'dns'})
     return outbounds
 
 
@@ -315,10 +314,15 @@ def build_routing(model):
         'inboundTag': ['api'],
         'outboundTag': 'api',
     })
+    # dns-in queries must egress via the proxy outbound (the active
+    # node), NOT direct: mosdns points its remote upstream at dns-in
+    # precisely so proxied-domain DNS resolves from the node's network.
+    # This rule must stay before the port-53-direct rule below (which
+    # protects xray's own resolver dialing, not dns-in traffic).
     rules.append({
         'type': 'field',
         'inboundTag': ['dns-in'],
-        'outboundTag': 'dns-out',
+        'outboundTag': 'proxy-default',
     })
     # System rules, always before user rules (P0-5):
     # - port 53 -> direct: xray's own DNS dialing goes through the routing
