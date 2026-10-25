@@ -45,7 +45,10 @@ class SettingsController extends ApiMutableModelControllerBase
 
     public function searchRulesAction()
     {
-        return $this->searchBase('rules.rule');
+        // Grid default = execution order (priority ascending, matching
+        // the generator's sort). A column-header sort from the request
+        // overrides this default.
+        return $this->searchBase('rules.rule', null, 'order');
     }
 
     public function searchSubscriptionsAction()
