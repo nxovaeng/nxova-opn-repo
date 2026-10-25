@@ -197,6 +197,9 @@
                 }
             });
         });
+        $("#addSubAct").click(function() {
+            $("#grid-subscriptions tfoot button[data-action='add']").click();
+        });
         $("#updateAllSubsAct").click(function() {
             var $r = $("#subResult");
             fetchAll('/api/xray/settings/searchSubscriptions').done(function(rows) {
@@ -340,12 +343,10 @@
             <div class="pull-right">
                 <select id="activeNodeSelect" class="form-control input-sm" style="width: auto; display: inline-block;"></select>
                 <button class="btn btn-primary btn-sm" id="setActiveAct" type="button">切换</button>
-                <button class="btn btn-default btn-sm" id="pingNodesAct" type="button">全部测速</button>
                 <button class="btn btn-default btn-sm" id="testOutboundAct" type="button">测试出站</button>
             </div>
             <div style="line-height: 30px;">
                 当前活动节点：<b id="activeNodeTag">未设置</b>
-                <span id="pingResult" class="text-muted" style="margin-left: 10px;"></span>
                 <span id="outboundTestResult" style="margin-left: 10px;"></span>
             </div>
             <div class="clearfix"></div>
@@ -380,6 +381,10 @@
                 </tr>
             </tfoot>
         </table>
+        <div style="margin-top: 10px;">
+            <button class="btn btn-default btn-sm" id="pingNodesAct" type="button">全部测速</button>
+            <span id="pingResult" class="text-muted" style="margin-left: 10px;"></span>
+        </div>
     </div>
     <div id="subscriptions" class="tab-pane fade">
         <div class="panel panel-default">
@@ -408,6 +413,7 @@
                     </tfoot>
                 </table>
                 <div>
+                    <button class="btn btn-default btn-sm" id="addSubAct" type="button">添加订阅</button>
                     <button class="btn btn-default btn-sm" id="updateAllSubsAct" type="button">全部更新</button>
                     <span id="subResult" style="margin-left: 10px;"></span>
                 </div>
