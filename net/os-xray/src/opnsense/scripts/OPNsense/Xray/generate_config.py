@@ -31,6 +31,7 @@ Fixed infrastructure inbounds (always present):
 import sys
 import os
 import json
+import ipaddress
 import secrets
 import subprocess
 import fcntl
@@ -306,6 +307,128 @@ def rule_order(rule):
         return 100
 
 
+# DNS/routing linkage (2026-10-25): xray's own DNS must follow the same
+# split as its routing, or an IP rule can match a resolution that
+# disagrees with the client's (mosdns) answer and misroute to direct
+# with a poisoned dial. Two query paths:
+# - local: domestic resolvers, for node domains (a node must be resolved
+#   WITHOUT the node, chicken-and-egg) and for domains routed direct
+#   (lan-socks direct queries included: the direct leg needs domestic
+#   CDN IPs, not foreign/poisoned ones).
+# - remote: DoH through the proxy, for domains routed via a node. The
+#   DoH host is statically mapped (hosts) so the remote path never
+#   depends on local DNS, and its dials are tagged (DNS_QUERY_TAG) so
+#   the routing rule below sends them via proxy-default.
+# xray DNS must NEVER point at mosdns: mosdns's remote upstream IS
+# mosdns-in (xray), so that would be a loop. The linkage is "same
+# split logic, separate resolvers", not "xray uses mosdns".
+LOCAL_DNS_SERVERS = ['223.5.5.5', '119.29.29.29']
+REMOTE_DNS_DOH = 'https://dns.google/dns-query'
+REMOTE_DNS_HOSTS = {'dns.google': ['8.8.8.8', '8.8.4.4']}
+DNS_QUERY_TAG = 'dns-query'
+
+
+def _classify_endpoint(addr):
+    """Split a node address into ('domain', normalized) or ('ip', ip)."""
+    a = (addr or '').strip().strip('[]')
+    if not a or ' ' in a:
+        return None
+    try:
+        return ('ip', str(ipaddress.ip_address(a)))
+    except ValueError:
+        pass
+    return ('domain', normalize_domain(a))
+
+
+def node_endpoints(model):
+    """Node domains/IPs from ENABLED nodes (disabled nodes have no
+    outbound, so their endpoints need no protection). Structured nodes
+    carry address directly; legacy nodes carry it inside params
+    (vnext/servers). Returns (sorted domain matchers, sorted IPs)."""
+    domains, ips = set(), set()
+    for _uuid, nd in iter_items((model.get('nodes') or {}).get('node')):
+        if nd.get('enabled') != '1':
+            continue
+        addr = nd.get('address') or ''
+        if not addr:
+            try:
+                params = json.loads(nd.get('params') or '{}')
+                settings = params.get('settings') or {}
+                vnext = settings.get('vnext') or []
+                servers = settings.get('servers') or []
+                if vnext:
+                    addr = vnext[0].get('address') or ''
+                elif servers:
+                    addr = servers[0].get('address') or ''
+                elif settings.get('address'):
+                    addr = settings.get('address') or ''
+            except Exception:
+                continue
+        got = _classify_endpoint(addr)
+        if not got:
+            continue
+        kind, value = got
+        if kind == 'domain':
+            domains.add(value)
+        else:
+            ips.add(value)
+    return sorted(domains), sorted(ips)
+
+
+def rule_domain_sets(model):
+    """Domain matchers from enabled user rules, split by their outbound.
+    Mirrors build_routing's domain-type classification (anything that is
+    not inbound/protocol/ip/source/port is a domain rule) and its
+    normalize_domain, so DNS and routing see identical domain sets.
+    block rules carry no DNS relevance (traffic is dropped anyway).
+    Returns (sorted direct domains, sorted proxy domains)."""
+    direct, proxy = set(), set()
+    for _uuid, r in iter_items((model.get('rules') or {}).get('rule')):
+        if r.get('enabled') != '1':
+            continue
+        rtype = (r.get('type') or 'domain')
+        if rtype in ('inbound', 'protocol', 'ip', 'source', 'port'):
+            continue
+        values = [normalize_domain(v) for v in
+                  (r.get('values') or '').split(',') if v.strip()]
+        if not values:
+            continue
+        out = r.get('outbound_tag') or 'proxy-default'
+        if out == 'direct':
+            direct.update(values)
+        elif out == 'block':
+            continue
+        else:  # proxy-default or a specific node tag: still via a node
+            proxy.update(values)
+    return sorted(direct), sorted(proxy)
+
+
+def build_dns(model, general):
+    """DNS servers: domain-specific split entries first, then the user's
+    dns_servers list as fallback (unchanged behavior for everything the
+    split does not cover). Local wins on overlap: a domain that is both
+    a node domain and a proxy-rule domain must resolve locally, or the
+    node itself becomes unresolvable."""
+    dns_servers = [s.strip() for s in (general.get('dns_servers') or '').split(',') if s.strip()]
+    node_domains, _node_ips = node_endpoints(model)
+    direct_domains, proxy_domains = rule_domain_sets(model)
+    local_domains = sorted(set(node_domains) | set(direct_domains))
+    remote_domains = sorted(set(proxy_domains) - set(local_domains))
+    servers = []
+    for addr in LOCAL_DNS_SERVERS:
+        if local_domains:
+            servers.append({'address': addr, 'port': 53, 'domains': local_domains})
+    if remote_domains:
+        servers.append({'address': REMOTE_DNS_DOH, 'domains': remote_domains})
+    servers.extend(dns_servers or ['tcp://1.1.1.1:53'])
+    return {
+        'servers': servers,
+        'queryStrategy': general.get('dns_query_strategy') or 'UseIP',
+        'tag': DNS_QUERY_TAG,
+        'hosts': REMOTE_DNS_HOSTS,
+    }
+
+
 def build_routing(model):
     rules = []
     # api service entry must be first (P0-6)
@@ -339,6 +462,40 @@ def build_routing(model):
         'ip': PRIVATE_CIDRS,
         'outboundTag': 'direct',
     })
+    # Node endpoints get priority direct rules: a node must never be
+    # reached THROUGH itself (the self-referential loop that once
+    # timed out proxied sites). Extracted from the enabled nodes, so
+    # they track node adds/removes/renames with no manual rule. They
+    # sit before all user rules, so no user rule or catch-all can
+    # capture node traffic into a proxy.
+    node_domains, node_ips = node_endpoints(model)
+    if node_domains:
+        rules.append({
+            'type': 'field',
+            'domain': node_domains,
+            'outboundTag': 'direct',
+        })
+    if node_ips:
+        rules.append({
+            'type': 'field',
+            'ip': node_ips,
+            'outboundTag': 'direct',
+        })
+    # xray's own DNS queries (tag dns-query, see build_dns) that are not
+    # port 53 go via the proxy: the remote DoH dials. Placed AFTER the
+    # port-53 rule on purpose, so :53 dials (local servers) always take
+    # the direct path first and only DoH reaches this rule. Emitted only
+    # when a remote (proxy-domain) DNS entry exists: without one there
+    # is no remote DNS to route, and fallback DoH should follow the
+    # catch-all like any other traffic.
+    _direct_domains, _proxy_domains = rule_domain_sets(model)
+    _local_domains = set(node_domains) | set(_direct_domains)
+    if set(_proxy_domains) - _local_domains:
+        rules.append({
+            'type': 'field',
+            'inboundTag': [DNS_QUERY_TAG],
+            'outboundTag': 'proxy-default',
+        })
     user_rules = [
         (uuid, r) for uuid, r in
         iter_items((model.get('rules') or {}).get('rule'))
@@ -412,13 +569,9 @@ def build_routing(model):
 
 def build_config(model):
     general = model.get('general') or {}
-    dns_servers = [s.strip() for s in (general.get('dns_servers') or '').split(',') if s.strip()]
     return {
         'log': {'loglevel': general.get('log_level') or 'warning'},
-        'dns': {
-            'servers': dns_servers or ['tcp://1.1.1.1:53'],
-            'queryStrategy': general.get('dns_query_strategy') or 'UseIP',
-        },
+        'dns': build_dns(model, general),
         # stats/api/policy (P0-6): prerequisite for traffic stats, the
         # handler API (balancer override, statsquery) and sane timeouts.
         # connIdle 3600 replaces xray's 300s default, which kills pooled

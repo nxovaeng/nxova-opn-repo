@@ -252,7 +252,7 @@
         <button class="btn btn-default btn-xs" id="addTemplateCN" type="button">＋ 国内直连（geosite/geoip）</button>
         <button class="btn btn-default btn-xs" id="addTemplateAds" type="button">＋ 广告拦截</button>
     </p>
-    <p class="text-muted">规则按「顺序」值自小到大匹配，命中即止；都没命中走设置里的默认出站（默认活动节点）。系统规则（mosdns-in 走活动节点、53 端口直连、私网直连）永远排在最前。出站是联动下拉框：默认节点、直连、拦截，或当前某个节点的标签（节点增删后重新打开对话框即刷新）。</p>
+    <p class="text-muted">规则按「顺序」值自小到大匹配，命中即止；都没命中走设置里的默认出站（默认活动节点）。系统规则（mosdns-in 走活动节点、53 端口直连、私网直连、节点域名/IP 优先直连）永远排在最前。xray 自身 DNS 也按路由分流：节点域名与直连规则的域名走本地 223.5.5.5/119.29.29.29，代理规则的域名走节点侧 DoH；其余域名走设置里的 DNS 服务器。出站是联动下拉框：默认节点、直连、拦截，或当前某个节点的标签（节点增删后重新打开对话框即刷新）。</p>
     <table id="grid-rules" class="table table-condensed table-hover table-striped" data-editDialog="DialogRule">
         <thead>
             <tr>
