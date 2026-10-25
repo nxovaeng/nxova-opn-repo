@@ -161,7 +161,33 @@
             set: '/api/xray/settings/setInbound/',
             add: '/api/xray/settings/addInbound/',
             del: '/api/xray/settings/delInbound/',
-            toggle: '/api/xray/settings/toggleInbound/'
+            toggle: '/api/xray/settings/toggleInbound/',
+            // Built-in rows are display-only: no edit/copy/delete buttons.
+            commands: {
+                "edit": {
+                    filter: function(cell) { return !cell.getData().builtin; }
+                },
+                "delete": {
+                    filter: function(cell) { return !cell.getData().builtin; }
+                },
+                "copy": {
+                    filter: function(cell) { return !cell.getData().builtin; }
+                }
+            },
+            options: {
+                formatters: {
+                    // Built-in inbounds are always on: static icon, no toggle.
+                    rowtoggle: function(column, row) {
+                        if (row.builtin) {
+                            return '<span class="fa fa-fw fa-check-square-o" title="内置固定入站"></span>';
+                        }
+                        if (parseInt(row.enabled, 10) === 1) {
+                            return '<span style="cursor: pointer;" class="fa fa-fw fa-check-square-o command-toggle bootgrid-tooltip" data-value="1" data-row-id="' + row.uuid + '"></span>';
+                        }
+                        return '<span style="cursor: pointer;" class="fa fa-fw fa-square-o command-toggle bootgrid-tooltip" data-value="0" data-row-id="' + row.uuid + '"></span>';
+                    }
+                }
+            }
         });
 
         // ---- apply ----

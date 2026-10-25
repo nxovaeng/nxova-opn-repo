@@ -40,7 +40,34 @@ class SettingsController extends ApiMutableModelControllerBase
 
     public function searchInboundsAction()
     {
-        return $this->searchBase('inbounds.inbound');
+        $result = $this->searchBase('inbounds.inbound');
+        // Built-in fixed inbounds are generated, not model items, so
+        // append them as display rows. The builtin flag hides their
+        // edit/delete buttons and their toggle switch in the grid;
+        // the generator still emits them unchanged.
+        $builtins = [
+            ['uuid' => 'builtin-hev-socks-in', 'enabled' => '1', 'tag' => 'hev-socks-in',
+             'protocol' => 'socks', 'listen' => '127.0.0.1', 'port' => '10808', 'builtin' => '1'],
+            ['uuid' => 'builtin-dns-in', 'enabled' => '1', 'tag' => 'dns-in',
+             'protocol' => 'dokodemo-door', 'listen' => '127.0.0.1', 'port' => '10853', 'builtin' => '1'],
+        ];
+        $phrase = trim($this->request->get('searchPhrase', 'string', ''));
+        if ($phrase !== '') {
+            $tokens = array_filter(explode(' ', $phrase));
+            $builtins = array_values(array_filter($builtins, function ($row) use ($tokens) {
+                $hay = strtolower(implode(' ', $row));
+                foreach ($tokens as $tok) {
+                    if (strpos($hay, strtolower($tok)) === false) {
+                        return false;
+                    }
+                }
+                return true;
+            }));
+        }
+        $result['rows'] = array_merge($result['rows'], $builtins);
+        $result['total'] = ($result['total'] ?? 0) + count($builtins);
+        $result['rowCount'] = count($result['rows']);
+        return $result;
     }
 
     public function searchRulesAction()
@@ -110,11 +137,17 @@ class SettingsController extends ApiMutableModelControllerBase
 
     public function delInboundAction($uuid)
     {
+        if (strpos($uuid, 'builtin-') === 0) {
+            return ['status' => 'failed', 'status_msg' => '内置入站不可删除'];
+        }
         return $this->delBase('inbounds.inbound', $uuid);
     }
 
     public function toggleInboundAction($uuid, $enabled = null)
     {
+        if (strpos($uuid, 'builtin-') === 0) {
+            return ['status' => 'failed', 'status_msg' => '内置入站不可修改'];
+        }
         return $this->toggleBase('inbounds.inbound', $uuid, $enabled);
     }
 
