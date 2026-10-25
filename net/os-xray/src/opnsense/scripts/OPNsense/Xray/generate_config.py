@@ -99,7 +99,7 @@ def build_inbounds(model):
             'protocol': 'dokodemo-door',
             'listen': '127.0.0.1',
             'port': 10853,
-            'settings': {'address': '1.1.1.1', 'port': 53, 'networks': ['tcp', 'udp']},
+            'settings': {'address': '1.1.1.1', 'port': 53, 'network': 'tcp,udp'},
         },
         {
             # xray stats/handler API entry (P0-6). Loopback only; the
