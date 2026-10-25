@@ -15,7 +15,11 @@ rcvar=mosdns_enable
 pidfile=/var/run/mosdns.pid
 procname=/usr/local/bin/mosdns
 command=/usr/sbin/daemon
-command_args="-p ${pidfile} ${procname} start -c /usr/local/etc/mosdns/config.yaml"
+# -o captures mosdns's stdio: the config template sets only
+# log level (no file), and the UI log page tails
+# /var/log/mosdns.log. Without it daemon discards the output
+# and the log page stays empty.
+command_args="-p ${pidfile} -o /var/log/mosdns.log ${procname} start -c /usr/local/etc/mosdns/config.yaml"
 
 load_rc_config $name
 run_rc_command "$1"

@@ -22,7 +22,10 @@ load_rc_config $name
 : ${pf_aliasd_socket:=/var/run/pf-aliasd.sock}
 : ${pf_aliasd_tables:=}
 
-command_args="-p ${pidfile} ${procname} -socket ${pf_aliasd_socket}"
+command_args="-p ${pidfile} -o /var/log/pf-aliasd.log ${procname} -socket ${pf_aliasd_socket}"
+# -o captures pf-aliasd's stdio (Go log package): the UI log
+# page tails /var/log/pf-aliasd.log, and without it daemon
+# discards the output and the log page stays empty.
 # -tables must be omitted entirely when empty: Go's flag package treats
 # a trailing "-tables" with no value as "flag needs an argument" and exits.
 if [ -n "${pf_aliasd_tables}" ]; then
