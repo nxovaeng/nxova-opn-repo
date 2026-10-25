@@ -428,7 +428,7 @@
     </div>
 </div>
 
-<div class="content-box" style="margin-top: 20px;">
+<div class="content-box" style="margin-top: 20px; padding: 15px 0;">
     <div class="col-md-12">
         <button class="btn btn-primary" id="reconfigureAct" type="button">
             <b>应用</b> <i id="reconfigureAct_progress"></i>

@@ -130,7 +130,7 @@
             <tbody>
                 <tr>
                     <td></td>
-                    <td><button class="btn btn-primary" id="saveGeneralAct" type="button"><b>保存</b></button></td>
+                    <td style="padding-top: 10px;"><button class="btn btn-primary" id="saveGeneralAct" type="button"><b>保存</b></button></td>
                     <td></td>
                 </tr>
             </tbody>
@@ -147,7 +147,7 @@
     </div>
 </div>
 
-<div class="content-box" style="margin-top: 20px;">
+<div class="content-box" style="margin-top: 20px; padding: 15px 0;">
     <div class="col-md-12">
         <button class="btn btn-primary" id="reconfigureAct" type="button">
             <b>应用</b> <i id="reconfigureAct_progress"></i>
