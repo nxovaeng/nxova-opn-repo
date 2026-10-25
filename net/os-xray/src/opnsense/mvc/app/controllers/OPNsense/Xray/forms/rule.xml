@@ -20,13 +20,13 @@
         <id>rule.inbound_tag</id>
         <label>入站</label>
         <type>text</type>
-        <help>仅入站类型规则用：对话框里是入站下拉框（固定入站 + 自定义入站）；其他类型规则忽略此字段，名/ip 规则不加 inbound。</help>
+        <help>仅入站类型规则用：对话框里是入站下拉框（tun2socks-in + 自定义入站）；其他类型规则忽略此字段，名/ip 规则不加 inbound。</help>
     </field>
     <field>
         <id>rule.order</id>
         <label>优先级</label>
         <type>text</type>
-        <help>匹配顺序：自小到大，值相同按添加顺序。系统规则（DNS、53 端口、私网直连）永远排在用户规则之前。</help>
+        <help>匹配顺序：自小到大，值相同按添加顺序。系统规则（mosdns-in 走活动节点、53 端口直连、私网直连、节点域名/IP 优先直连）永远排在用户规则之前。</help>
     </field>
     <field>
         <id>rule.outbound_tag</id>

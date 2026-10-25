@@ -206,7 +206,7 @@
                 </inbound_tag>
                 <order type="IntegerField">
                     <default>100</default>
-                    <help>匹配顺序：自小到大，值相同按添加顺序。系统规则（DNS、53 端口、私网）永远排在用户规则之前。</help>
+                    <help>匹配顺序：自小到大，值相同按添加顺序。系统规则（mosdns-in 走活动节点、53 端口直连、私网直连、节点域名/IP 优先直连）永远排在用户规则之前。</help>
                 </order>
                 <outbound_tag type="TextField">
                     <help>Node tag, 'direct', 'block', or empty for default node.</help>
