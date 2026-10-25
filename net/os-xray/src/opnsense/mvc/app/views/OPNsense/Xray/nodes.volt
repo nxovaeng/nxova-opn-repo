@@ -10,6 +10,8 @@
 
     $(document).ready(function() {
         window.__pings = {};
+        window.__subCounts = {};
+        window.__subCountsLoaded = false;
         window.__activeUuid = '';
 
         // ---- validation error banner (P0-2) ----
@@ -75,6 +77,10 @@
                 formatters: {
                     subUpdateFmt: function(column, row) {
                         return '<button type="button" class="btn btn-xs btn-default sub-update" data-uuid="' + row.uuid + '" title="拉取订阅并替换其节点"><i class="fa fa-refresh"></i> 更新</button>';
+                    },
+                    subCountFmt: function(column, row) {
+                        if (!window.__subCountsLoaded) return '<span class="text-muted">—</span>';
+                        return String(window.__subCounts[row.uuid] || 0);
                     }
                 }
             }        });
@@ -87,6 +93,23 @@
             });
             return d.promise();
         }
+
+        // ---- subscription node counts (a node's sub_id is its subscription uuid) ----
+        function refreshSubCounts() {
+            fetchAll('/api/xray/settings/searchNodes').done(function(rows) {
+                var counts = {};
+                $.each(rows, function(i, r) {
+                    if (r.sub_id && r.sub_id !== 'manual') {
+                        counts[r.sub_id] = (counts[r.sub_id] || 0) + 1;
+                    }
+                });
+                window.__subCounts = counts;
+                window.__subCountsLoaded = true;
+                $("#grid-subscriptions").bootgrid("reload");
+            });
+        }
+        refreshSubCounts();
+        $('a[href="#subscriptions"]').on('shown.bs.tab', function() { refreshSubCounts(); });
 
         function setActive(uuid) {
             if (!uuid) return;
@@ -167,6 +190,7 @@
                     $r.addClass("text-success").text(msg);
                     $("#grid-nodes").bootgrid("reload");
                     updateActiveUI();
+                    refreshSubCounts();
                     refreshValidationBanner();
                 } else {
                     $r.addClass("text-danger").text("更新失败：" + (data['error'] || '拉取或解析失败'));
@@ -367,6 +391,7 @@
                             <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
                             <th data-column-id="name" data-type="string">名称</th>
                             <th data-column-id="url" data-type="string">订阅链接</th>
+                            <th data-column-id="count" data-type="numeric" data-width="6em" data-sortable="false" data-formatter="subCountFmt">条数</th>
                             <th data-column-id="update" data-type="string" data-width="8em" data-sortable="false" data-formatter="subUpdateFmt">更新</th>
                             <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                         </tr>
