@@ -297,9 +297,17 @@ class SettingsController extends ApiMutableModelControllerBase
 
     /**
      * Node identity fingerprint for subscription upsert (P0-3).
-     * protocol|address|port|credential|transport|tls. SNI is deliberately
-     * excluded: rotating SNI must not count as a new node (PiTun same rule).
-     * NOTE: this is NOT the TLS `fingerprint` field on the node model.
+     * protocol|address|port|credential|transport|tls|sni|path|host.
+     * SNI, path and host ARE routing keys, not decoration: behind one
+     * front address, nginx routes by SNI to a backend port and xhttp/ws
+     * routes by path/vhost, so links that differ only in SNI/path/host
+     * are DIFFERENT services and must not collapse (a feed of 3 links
+     * sharing address+credential but with different SNIs used to upsert
+     * into a single node, the other two skipped as "duplicates").
+     * sni/host are lowercased (domain case-insensitive); path is kept
+     * verbatim (URL paths are case-sensitive). Tag is NOT identity:
+     * renaming a node must update it in place. NOTE: this is NOT the
+     * TLS `fingerprint` field on the node model.
      * Accepts either a parsed node array or a model item.
      */
     private function nodeFingerprint($d)
@@ -314,6 +322,9 @@ class SettingsController extends ApiMutableModelControllerBase
             }
             $net = strtolower((string)($d['network'] ?? ''));
             $sec = strtolower((string)($d['security'] ?? ''));
+            $sni = strtolower((string)($d['sni'] ?? ''));
+            $path = (string)($d['path'] ?? '');
+            $host = strtolower((string)($d['host'] ?? ''));
         } else {
             $proto = strtolower((string)$d->protocol);
             $addr = (string)$d->address;
@@ -324,8 +335,11 @@ class SettingsController extends ApiMutableModelControllerBase
             }
             $net = strtolower((string)$d->network);
             $sec = strtolower((string)$d->security);
+            $sni = strtolower((string)$d->sni);
+            $path = (string)$d->path;
+            $host = strtolower((string)$d->host);
         }
-        return implode('|', [$proto, $addr, $port, $cred, $net, $sec]);
+        return implode('|', [$proto, $addr, $port, $cred, $net, $sec, $sni, $path, $host]);
     }
 
     /**
