@@ -131,6 +131,9 @@ def parse_probe_body(kind, body):
     if not is_ip(ip):
         return '', '', 'trace 中的 ip 格式无效'
     return ip, loc, ''
+
+
+def build_probe_config(nd):
     """Return (config dict, port) or (None, 0) when no outbound builds."""
     ob = None
     if structured_ready(nd):
