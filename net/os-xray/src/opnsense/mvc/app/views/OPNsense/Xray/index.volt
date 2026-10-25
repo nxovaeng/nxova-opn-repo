@@ -238,6 +238,24 @@
             });
         });
 
+        // ---- site connectivity cards (live-config path: HEAD via
+        // the socks inbound, rules first, else default outbound) ----
+        $(document).on('click', '.site-test-card', function() {
+            var $card = $(this);
+            if ($card.data('testing')) { return; }
+            var $st = $card.find('.site-test-status');
+            $card.data('testing', true);
+            $st.removeClass('text-success text-danger').addClass('text-muted').text('检测中…');
+            ajaxCall(url="/api/xray/service/testOutbound", sendData={site: $card.data('site')}, callback=function(data, status) {
+                $card.data('testing', false);
+                if (data && data['ok']) {
+                    $st.removeClass('text-muted text-danger').addClass('text-success').text('通，' + (data['ms'] || 0) + ' ms');
+                } else {
+                    $st.removeClass('text-muted text-success').addClass('text-danger').text('断：' + ((data && data['error']) || '检测失败'));
+                }
+            });
+        });
+
         updateServiceControlUI('xray');
     });
 </script>
@@ -247,6 +265,7 @@
     <li class="active"><a data-toggle="tab" href="#inbounds">入站</a></li>
     <li><a data-toggle="tab" href="#settings">设置</a></li>
     <li><a data-toggle="tab" href="#logs">日志</a></li>
+    <li><a data-toggle="tab" href="#conntest">连接检测</a></li>
 </ul>
 <div class="tab-content content-box tab-content">
     <div id="inbounds" class="tab-pane fade in active">
@@ -301,6 +320,67 @@
         <button class="btn btn-default btn-sm" id="refreshLogAct" type="button">刷新</button>
         <button class="btn btn-default btn-sm" id="clearLogAct" type="button">清空日志</button>
         <pre id="xrayLog" style="margin-top:10px; max-height:500px; overflow:auto; background:#000; color:#0f0;"></pre>
+    </div>
+    <div id="conntest" class="tab-pane fade">
+        <p class="text-muted">经当前 live 配置出站检测（命中规则走规则出站，否则走默认出站）；点卡片检测。</p>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="panel panel-default site-test-card" data-site="google" style="cursor: pointer;">
+                    <div class="panel-body" style="padding: 10px 15px;">
+                        <img src="https://www.google.com/favicon.ico" style="width: 32px; height: 32px; float: left; margin-right: 12px;" onerror="this.style.display='none'">
+                        <div><b>谷歌连接</b></div>
+                        <div class="site-test-status text-muted">点我检测</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-default site-test-card" data-site="github" style="cursor: pointer;">
+                    <div class="panel-body" style="padding: 10px 15px;">
+                        <img src="https://github.com/favicon.ico" style="width: 32px; height: 32px; float: left; margin-right: 12px;" onerror="this.style.display='none'">
+                        <div><b>GitHub连接</b></div>
+                        <div class="site-test-status text-muted">点我检测</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-default site-test-card" data-site="youtube" style="cursor: pointer;">
+                    <div class="panel-body" style="padding: 10px 15px;">
+                        <img src="https://www.youtube.com/favicon.ico" style="width: 32px; height: 32px; float: left; margin-right: 12px;" onerror="this.style.display='none'">
+                        <div><b>YouTube连接</b></div>
+                        <div class="site-test-status text-muted">点我检测</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="panel panel-default site-test-card" data-site="aliyun" style="cursor: pointer;">
+                    <div class="panel-body" style="padding: 10px 15px;">
+                        <img src="https://www.aliyun.com/favicon.ico" style="width: 32px; height: 32px; float: left; margin-right: 12px;" onerror="this.style.display='none'">
+                        <div><b>阿里连接</b></div>
+                        <div class="site-test-status text-muted">点我检测</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-default site-test-card" data-site="qq" style="cursor: pointer;">
+                    <div class="panel-body" style="padding: 10px 15px;">
+                        <img src="https://www.qq.com/favicon.ico" style="width: 32px; height: 32px; float: left; margin-right: 12px;" onerror="this.style.display='none'">
+                        <div><b>腾讯连接</b></div>
+                        <div class="site-test-status text-muted">点我检测</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="panel panel-default site-test-card" data-site="youku" style="cursor: pointer;">
+                    <div class="panel-body" style="padding: 10px 15px;">
+                        <img src="https://www.youku.com/favicon.ico" style="width: 32px; height: 32px; float: left; margin-right: 12px;" onerror="this.style.display='none'">
+                        <div><b>优酷连接</b></div>
+                        <div class="site-test-status text-muted">点我检测</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

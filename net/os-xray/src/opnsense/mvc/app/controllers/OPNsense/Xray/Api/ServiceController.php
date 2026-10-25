@@ -74,16 +74,22 @@ class ServiceController extends ApiMutableServiceControllerBase
     }
 
     /**
-     * Probe the live default outbound path (see test_outbound.py).
-     * The script always exits 0 with one JSON object; pass it through.
+     * Probe one site through the live default outbound path
+     * (see test_outbound.py). Site is an allowlisted key, never a
+     * raw URL from the client. The script always exits 0 with one
+     * JSON object; pass it through.
      */
     public function testOutboundAction()
     {
         if (!$this->request->isPost()) {
             return ['ok' => false, 'http_code' => 0, 'ms' => 0, 'error' => '需要 POST'];
         }
+        $site = $this->request->getPost('site');
+        if (!in_array($site, ['google', 'github', 'youtube', 'aliyun', 'qq', 'youku'], true)) {
+            $site = 'google';
+        }
         $backend = new Backend();
-        $raw = trim($backend->configdRun('xray test_outbound'));
+        $raw = trim($backend->configdpRun('xray test_outbound', [$site]));
         $data = json_decode($raw, true);
         if (is_array($data)) {
             return $data;
