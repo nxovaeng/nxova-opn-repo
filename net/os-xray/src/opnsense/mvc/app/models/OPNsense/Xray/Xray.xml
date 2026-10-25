@@ -12,7 +12,7 @@
                 <Mask>/^[a-f0-9\-]*$/</Mask>
             </active_node>
             <domain_strategy type="OptionField">
-                <default>AsIs</default>
+                <default>IPIfNonMatch</default>
                 <OptionValues>
                     <AsIs>AsIs</AsIs>
                     <IPIfNonMatch>IPIfNonMatch</IPIfNonMatch>

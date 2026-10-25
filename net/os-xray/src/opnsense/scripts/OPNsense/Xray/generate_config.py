@@ -405,7 +405,7 @@ def build_routing(model):
         'outboundTag': default_out,
     })
     return {
-        'domainStrategy': (model.get('general') or {}).get('domain_strategy') or 'AsIs',
+        'domainStrategy': (model.get('general') or {}).get('domain_strategy') or 'IPIfNonMatch',
         'rules': rules,
     }
 
