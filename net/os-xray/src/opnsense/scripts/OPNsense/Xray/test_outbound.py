@@ -1,24 +1,28 @@
 #!/usr/local/bin/python3
 """Probe one site through the live xray path and report up/down + latency.
 
-Runs curl (HEAD, so no page body is downloaded) through
-socks5h://127.0.0.1:10808 (the fixed tun2socks-in inbound) against
-the chosen site. The probe walks the live config: traffic matching
-a user rule follows that rule's outbound, otherwise it takes the
-default outbound (proxy-default = the active node). Always exits 0
-and prints one JSON object so the controller can pass it straight
-through.
+Runs curl (HEAD, so no page body is downloaded) through a socks
+inbound (default socks5h://127.0.0.1:10808, the fixed tun2socks-in
+inbound) against the chosen site. The probe walks the live config:
+traffic matching a user rule follows that rule's outbound, otherwise
+it takes the default outbound (proxy-default = the active node).
+Always exits 0 and prints one JSON object so the controller can pass
+it straight through.
 
-Usage: test_outbound.py [site]
+Usage: test_outbound.py [site] [host:port]
   site: google (default), github, youtube, aliyun, qq, youku.
   Any other value falls back to google.
+  host:port: socks inbound to probe through (default 127.0.0.1:10808).
+  The value is strictly validated (host + numeric port) so it can
+  never smuggle extra curl flags.
 """
 import json
 import os
+import re
 import subprocess
 import sys
 
-PROXY = 'socks5h://127.0.0.1:10808'
+DEFAULT_PROXY = '127.0.0.1:10808'
 USER_AGENT = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
               'AppleWebKit/537.36 (KHTML, like Gecko) '
               'Chrome/124.0 Safari/537.36')
@@ -44,12 +48,20 @@ def find_curl():
 def main():
     site = sys.argv[1] if len(sys.argv) > 1 else 'google'
     url = SITES.get(site, SITES['google'])
+    proxy = DEFAULT_PROXY
+    if len(sys.argv) > 2 and sys.argv[2]:
+        m = re.fullmatch(r'([0-9A-Za-z._-]+):([0-9]{1,5})', sys.argv[2])
+        if not m or not 1 <= int(m.group(2)) <= 65535:
+            print(json.dumps({'ok': False, 'http_code': 0, 'ms': 0,
+                              'error': 'socks 入口地址无效'}))
+            return
+        proxy = sys.argv[2]
     try:
         r = subprocess.run(
             [find_curl(), '-s', '-I', '-o', '/dev/null',
              '-w', '%{http_code} %{time_total}',
              '-A', USER_AGENT,
-             '--proxy', PROXY, '--max-time', str(TIMEOUT), url],
+             '--proxy', 'socks5h://' + proxy, '--max-time', str(TIMEOUT), url],
             capture_output=True, text=True, timeout=TIMEOUT + 5)
     except (OSError, subprocess.TimeoutExpired) as e:
         print(json.dumps({'ok': False, 'http_code': 0, 'ms': 0,

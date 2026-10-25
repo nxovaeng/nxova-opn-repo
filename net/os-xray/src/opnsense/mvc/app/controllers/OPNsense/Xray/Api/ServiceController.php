@@ -78,6 +78,16 @@ class ServiceController extends ApiMutableServiceControllerBase
      * (see test_outbound.py). Site is an allowlisted key, never a
      * raw URL from the client. The script always exits 0 with one
      * JSON object; pass it through.
+     *
+     * POST `inbound` (optional) selects the socks entry: a model
+     * inbound uuid, or 'builtin-tun2socks-in'. Absent/empty means
+     * tun2socks-in (127.0.0.1:10808), the historical default, so the
+     * nodes-page button (which sends no inbound) is unchanged.
+     * Only enabled, no-auth socks inbounds resolve; anything else
+     * (unknown uuid, disabled, non-socks, auth) is an explicit
+     * error, never a silent fallback to 10808: falling back would
+     * report the wrong entry's result as the selected entry's.
+     * A 0.0.0.0 listen address maps to 127.0.0.1 for curl.
      */
     public function testOutboundAction()
     {
@@ -88,8 +98,41 @@ class ServiceController extends ApiMutableServiceControllerBase
         if (!in_array($site, ['google', 'github', 'youtube', 'aliyun', 'qq', 'youku'], true)) {
             $site = 'google';
         }
+        $proxy = '127.0.0.1:10808';
+        $inbound = trim((string)$this->request->getPost('inbound', 'string', ''));
+        if ($inbound !== '' && $inbound !== 'builtin-tun2socks-in') {
+            $found = null;
+            $mdl = new \OPNsense\Xray\Xray();
+            foreach ($mdl->inbounds->inbound->iterateItems() as $uuid => $ib) {
+                if ($uuid === $inbound) {
+                    $found = $ib;
+                    break;
+                }
+            }
+            if ($found === null) {
+                return ['ok' => false, 'http_code' => 0, 'ms' => 0, 'error' => 'socks 入站不存在'];
+            }
+            if ((string)$found->enabled !== '1') {
+                return ['ok' => false, 'http_code' => 0, 'ms' => 0, 'error' => 'socks 入站未启用'];
+            }
+            if ((string)$found->protocol !== 'socks') {
+                return ['ok' => false, 'http_code' => 0, 'ms' => 0, 'error' => '该入站不是 socks 协议'];
+            }
+            if (trim((string)$found->username) !== '') {
+                return ['ok' => false, 'http_code' => 0, 'ms' => 0, 'error' => '该 socks 入站需认证，暂不支持探针'];
+            }
+            $listen = trim((string)$found->listen);
+            if ($listen === '' || $listen === '0.0.0.0') {
+                $listen = '127.0.0.1';
+            }
+            $port = (int)(string)$found->port;
+            if ($port < 1 || $port > 65535) {
+                return ['ok' => false, 'http_code' => 0, 'ms' => 0, 'error' => 'socks 入站端口无效'];
+            }
+            $proxy = $listen . ':' . $port;
+        }
         $backend = new Backend();
-        $raw = trim($backend->configdpRun('xray test_outbound', [$site]));
+        $raw = trim($backend->configdpRun('xray test_outbound', [$site, $proxy]));
         $data = json_decode($raw, true);
         if (is_array($data)) {
             return $data;

@@ -239,14 +239,45 @@
         });
 
         // ---- site connectivity cards (live-config path: HEAD via
-        // the socks inbound, rules first, else default outbound) ----
+        // the selected socks inbound, rules first, else default outbound) ----
+        function refreshConntestInbounds() {
+            var $sel = $("#conntestInbound");
+            ajaxCall(url="/api/xray/settings/searchInbounds", sendData={}, callback=function(data, status) {
+                var rows = (data && data['rows']) || [];
+                var opts = [];
+                var seen = {};
+                rows.forEach(function(r) {
+                    if (r['protocol'] !== 'socks' || String(r['enabled']) !== '1') { return; }
+                    if (seen[r['uuid']]) { return; }
+                    seen[r['uuid']] = true;
+                    var label = r['tag'] + ' (' + r['listen'] + ':' + r['port'] + ')';
+                    var dis = !!r['username'];
+                    if (dis) { label += '（需认证，暂不支持）'; }
+                    opts.push({uuid: r['uuid'], label: label, disabled: dis});
+                });
+                // tun2socks-in first, the historical default
+                opts.sort(function(a, b) {
+                    if (a.uuid === 'builtin-tun2socks-in') { return -1; }
+                    if (b.uuid === 'builtin-tun2socks-in') { return 1; }
+                    return 0;
+                });
+                if (opts.length === 0) { return; } // keep hardcoded fallback
+                $sel.empty();
+                opts.forEach(function(o) {
+                    var $o = $("<option>").val(o.uuid).text(o.label);
+                    if (o.disabled) { $o.prop('disabled', true); }
+                    $sel.append($o);
+                });
+            });
+        }
+        refreshConntestInbounds();
         $(document).on('click', '.site-test-card', function() {
             var $card = $(this);
             if ($card.data('testing')) { return; }
             var $st = $card.find('.site-test-status');
             $card.data('testing', true);
             $st.removeClass('text-success text-danger').addClass('text-muted').text('检测中…');
-            ajaxCall(url="/api/xray/service/testOutbound", sendData={site: $card.data('site')}, callback=function(data, status) {
+            ajaxCall(url="/api/xray/service/testOutbound", sendData={site: $card.data('site'), inbound: $("#conntestInbound").val() || 'builtin-tun2socks-in'}, callback=function(data, status) {
                 $card.data('testing', false);
                 if (data && data['ok']) {
                     $st.removeClass('text-muted text-danger').addClass('text-success').text('通，' + (data['ms'] || 0) + ' ms');
@@ -322,7 +353,16 @@
         <pre id="xrayLog" style="margin-top:10px; max-height:500px; overflow:auto; background:#000; color:#0f0;"></pre>
     </div>
     <div id="conntest" class="tab-pane fade">
-        <p class="text-muted">经当前 live 配置出站检测（命中规则走规则出站，否则走默认出站）；点卡片检测。</p>
+        <p class="text-muted">经所选 socks 入口 + 当前 live 配置出站检测（命中规则走规则出站，否则走默认出站）；点卡片检测。</p>
+        <div class="row" style="margin-bottom: 10px;">
+            <div class="col-md-4">
+                <label for="conntestInbound">SOCKS 入口</label>
+                <select id="conntestInbound" class="form-control">
+                    <option value="builtin-tun2socks-in">tun2socks-in (127.0.0.1:10808)</option>
+                </select>
+                <p class="text-muted">只列出已启用的 socks 入站；mosdns-in/api 不是 socks，不可选；需认证的入站暂不支持探针。</p>
+            </div>
+        </div>
         <div class="row">
             <div class="col-md-4">
                 <div class="panel panel-default site-test-card" data-site="google" style="cursor: pointer;">
