@@ -26,7 +26,7 @@
         <id>rule.order</id>
         <label>优先级</label>
         <type>text</type>
-        <help>匹配顺序：自小到大，值相同按添加顺序。系统规则（mosdns-in 走活动节点、53 端口直连、私网直连、节点域名/IP 优先直连）永远排在用户规则之前。</help>
+        <help>匹配顺序：自小到大，值相同按添加顺序。系统规则（mosdns-in 走活动节点、本地 DNS 查询直连、私网直连、节点域名/IP 优先直连）永远排在用户规则之前。</help>
     </field>
     <field>
         <id>rule.outbound_tag</id>

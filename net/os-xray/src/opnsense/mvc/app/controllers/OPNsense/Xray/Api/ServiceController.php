@@ -114,4 +114,15 @@ class ServiceController extends ApiMutableServiceControllerBase
         $raw = $backend->configdpRun('xray show_log', [(string)$lines]);
         return ['result' => 'ok', 'log' => $raw];
     }
+
+    /**
+     * Truncate the xray log (manual clear; the file grows fast at
+     * debug level and there is no rotation daemon wired up).
+     */
+    public function clearLogAction()
+    {
+        $backend = new Backend();
+        $raw = trim($backend->configdRun('xray clear_log'));
+        return ['result' => 'ok', 'output' => $raw];
+    }
 }

@@ -18,7 +18,11 @@ rcvar=xray_os_enable
 pidfile=/var/run/xray_os.pid
 procname=/usr/local/bin/xray-os
 command=/usr/sbin/daemon
-command_args="-p ${pidfile} ${procname} run -c /usr/local/etc/xray-os/config.json"
+# -o captures xray's stdout/stderr (the generated config sets only
+# loglevel, no access/error paths, so logs go to stdio). Without it
+# nothing ever writes /var/log/xray-os.log and the log page stays
+# empty. Truncate (not rm) to clear: daemon holds the file open.
+command_args="-p ${pidfile} -o /var/log/xray-os.log ${procname} run -c /usr/local/etc/xray-os/config.json"
 
 load_rc_config $name
 

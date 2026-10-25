@@ -189,22 +189,29 @@
                 }
             });
         });
-        $("#addSubAct").click(function() {
-            $("#grid-subscriptions tfoot button[data-action='add']").click();
+        $("#addSubAct").click(function(e) {
+            // Do NOT click the grid's tfoot add button: UIBootgrid
+            // replaces the original <table> with a <div> at init, so
+            // the tfoot button is detached and that click hits an
+            // empty set (silent no-op). Call the grid instance's add
+            // command instead (the same method its own toolbar button
+            // calls), which opens DialogSubscription.
+            var bg = $("#grid-subscriptions").data('UIBootgrid');
+            if (bg) { bg.command_add(e); }
         });
         $("#updateAllSubsAct").click(function() {
             var $r = $("#subResult");
             fetchAll('/api/xray/settings/searchSubscriptions').done(function(rows) {
                 if (!rows.length) { $r.text("没有订阅。"); return; }
                 $r.removeClass("text-success text-danger").text("更新中…（0/" + rows.length + "）");
-                var ok = 0, total = 0, anyReloaded = false, anyWarning = '';
+                var ok = 0, added = 0, updated = 0, removed = 0, anyReloaded = false, anyWarning = '';
                 var chain = $.Deferred().resolve();
                 $.each(rows, function(i, row) {
                     chain = chain.then(function() {
                         var d = $.Deferred();
                         updateSub(row.uuid, function(data) {
                             if (data['result'] === 'saved') {
-                                ok++; total += (data['added'] || 0);
+                                ok++; added += (data['added'] || 0); updated += (data['updated'] || 0); removed += (data['removed'] || 0);
                                 if (data['reloaded']) { anyReloaded = true; }
                                 if (data['warning']) { anyWarning = data['warning']; }
                             }
@@ -215,7 +222,12 @@
                     });
                 });
                 chain.done(function() {
-                    var msg = "全部更新完成：" + ok + "/" + rows.length + " 个订阅，共 " + total + " 个节点。";
+                    var msg;
+                    if (added === 0 && updated === 0 && removed === 0) {
+                        msg = "全部更新完成：" + ok + "/" + rows.length + " 个订阅，节点未变化。";
+                    } else {
+                        msg = "全部更新完成：" + ok + "/" + rows.length + " 个订阅，新加 " + added + " 个，更新 " + updated + " 个，删除 " + removed + " 个。";
+                    }
                     if (anyReloaded) { msg += "命中配置的改动已自动重载生效。"; }
                     else if (anyWarning) { msg += anyWarning; }
                     else { msg += "点底部「应用」生效。"; }
@@ -424,10 +436,12 @@
                         </tr>
                     </tfoot>
                 </table>
-                <div>
-                    <button class="btn btn-default btn-sm" id="addSubAct" type="button">添加订阅</button>
-                    <button class="btn btn-default btn-sm" id="updateAllSubsAct" type="button">全部更新</button>
-                    <span id="subResult" style="margin-left: 10px;"></span>
+                <div class="clearfix">
+                    <span id="subResult"></span>
+                    <span class="pull-right">
+                        <button class="btn btn-default btn-sm" id="addSubAct" type="button">添加订阅</button>
+                        <button class="btn btn-default btn-sm" id="updateAllSubsAct" type="button">全部更新</button>
+                    </span>
                 </div>
             </div>
         </div>

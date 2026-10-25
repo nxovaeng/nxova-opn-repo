@@ -232,6 +232,11 @@
             });
         }
         $("#refreshLogAct").click(refreshLog);
+        $("#clearLogAct").click(function() {
+            ajaxCall(url="/api/xray/service/clearLog", sendData={}, callback=function(data, status) {
+                refreshLog();
+            });
+        });
 
         updateServiceControlUI('xray');
     });
@@ -294,6 +299,7 @@
     </div>
     <div id="logs" class="tab-pane fade">
         <button class="btn btn-default btn-sm" id="refreshLogAct" type="button">刷新</button>
+        <button class="btn btn-default btn-sm" id="clearLogAct" type="button">清空日志</button>
         <pre id="xrayLog" style="margin-top:10px; max-height:500px; overflow:auto; background:#000; color:#0f0;"></pre>
     </div>
 </div>
