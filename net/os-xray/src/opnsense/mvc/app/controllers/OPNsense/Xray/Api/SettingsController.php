@@ -576,7 +576,7 @@ class SettingsController extends ApiMutableModelControllerBase
         // Probe endpoint is an allowlisted key, never a raw URL from
         // the client (the temp xray would fetch it through the node).
         $probe = $this->request->getPost('probe');
-        if (!in_array($probe, ['cloudflare', 'ifconfig', 'ipify', 'ipsb', 'checkip', 'icanhazip'], true)) {
+        if (!in_array($probe, ['cloudflare', 'ifconfig', 'ipify', 'ipsb', 'ipinfo', 'checkip', 'icanhazip'], true)) {
             $probe = 'cloudflare';
         }
         $backend = new Backend();

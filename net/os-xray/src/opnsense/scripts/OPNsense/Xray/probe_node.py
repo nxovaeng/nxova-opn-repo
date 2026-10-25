@@ -17,7 +17,7 @@ This is an on-demand, single-node probe (no bulk probing, so no
 rate-limit concern on the echo/speed endpoints).
 
 Usage: probe_node.py '<json node fields>' [endpoint-key]
-  endpoint-key: cloudflare (default), ifconfig, ipify, ipsb,
+  endpoint-key: cloudflare (default), ifconfig, ipify, ipsb, ipinfo,
     checkip, icanhazip.
 Output: one JSON object {ok, ip, loc, trace_ms, speed_mbps, error}.
 Always exits 0 so the controller can pass it straight through.
@@ -52,6 +52,7 @@ PROBE_ENDPOINTS = {
     'ifconfig': ('https://ifconfig.me', 'plain'),
     'ipify': ('https://api.ipify.org', 'plain'),
     'ipsb': ('https://api.ip.sb/geoip', 'json'),
+    'ipinfo': ('https://ipinfo.io/json', 'json'),
     'checkip': ('https://checkip.amazonaws.com', 'plain'),
     'icanhazip': ('https://icanhazip.com', 'plain'),
 }
@@ -118,7 +119,7 @@ def parse_probe_body(kind, body):
         if not isinstance(data, dict):
             return '', '', '端点返回内容不是 JSON 对象'
         ip = str(data.get('ip') or '')
-        loc = str(data.get('country_code') or '')
+        loc = str(data.get('country_code') or data.get('country') or '')
         if not ip:
             return '', '', 'JSON 中未找到 ip'
         if not is_ip(ip):

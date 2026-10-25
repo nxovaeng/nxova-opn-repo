@@ -411,6 +411,7 @@
                     <option value="ifconfig">ifconfig.me（纯 IP）</option>
                     <option value="ipify">api.ipify.org（纯 IP）</option>
                     <option value="ipsb">ip.sb（带地区）</option>
+                    <option value="ipinfo">ipinfo.io（带地区）</option>
                     <option value="checkip">checkip.amazonaws.com（纯 IP）</option>
                     <option value="icanhazip">icanhazip.com（纯 IP）</option>
                 </select>
