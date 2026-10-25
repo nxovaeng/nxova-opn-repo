@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/xray</mount>
-    <version>1.6.0</version>
+    <version>1.7.0</version>
     <description>Xray-core routing engine manager (custom config, no conflict with official package)</description>
     <items>
         <general>
@@ -34,6 +34,12 @@
             <dns_servers type="TextField">
                 <default>tcp://1.1.1.1:53,tcp://8.8.8.8:53,https://1.1.1.1/dns-query</default>
             </dns_servers>
+            <dns_local_servers type="TextField">
+                <default>223.5.5.5,119.29.29.29</default>
+            </dns_local_servers>
+            <dns_remote_servers type="TextField">
+                <default>https://dns.google/dns-query</default>
+            </dns_remote_servers>
             <dns_query_strategy type="OptionField">
                 <default>UseIP</default>
                 <Required>Y</Required>

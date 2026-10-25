@@ -33,6 +33,8 @@
         mapDataToFormUI({'frm_GeneralSettings': "/api/xray/settings/get"}).done(function() {
             $('.selectpicker').selectpicker('refresh');
             upstreamEditor('xray.general.dns_servers');
+            upstreamEditor('xray.general.dns_local_servers');
+            upstreamEditor('xray.general.dns_remote_servers');
         });
         $("#saveGeneralAct").click(function() {
             saveFormToEndpoint(url="/api/xray/settings/set", formid='frm_GeneralSettings',
@@ -120,11 +122,14 @@
                 $(input).val(vals.join(','));
                 if (invalid > 0) {
                     $err.text('有 ' + invalid + ' 行格式不对：应为 IP、IP:端口，或 tcp:// / tls:// / https:// 地址。修正后才能保存。').show();
-                    $('#saveGeneralAct').prop('disabled', true);
                 } else {
                     $err.hide();
-                    $('#saveGeneralAct').prop('disabled', false);
                 }
+                // save is gated on ALL editors, not just this one: with
+                // three upstream fields, one editor's sync must not
+                // re-enable save while another still holds invalid rows.
+                $('#saveGeneralAct').prop('disabled',
+                    $('.upstream-editor .upstream-invalid').length > 0);
             }
             function addRow(value) {
                 var $row = $('<div class="upstream-row"></div>');

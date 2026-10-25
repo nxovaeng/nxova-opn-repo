@@ -310,20 +310,26 @@ def rule_order(rule):
 # DNS/routing linkage (2026-10-25): xray's own DNS must follow the same
 # split as its routing, or an IP rule can match a resolution that
 # disagrees with the client's (mosdns) answer and misroute to direct
-# with a poisoned dial. Two query paths:
+# with a poisoned dial. Two query paths, each user-configurable
+# (model 1.7.0: dns_local_servers / dns_remote_servers):
 # - local: domestic resolvers, for node domains (a node must be resolved
 #   WITHOUT the node, chicken-and-egg) and for domains routed direct
 #   (lan-socks direct queries included: the direct leg needs domestic
 #   CDN IPs, not foreign/poisoned ones).
-# - remote: DoH through the proxy, for domains routed via a node. The
-#   DoH host is statically mapped (hosts) so the remote path never
-#   depends on local DNS, and its dials are tagged (DNS_QUERY_TAG) so
-#   the routing rule below sends them via proxy-default.
+# - remote: through the proxy, for domains routed via a node. DoH dials
+#   are tagged (DNS_QUERY_TAG) so the routing rule below sends them via
+#   proxy-default; a remote server on :53 gets an explicit IP rule
+#   before port-53-direct for the same reason. The dns.google host is
+#   statically mapped (hosts) so that remote path never depends on
+#   local DNS.
 # xray DNS must NEVER point at mosdns: mosdns's remote upstream IS
 # mosdns-in (xray), so that would be a loop. The linkage is "same
 # split logic, separate resolvers", not "xray uses mosdns".
-LOCAL_DNS_SERVERS = ['223.5.5.5', '119.29.29.29']
-REMOTE_DNS_DOH = 'https://dns.google/dns-query'
+# Empty fields fall back to these defaults, so upgraded configs (which
+# lack the fields) keep the previous behavior instead of silently
+# dropping the split.
+LOCAL_DNS_DEFAULT = ['223.5.5.5', '119.29.29.29']
+REMOTE_DNS_DEFAULT = ['https://dns.google/dns-query']
 REMOTE_DNS_HOSTS = {'dns.google': ['8.8.8.8', '8.8.4.4']}
 DNS_QUERY_TAG = 'dns-query'
 
@@ -403,6 +409,96 @@ def rule_domain_sets(model):
     return sorted(direct), sorted(proxy)
 
 
+def parse_dns_servers(general, field, default):
+    vals = [s.strip() for s in (general.get(field) or '').split(',') if s.strip()]
+    return vals or list(default)
+
+
+def split_dns_server(s):
+    """Classify one DNS server string.
+    Returns ('doh', url, host, host_ip_or_None), ('ip', ip, port), or
+    None for a domain-host plain server (it cannot be expressed as a
+    routing match; the fallback servers still cover those domains)."""
+    v = (s or '').strip()
+    if not v:
+        return None
+    if v.startswith('https://'):
+        hostport = v[len('https://'):].split('/')[0]
+        host = hostport.split(':')[0]
+        try:
+            host_ip = str(ipaddress.ip_address(host))
+        except ValueError:
+            host_ip = None
+        return ('doh', v, host, host_ip)
+    work = v
+    for scheme in ('tcp://', 'udp://', 'tls://'):
+        if work.startswith(scheme):
+            work = work[len(scheme):]
+            break
+    hostport = work.split('/')[0]
+    if ':' in hostport:
+        host, _, port_s = hostport.partition(':')
+        try:
+            port = int(port_s)
+        except ValueError:
+            return None
+    else:
+        host, port = hostport, 53
+    try:
+        return ('ip', str(ipaddress.ip_address(host)), port)
+    except ValueError:
+        return None
+
+
+def dns_split_entries(general, model):
+    """Shared by build_dns and build_routing so both see identical
+    splits. Returns (local_entries, remote_entries, remote_domains,
+    local_doh_hosts, local_ips, remote_53_ips):
+    - local/remote_entries: DNS server objects with their domains.
+    - local_doh_hosts / local_ips: local servers the port-53 rule does
+      NOT already catch (DoH hosts, non-:53 IPs) -> explicit direct
+      rules, or the tag rule would send them via proxy.
+    - remote_53_ips: remote servers on :53 -> an explicit proxy rule
+      before port-53-direct, or the port rule would send them direct.
+    Domain-host plain servers are skipped (see split_dns_server)."""
+    local_servers = parse_dns_servers(general, 'dns_local_servers', LOCAL_DNS_DEFAULT)
+    remote_servers = parse_dns_servers(general, 'dns_remote_servers', REMOTE_DNS_DEFAULT)
+    node_domains, _node_ips = node_endpoints(model)
+    direct_domains, proxy_domains = rule_domain_sets(model)
+    local_domains = sorted(set(node_domains) | set(direct_domains))
+    remote_domains = sorted(set(proxy_domains) - set(local_domains))
+    local_entries, remote_entries = [], []
+    local_doh_hosts, local_ips, remote_ips = set(), set(), set()
+    if local_domains:
+        for s in local_servers:
+            got = split_dns_server(s)
+            if not got:
+                continue
+            if got[0] == 'doh':
+                local_entries.append({'address': got[1], 'domains': local_domains})
+                if got[3]:
+                    local_ips.add(got[3])
+                else:
+                    local_doh_hosts.add(got[2])
+            else:
+                local_entries.append({'address': got[1], 'port': got[2], 'domains': local_domains})
+                if got[2] != 53:
+                    local_ips.add(got[1])
+    if remote_domains:
+        for s in remote_servers:
+            got = split_dns_server(s)
+            if not got:
+                continue
+            if got[0] == 'doh':
+                remote_entries.append({'address': got[1], 'domains': remote_domains})
+            else:
+                remote_entries.append({'address': got[1], 'port': got[2], 'domains': remote_domains})
+                if got[2] == 53:
+                    remote_ips.add(got[1])
+    return (local_entries, remote_entries, remote_domains,
+            sorted(local_doh_hosts), sorted(local_ips), sorted(remote_ips))
+
+
 def build_dns(model, general):
     """DNS servers: domain-specific split entries first, then the user's
     dns_servers list as fallback (unchanged behavior for everything the
@@ -410,16 +506,8 @@ def build_dns(model, general):
     a node domain and a proxy-rule domain must resolve locally, or the
     node itself becomes unresolvable."""
     dns_servers = [s.strip() for s in (general.get('dns_servers') or '').split(',') if s.strip()]
-    node_domains, _node_ips = node_endpoints(model)
-    direct_domains, proxy_domains = rule_domain_sets(model)
-    local_domains = sorted(set(node_domains) | set(direct_domains))
-    remote_domains = sorted(set(proxy_domains) - set(local_domains))
-    servers = []
-    for addr in LOCAL_DNS_SERVERS:
-        if local_domains:
-            servers.append({'address': addr, 'port': 53, 'domains': local_domains})
-    if remote_domains:
-        servers.append({'address': REMOTE_DNS_DOH, 'domains': remote_domains})
+    local_entries, remote_entries, _rd, _ldh, _li, _rpi = dns_split_entries(general, model)
+    servers = local_entries + remote_entries
     servers.extend(dns_servers or ['tcp://1.1.1.1:53'])
     return {
         'servers': servers,
@@ -447,6 +535,20 @@ def build_routing(model):
         'inboundTag': ['mosdns-in'],
         'outboundTag': 'proxy-default',
     })
+    general = model.get('general') or {}
+    (_le, _re, remote_domains,
+     local_doh_hosts, local_ips, remote_53_ips) = dns_split_entries(general, model)
+    node_domains, node_ips = node_endpoints(model)
+    # Remote :53 servers must beat port-53-direct, or the port rule
+    # would send them direct. Node IPs win over remote IPs: a server IP
+    # that is also a node IP must stay direct (node safety first).
+    remote_proxy_ips = sorted(set(remote_53_ips) - set(node_ips))
+    if remote_proxy_ips:
+        rules.append({
+            'type': 'field',
+            'ip': remote_proxy_ips,
+            'outboundTag': 'proxy-default',
+        })
     # System rules, always before user rules (P0-5):
     # - port 53 -> direct: xray's own DNS dialing goes through the routing
     #   engine too; without this, a catch-all -> proxy rule would drag DNS
@@ -468,7 +570,6 @@ def build_routing(model):
     # they track node adds/removes/renames with no manual rule. They
     # sit before all user rules, so no user rule or catch-all can
     # capture node traffic into a proxy.
-    node_domains, node_ips = node_endpoints(model)
     if node_domains:
         rules.append({
             'type': 'field',
@@ -481,6 +582,21 @@ def build_routing(model):
             'ip': node_ips,
             'outboundTag': 'direct',
         })
+    # Local servers the port-53 rule does not catch (DoH hosts,
+    # non-:53 IPs) go direct explicitly, or the tag rule below would
+    # send them via proxy.
+    if local_doh_hosts:
+        rules.append({
+            'type': 'field',
+            'domain': [normalize_domain(h) for h in local_doh_hosts],
+            'outboundTag': 'direct',
+        })
+    if local_ips:
+        rules.append({
+            'type': 'field',
+            'ip': local_ips,
+            'outboundTag': 'direct',
+        })
     # xray's own DNS queries (tag dns-query, see build_dns) that are not
     # port 53 go via the proxy: the remote DoH dials. Placed AFTER the
     # port-53 rule on purpose, so :53 dials (local servers) always take
@@ -488,9 +604,7 @@ def build_routing(model):
     # when a remote (proxy-domain) DNS entry exists: without one there
     # is no remote DNS to route, and fallback DoH should follow the
     # catch-all like any other traffic.
-    _direct_domains, _proxy_domains = rule_domain_sets(model)
-    _local_domains = set(node_domains) | set(_direct_domains)
-    if set(_proxy_domains) - _local_domains:
+    if remote_domains:
         rules.append({
             'type': 'field',
             'inboundTag': [DNS_QUERY_TAG],
