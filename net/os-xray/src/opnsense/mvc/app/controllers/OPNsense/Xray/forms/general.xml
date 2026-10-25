@@ -15,7 +15,7 @@
         <id>xray.general.domain_strategy</id>
         <label>路由匹配策略</label>
         <type>dropdown</type>
-        <help>路由规则匹配时按域名还是先解析成 IP：AsIs 只按域名匹配；IPIfNonMatch 域名没匹配上再解析成 IP 按 IP 匹配；IPOnDemand 按需解析成 IP 匹配。</help>
+        <help>路由阶段域名是否解析成 IP 以及如何解析：AsIs 不解析，直接用域名匹配（目标本身是 IP 时仍走 IP 规则）；IPIfNonMatch 先按域名匹配一轮，没命中再解析成 IP 二次匹配；IPOnDemand 目标是域名且存在 IP 规则时，匹配前就解析成 IP。</help>
     </field>
     <field>
         <id>xray.general.dns_servers</id>
