@@ -65,6 +65,9 @@
                     },
                     pingFmt: function(column, row) {
                         return '<button type="button" class="btn btn-xs btn-default node-ping" data-uuid="' + row.uuid + '" data-tag="' + escHtml(row.tag || row.uuid.substring(0, 8)) + '">连通测试</button>';
+                    },
+                    probeFmt: function(column, row) {
+                        return '<button type="button" class="btn btn-xs btn-default node-probe" data-uuid="' + row.uuid + '" data-tag="' + escHtml(row.tag || row.uuid.substring(0, 8)) + '">出口探测</button>';
                     }
                 }
             }        });
@@ -258,6 +261,26 @@
             });
         });
 
+        // ---- single-node egress probe (temp config, trace IP + download speed) ----
+        $(document).on('click', '.node-probe', function() {
+            var $btn = $(this);
+            var uuid = $btn.data('uuid');
+            var tag = $btn.data('tag') || uuid;
+            var $r = $("#probeResult");
+            $btn.prop('disabled', true).text('探测中…');
+            ajaxCall(url="/api/xray/settings/probeNode", sendData={uuid: uuid}, callback=function(data, status) {
+                $btn.prop('disabled', false).text('出口探测');
+                if (data && data['ok']) {
+                    var msg = tag + '：出口 ' + data['ip'] + (data['loc'] ? '（' + data['loc'] + '）' : '');
+                    msg += (data['speed_mbps'] !== null && data['speed_mbps'] !== undefined) ? '，下载 ' + data['speed_mbps'] + ' Mbps' : '，速度未测到';
+                    msg += '。';
+                    $r.removeClass("text-danger").addClass("text-muted").text(msg);
+                } else {
+                    $r.removeClass("text-muted").addClass("text-danger").text(tag + '：探测失败：' + ((data && data['error']) || '未知错误') + '。');
+                }
+            });
+        });
+
         // ---- outbound test (live config path via socks inbound, 204 + latency) ----
         $("#testOutboundAct").click(function() {
             var $btn = $(this);
@@ -354,6 +377,7 @@
                     <th data-column-id="latency" data-type="string" data-width="7em" data-sortable="false" data-formatter="latencyFmt">延迟</th>
                     <th data-column-id="active" data-type="string" data-width="4em" data-sortable="false" data-formatter="activeFmt">活动</th>
                     <th data-column-id="ping" data-type="string" data-width="6em" data-sortable="false" data-formatter="pingFmt">连通测试</th>
+                    <th data-column-id="probe" data-type="string" data-width="8em" data-sortable="false" data-formatter="probeFmt">出口探测</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>
@@ -371,6 +395,7 @@
         <div style="margin-top: 10px;">
             <button class="btn btn-default btn-sm" id="pingNodesAct" type="button">全部连通测试</button>
             <span id="pingResult" class="text-muted" style="margin-left: 10px;"></span>
+            <span id="probeResult" class="text-muted" style="margin-left: 10px;"></span>
         </div>
     </div>
     <div id="subscriptions" class="tab-pane fade">

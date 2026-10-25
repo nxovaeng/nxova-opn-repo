@@ -510,4 +510,42 @@ class SettingsController extends ApiMutableModelControllerBase
         $result = json_decode(trim($raw), true);
         return ['result' => 'ok', 'pings' => is_array($result) ? $result : []];
     }
+
+    /**
+     * Probe one node as a single egress (temp config): egress IP + speed.
+     * Body: {uuid}. Node fields come from the live model, not the dumped
+     * model.json, so a node saved but not yet Applied still probes.
+     */
+    public function probeNodeAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['ok' => false, 'error' => '需要 POST'];
+        }
+        $uuid = $this->request->getPost('uuid');
+        $mdl = $this->getModel();
+        $fields = ['protocol', 'address', 'port', 'network', 'security', 'sni',
+            'path', 'host', 'user_id', 'password', 'ss_method', 'vmess_cipher',
+            'flow', 'alter_id', 'fingerprint', 'allow_insecure', 'public_key',
+            'short_id', 'spider_x', 'tag', 'params'];
+        $nd = null;
+        foreach ($mdl->nodes->node->iterateItems() as $nodeUuid => $node) {
+            if ($nodeUuid === $uuid) {
+                $nd = [];
+                foreach ($fields as $f) {
+                    $nd[$f] = (string)$node->$f;
+                }
+                break;
+            }
+        }
+        if ($nd === null) {
+            return ['ok' => false, 'error' => '节点不存在'];
+        }
+        $backend = new Backend();
+        $raw = trim($backend->configdpRun('xray probe_node', [json_encode($nd)]));
+        $data = json_decode($raw, true);
+        if (is_array($data)) {
+            return $data;
+        }
+        return ['ok' => false, 'error' => $raw !== '' ? $raw : '探针无输出'];
+    }
 }
