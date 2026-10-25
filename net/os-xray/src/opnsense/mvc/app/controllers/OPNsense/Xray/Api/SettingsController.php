@@ -573,8 +573,14 @@ class SettingsController extends ApiMutableModelControllerBase
         if ($nd === null) {
             return ['ok' => false, 'error' => '节点不存在'];
         }
+        // Probe endpoint is an allowlisted key, never a raw URL from
+        // the client (the temp xray would fetch it through the node).
+        $probe = $this->request->getPost('probe');
+        if (!in_array($probe, ['cloudflare', 'ifconfig', 'ipify'], true)) {
+            $probe = 'cloudflare';
+        }
         $backend = new Backend();
-        $raw = trim($backend->configdpRun('xray probe_node', [json_encode($nd)]));
+        $raw = trim($backend->configdpRun('xray probe_node', [json_encode($nd), $probe]));
         $data = json_decode($raw, true);
         if (is_array($data)) {
             return $data;

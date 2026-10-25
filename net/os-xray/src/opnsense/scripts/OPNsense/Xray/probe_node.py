@@ -4,9 +4,10 @@
 A temporary xray config is built with a socks inbound on a loopback port
 and that node as the ONLY outbound. Both probes share this one temp
 config (and one temp xray process, terminated afterwards):
-  - egress IP: curl via socks5h to https://www.cloudflare.com/cdn-cgi/trace,
-    parse the ip= and loc= lines. The trace answers from the egress
-    network, so ip/loc are the node's exit identity, not the gateway's.
+  - egress IP: curl via socks5h to the selected probe endpoint
+    (default Cloudflare trace, which answers ip= and loc= from the
+    egress network, so ip/loc are the node's exit identity, not the
+    gateway's; plain-IP endpoints return just the IP, no loc).
   - download speed: curl via socks5h to
     https://speed.cloudflare.com/__down?bytes=10000000 (10 MB),
     report speed_download as Mbps. A timeout with partial bytes still
@@ -15,7 +16,8 @@ The temp xray is terminated and the temp dir removed in all cases.
 This is an on-demand, single-node probe (no bulk probing, so no
 rate-limit concern on the echo/speed endpoints).
 
-Usage: probe_node.py '<json node fields>'
+Usage: probe_node.py '<json node fields>' [endpoint-key]
+  endpoint-key: cloudflare (default), ifconfig, ipify.
 Output: one JSON object {ok, ip, loc, trace_ms, speed_mbps, error}.
 Always exits 0 so the controller can pass it straight through.
 """
@@ -36,7 +38,13 @@ from generate_config import (  # noqa: E402
     structured_ready,
 )
 
-TRACE_URL = 'https://www.cloudflare.com/cdn-cgi/trace'
+# endpoint key -> (url, parser): 'trace' parses ip=/loc= lines,
+# 'plain' takes the body itself as the IP (no loc).
+PROBE_ENDPOINTS = {
+    'cloudflare': ('https://www.cloudflare.com/cdn-cgi/trace', 'trace'),
+    'ifconfig': ('https://ifconfig.me', 'plain'),
+    'ipify': ('https://api.ipify.org', 'plain'),
+}
 SPEED_URL = 'https://speed.cloudflare.com/__down?bytes=10000000'
 TRACE_TIMEOUT = 10
 SPEED_TIMEOUT = 15
@@ -122,6 +130,9 @@ def main():
         nd = json.loads(sys.argv[1]) if len(sys.argv) > 1 else {}
     except Exception:
         nd = {}
+    endpoint_key = sys.argv[2] if len(sys.argv) > 2 else 'cloudflare'
+    trace_url, trace_kind = PROBE_ENDPOINTS.get(
+        endpoint_key, PROBE_ENDPOINTS['cloudflare'])
     cfg, port = build_probe_config(nd)
     if cfg is None:
         print(json.dumps({'ok': False, 'ip': '', 'loc': '', 'trace_ms': 0,
@@ -154,7 +165,7 @@ def main():
             return
         try:
             r = run_curl(['-s', '-w', '\n%{time_total}', '--proxy', proxy,
-                          '--max-time', str(TRACE_TIMEOUT), TRACE_URL],
+                          '--max-time', str(TRACE_TIMEOUT), trace_url],
                          TRACE_TIMEOUT)
         except (OSError, subprocess.TimeoutExpired):
             print(json.dumps({'ok': False, 'ip': '', 'loc': '', 'trace_ms': 0,
@@ -165,7 +176,12 @@ def main():
             trace_ms = round(float(total.strip()) * 1000)
         except ValueError:
             trace_ms = 0
-        ip, loc = parse_trace(body)
+        if trace_kind == 'plain':
+            stripped = (body or '').strip()
+            ip = stripped.split()[0] if stripped else ''
+            loc = ''
+        else:
+            ip, loc = parse_trace(body)
         if r.returncode != 0 or not ip:
             detail = (r.stderr or '').strip().splitlines()
             print(json.dumps({'ok': False, 'ip': '', 'loc': '', 'trace_ms': trace_ms,

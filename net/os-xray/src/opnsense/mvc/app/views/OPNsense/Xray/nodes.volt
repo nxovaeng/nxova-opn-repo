@@ -280,7 +280,7 @@
             var tag = $btn.data('tag') || uuid;
             var $r = $("#probeResult");
             $btn.prop('disabled', true).text('探测中…');
-            ajaxCall(url="/api/xray/settings/probeNode", sendData={uuid: uuid}, callback=function(data, status) {
+            ajaxCall(url="/api/xray/settings/probeNode", sendData={uuid: uuid, probe: $("#probeAddrSel").val()}, callback=function(data, status) {
                 $btn.prop('disabled', false).text('出口探测');
                 if (data && data['ok']) {
                     var msg = tag + '：出口 ' + data['ip'] + (data['loc'] ? '（' + data['loc'] + '）' : '');
@@ -406,6 +406,13 @@
         </table>
         <div style="margin-top: 10px;">
             <button class="btn btn-default btn-sm" id="pingNodesAct" type="button">全部连通测试</button>
+            <span style="margin-left: 10px;">探测地址：
+                <select id="probeAddrSel" class="form-control input-sm" style="display: inline-block; width: auto;">
+                    <option value="cloudflare">Cloudflare trace（带地区）</option>
+                    <option value="ifconfig">ifconfig.me（纯 IP）</option>
+                    <option value="ipify">api.ipify.org（纯 IP）</option>
+                </select>
+            </span>
             <span id="pingResult" class="text-muted" style="margin-left: 10px;"></span>
             <span id="probeResult" class="text-muted" style="margin-left: 10px;"></span>
         </div>
