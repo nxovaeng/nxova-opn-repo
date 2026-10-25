@@ -17,10 +17,16 @@ This is an on-demand, single-node probe (no bulk probing, so no
 rate-limit concern on the echo/speed endpoints).
 
 Usage: probe_node.py '<json node fields>' [endpoint-key]
-  endpoint-key: cloudflare (default), ifconfig, ipify.
+  endpoint-key: cloudflare (default), ifconfig, ipify, ipsb,
+    checkip, icanhazip.
 Output: one JSON object {ok, ip, loc, trace_ms, speed_mbps, error}.
 Always exits 0 so the controller can pass it straight through.
+Error handling: the probe URL's final HTTP status must be 2xx
+(redirects are followed) and the parsed IP must be a valid IPv4 or
+IPv6 address, so an error page (e.g. a 403 HTML body) is reported
+as a failure instead of surfacing as a bogus egress IP.
 """
+import ipaddress
 import json
 import os
 import shutil
@@ -39,11 +45,15 @@ from generate_config import (  # noqa: E402
 )
 
 # endpoint key -> (url, parser): 'trace' parses ip=/loc= lines,
-# 'plain' takes the body itself as the IP (no loc).
+# 'plain' takes the body itself as the IP (no loc), 'json' parses an
+# ip.sb-style geoip object (ip + country_code as loc).
 PROBE_ENDPOINTS = {
     'cloudflare': ('https://www.cloudflare.com/cdn-cgi/trace', 'trace'),
     'ifconfig': ('https://ifconfig.me', 'plain'),
     'ipify': ('https://api.ipify.org', 'plain'),
+    'ipsb': ('https://api.ip.sb/geoip', 'json'),
+    'checkip': ('https://checkip.amazonaws.com', 'plain'),
+    'icanhazip': ('https://icanhazip.com', 'plain'),
 }
 SPEED_URL = 'https://speed.cloudflare.com/__down?bytes=10000000'
 TRACE_TIMEOUT = 10
@@ -78,7 +88,48 @@ def parse_trace(text):
     return ip, loc
 
 
-def build_probe_config(nd):
+def is_ip(s):
+    try:
+        ipaddress.ip_address((s or '').strip())
+        return True
+    except ValueError:
+        return False
+
+
+def parse_probe_body(kind, body):
+    """Return (ip, loc, error); error is '' on success.
+
+    Every body is validated: an error page (e.g. a 403 HTML body)
+    must never surface as an egress IP.
+    """
+    if kind == 'plain':
+        stripped = (body or '').strip()
+        token = stripped.split()[0] if stripped else ''
+        if not token:
+            return '', '', '端点返回为空'
+        if not is_ip(token):
+            return '', '', '端点返回内容不是 IP'
+        return token, '', ''
+    if kind == 'json':
+        try:
+            data = json.loads(body or '')
+        except ValueError:
+            return '', '', '端点返回内容不是 JSON'
+        if not isinstance(data, dict):
+            return '', '', '端点返回内容不是 JSON 对象'
+        ip = str(data.get('ip') or '')
+        loc = str(data.get('country_code') or '')
+        if not ip:
+            return '', '', 'JSON 中未找到 ip'
+        if not is_ip(ip):
+            return '', '', 'JSON 中的 ip 格式无效'
+        return ip, loc, ''
+    ip, loc = parse_trace(body)
+    if not ip:
+        return '', '', 'trace 中未找到 ip'
+    if not is_ip(ip):
+        return '', '', 'trace 中的 ip 格式无效'
+    return ip, loc, ''
     """Return (config dict, port) or (None, 0) when no outbound builds."""
     ob = None
     if structured_ready(nd):
@@ -164,29 +215,38 @@ def main():
                               'error': '临时 xray 未能启动' + ('：' + tail if tail else '')}))
             return
         try:
-            r = run_curl(['-s', '-w', '\n%{time_total}', '--proxy', proxy,
+            r = run_curl(['-s', '-L', '-w', '\n%{http_code} %{time_total}',
+                          '--proxy', proxy,
                           '--max-time', str(TRACE_TIMEOUT), trace_url],
                          TRACE_TIMEOUT)
         except (OSError, subprocess.TimeoutExpired):
             print(json.dumps({'ok': False, 'ip': '', 'loc': '', 'trace_ms': 0,
                               'speed_mbps': None, 'error': '出口 IP 探测执行失败'}))
             return
-        body, _, total = (r.stdout or '').rpartition('\n')
+        body, _, last = (r.stdout or '').rpartition('\n')
+        code, total = '', ''
+        parts = (last or '').strip().split()
+        if len(parts) >= 2:
+            code, total = parts[0], parts[1]
         try:
-            trace_ms = round(float(total.strip()) * 1000)
+            trace_ms = round(float(total) * 1000)
         except ValueError:
             trace_ms = 0
-        if trace_kind == 'plain':
-            stripped = (body or '').strip()
-            ip = stripped.split()[0] if stripped else ''
-            loc = ''
-        else:
-            ip, loc = parse_trace(body)
-        if r.returncode != 0 or not ip:
+        if r.returncode != 0:
             detail = (r.stderr or '').strip().splitlines()
             print(json.dumps({'ok': False, 'ip': '', 'loc': '', 'trace_ms': trace_ms,
                               'speed_mbps': None,
-                              'error': detail[-1] if detail else '出口 IP 未返回'}))
+                              'error': detail[-1] if detail else '出口 IP 探测执行失败'}))
+            return
+        if code and not code.startswith('2'):
+            print(json.dumps({'ok': False, 'ip': '', 'loc': '', 'trace_ms': trace_ms,
+                              'speed_mbps': None,
+                              'error': '探测端点返回 HTTP %s' % code}))
+            return
+        ip, loc, parse_err = parse_probe_body(trace_kind, body)
+        if parse_err:
+            print(json.dumps({'ok': False, 'ip': '', 'loc': '', 'trace_ms': trace_ms,
+                              'speed_mbps': None, 'error': parse_err}))
             return
         speed_mbps = None
         try:

@@ -410,6 +410,9 @@
                     <option value="cloudflare">Cloudflare trace（带地区）</option>
                     <option value="ifconfig">ifconfig.me（纯 IP）</option>
                     <option value="ipify">api.ipify.org（纯 IP）</option>
+                    <option value="ipsb">ip.sb（带地区）</option>
+                    <option value="checkip">checkip.amazonaws.com（纯 IP）</option>
+                    <option value="icanhazip">icanhazip.com（纯 IP）</option>
                 </select>
             </span>
             <button class="btn btn-default btn-sm pull-right" id="pingNodesAct" type="button">全部连通测试</button>
