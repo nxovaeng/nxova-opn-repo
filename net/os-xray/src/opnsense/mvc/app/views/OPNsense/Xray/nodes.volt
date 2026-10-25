@@ -418,7 +418,7 @@
         <div class="panel panel-default">
             <div class="panel-heading"><b>导入节点</b> <span class="text-muted">— 粘贴 vless / vmess / trojan / ss 链接，一行一个；也可以整段粘贴订阅内容（明文或 Base64）</span></div>
             <div class="panel-body">
-                <textarea id="importLinks" rows="10" class="form-control" wrap="off" style="font-family: monospace;" placeholder="vless://…&#10;vmess://…"></textarea>
+                <textarea id="importLinks" rows="10" class="form-control" style="width: 100%; font-family: monospace;" placeholder="vless://…&#10;vmess://…"></textarea>
                 <div style="margin-top: 10px;">
                     <button class="btn btn-primary btn-sm" id="importNodesAct" type="button">导入</button>
                     <span id="importResult" style="margin-left: 10px;"></span>

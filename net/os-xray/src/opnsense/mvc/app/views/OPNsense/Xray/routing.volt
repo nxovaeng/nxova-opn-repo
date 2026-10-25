@@ -209,7 +209,7 @@
             var cur = $input.val() || '';
             var $ta = $('#ruleValuesTextarea');
             if (!$ta.length) {
-                $ta = $('<textarea class="form-control" id="ruleValuesTextarea" rows="6"></textarea>');
+                $ta = $('<textarea class="form-control" id="ruleValuesTextarea" rows="6" style="width: 100%;"></textarea>');
                 $input.hide().after($ta);
                 $ta.on('input', function() {
                     var vals = [];
