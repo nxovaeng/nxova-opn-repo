@@ -25,6 +25,17 @@
         // ---- general settings ----
         mapDataToFormUI({'frm_GeneralSettings': "/api/xray/settings/get"}).done(function() {
             $('.selectpicker').selectpicker('refresh');
+            // dns_servers one-per-line textarea (mirror pattern: the hidden
+            // input still submits comma-separated, so model/generator unchanged)
+            var $dnsInput = $('#frm_GeneralSettings input[name="xray.general.dns_servers"]');
+            if ($dnsInput.length && $('#dnsServersArea').length === 0) {
+                var $area = $('<textarea id="dnsServersArea" class="form-control" rows="3"></textarea>');
+                $dnsInput.hide().after($area);
+                $area.val($dnsInput.val().split(',').map(function(s) { return s.trim(); }).filter(Boolean).join('\n'));
+                $area.on('input', function() {
+                    $dnsInput.val($(this).val().split('\n').map(function(s) { return s.trim(); }).filter(Boolean).join(','));
+                });
+            }
         });
         $("#saveGeneralAct").click(function() {
             saveFormToEndpoint(url="/api/xray/settings/set", formid='frm_GeneralSettings',

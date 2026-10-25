@@ -13,6 +13,7 @@
             </active_node>
             <domain_strategy type="OptionField">
                 <default>IPIfNonMatch</default>
+                <Required>Y</Required>
                 <OptionValues>
                     <AsIs>AsIs</AsIs>
                     <IPIfNonMatch>IPIfNonMatch</IPIfNonMatch>
@@ -21,6 +22,7 @@
             </domain_strategy>
             <log_level type="OptionField">
                 <default>warning</default>
+                <Required>Y</Required>
                 <OptionValues>
                     <debug>debug</debug>
                     <info>info</info>
@@ -34,6 +36,7 @@
             </dns_servers>
             <dns_query_strategy type="OptionField">
                 <default>UseIP</default>
+                <Required>Y</Required>
                 <OptionValues>
                     <UseIP>UseIP（IPv4+IPv6）</UseIP>
                     <UseIPv4>UseIPv4（仅 IPv4）</UseIPv4>
@@ -42,6 +45,7 @@
             </dns_query_strategy>
             <default_outbound type="OptionField">
                 <default>proxy-default</default>
+                <Required>Y</Required>
                 <OptionValues>
                     <proxy-default>默认节点</proxy-default>
                     <direct>直连</direct>
