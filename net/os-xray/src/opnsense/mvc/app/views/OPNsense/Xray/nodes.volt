@@ -286,9 +286,9 @@
                     var msg = tag + '：出口 ' + data['ip'] + (data['loc'] ? '（' + data['loc'] + '）' : '');
                     msg += (data['speed_mbps'] !== null && data['speed_mbps'] !== undefined) ? '，下载 ' + data['speed_mbps'] + ' Mbps' : '，速度未测到';
                     msg += '。';
-                    $r.removeClass("text-danger").addClass("text-muted").text(msg);
+                    $r.removeClass("hidden alert-danger").addClass("alert alert-success").text(msg);
                 } else {
-                    $r.removeClass("text-muted").addClass("text-danger").text(tag + '：探测失败：' + ((data && data['error']) || '未知错误') + '。');
+                    $r.removeClass("hidden alert-success").addClass("alert alert-danger").text(tag + '：探测失败：' + ((data && data['error']) || '未知错误') + '。');
                 }
             });
         });
@@ -404,17 +404,19 @@
                 </tr>
             </tfoot>
         </table>
-        <div style="margin-top: 10px;">
-            <button class="btn btn-default btn-sm" id="pingNodesAct" type="button">全部连通测试</button>
-            <span style="margin-left: 10px;">探测地址：
+        <div style="margin-top: 10px;" class="clearfix">
+            <span>探测地址：
                 <select id="probeAddrSel" class="form-control input-sm" style="display: inline-block; width: auto;">
                     <option value="cloudflare">Cloudflare trace（带地区）</option>
                     <option value="ifconfig">ifconfig.me（纯 IP）</option>
                     <option value="ipify">api.ipify.org（纯 IP）</option>
                 </select>
             </span>
-            <span id="pingResult" class="text-muted" style="margin-left: 10px;"></span>
-            <span id="probeResult" class="text-muted" style="margin-left: 10px;"></span>
+            <button class="btn btn-default btn-sm pull-right" id="pingNodesAct" type="button">全部连通测试</button>
+        </div>
+        <div style="margin-top: 10px;">
+            <span id="pingResult" class="text-muted"></span>
+            <div id="probeResult" class="hidden" style="margin-top: 5px; margin-bottom: 0;"></div>
         </div>
     </div>
     <div id="subscriptions" class="tab-pane fade">
