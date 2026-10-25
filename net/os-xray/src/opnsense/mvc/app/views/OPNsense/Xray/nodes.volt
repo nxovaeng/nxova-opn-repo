@@ -64,7 +64,7 @@
                         return '<button type="button" class="btn btn-xs btn-link set-active" data-uuid="' + row.uuid + '" title="设为活动节点"><i class="fa fa-star-o"></i></button>';
                     },
                     pingFmt: function(column, row) {
-                        return '<button type="button" class="btn btn-xs btn-default node-ping" data-uuid="' + row.uuid + '" data-tag="' + escHtml(row.tag || row.uuid.substring(0, 8)) + '">测速</button>';
+                        return '<button type="button" class="btn btn-xs btn-default node-ping" data-uuid="' + row.uuid + '" data-tag="' + escHtml(row.tag || row.uuid.substring(0, 8)) + '">连通测试</button>';
                     }
                 }
             }        });
@@ -246,9 +246,9 @@
             var $btn = $(this);
             var uuid = $btn.data('uuid');
             var tag = $btn.data('tag') || uuid;
-            $btn.prop('disabled', true).text('测速中…');
+            $btn.prop('disabled', true).text('测试中…');
             ajaxCall(url="/api/xray/settings/pingNodes", sendData={uuids: [uuid]}, callback=function(data, status) {
-                $btn.prop('disabled', false).text('测速');
+                $btn.prop('disabled', false).text('连通测试');
                 var pings = data['pings'] || {};
                 if (pings[uuid] !== undefined) {
                     window.__pings[uuid] = pings[uuid];
@@ -353,7 +353,7 @@
                     <th data-column-id="sub_id" data-type="string" data-width="6em" data-formatter="sourceFmt">来源</th>
                     <th data-column-id="latency" data-type="string" data-width="7em" data-sortable="false" data-formatter="latencyFmt">延迟</th>
                     <th data-column-id="active" data-type="string" data-width="4em" data-sortable="false" data-formatter="activeFmt">活动</th>
-                    <th data-column-id="ping" data-type="string" data-width="6em" data-sortable="false" data-formatter="pingFmt">测速</th>
+                    <th data-column-id="ping" data-type="string" data-width="6em" data-sortable="false" data-formatter="pingFmt">连通测试</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>
@@ -369,7 +369,7 @@
             </tfoot>
         </table>
         <div style="margin-top: 10px;">
-            <button class="btn btn-default btn-sm" id="pingNodesAct" type="button">全部测速</button>
+            <button class="btn btn-default btn-sm" id="pingNodesAct" type="button">全部连通测试</button>
             <span id="pingResult" class="text-muted" style="margin-left: 10px;"></span>
         </div>
     </div>
