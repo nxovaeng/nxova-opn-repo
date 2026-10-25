@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/xray</mount>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
     <description>Xray-core routing engine manager (custom config, no conflict with official package)</description>
     <items>
         <general>
@@ -32,6 +32,15 @@
             <dns_servers type="TextField">
                 <default>tcp://1.1.1.1:53,tcp://8.8.8.8:53,https://1.1.1.1/dns-query</default>
             </dns_servers>
+            <default_outbound type="OptionField">
+                <default>proxy-default</default>
+                <OptionValues>
+                    <proxy-default>默认节点</proxy-default>
+                    <direct>直连</direct>
+                    <block>拦截</block>
+                </OptionValues>
+                <help>没有规则命中时的走向：默认节点（活动节点）、直连、拦截。</help>
+            </default_outbound>
         </general>
         <nodes>
             <node type="ArrayField">

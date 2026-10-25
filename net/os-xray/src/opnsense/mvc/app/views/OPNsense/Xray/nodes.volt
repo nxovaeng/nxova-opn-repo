@@ -60,6 +60,9 @@
                             return '<i class="fa fa-star text-warning" title="活动节点"></i>';
                         }
                         return '<button type="button" class="btn btn-xs btn-link set-active" data-uuid="' + row.uuid + '" title="设为活动节点"><i class="fa fa-star-o"></i></button>';
+                    },
+                    pingFmt: function(column, row) {
+                        return '<button type="button" class="btn btn-xs btn-default node-ping" data-uuid="' + row.uuid + '" data-tag="' + escHtml(row.tag || row.uuid.substring(0, 8)) + '">测速</button>';
                     }
                 }
             }        });
@@ -98,16 +101,15 @@
         }
 
         function updateActiveUI() {
-            ajaxCall(url="/api/xray/settings/get", sendData={}, callback=function(data, status) {
-                window.__activeUuid = (data['xray'] && data['xray']['general'] && data['xray']['general']['active_node']) || '';
+            ajaxCall(url="/api/xray/settings/getActiveNode", sendData={}, callback=function(data, status) {
+                window.__activeUuid = (data && data['uuid']) || '';
+                var activeTag = (data && data['tag']) || '';
                 fetchAll('/api/xray/settings/searchNodes').done(function(rows) {
                     var $sel = $("#activeNodeSelect");
                     var cur = $sel.val();
                     $sel.empty();
-                    var activeTag = '';
                     $.each(rows, function(i, r) {
                         $sel.append($('<option>').val(r.uuid).text(r.tag || r.uuid.substring(0, 8)));
-                        if (r.uuid === window.__activeUuid) activeTag = r.tag;
                     });
                     if (window.__activeUuid) $sel.val(window.__activeUuid);
                     else if (cur) $sel.val(cur);
@@ -223,6 +225,23 @@
             });
         });
 
+        // ---- single-node ping (same pingNodes endpoint, one uuid) ----
+        $(document).on('click', '.node-ping', function() {
+            var $btn = $(this);
+            var uuid = $btn.data('uuid');
+            var tag = $btn.data('tag') || uuid;
+            $btn.prop('disabled', true).text('测速中…');
+            ajaxCall(url="/api/xray/settings/pingNodes", sendData={uuids: [uuid]}, callback=function(data, status) {
+                $btn.prop('disabled', false).text('测速');
+                var pings = data['pings'] || {};
+                if (pings[uuid] !== undefined) {
+                    window.__pings[uuid] = pings[uuid];
+                    $("#pingResult").text(tag + '：' + (pings[uuid] >= 0 ? pings[uuid] + ' ms' : '超时') + '。');
+                    $("#grid-nodes").bootgrid("reload");
+                }
+            });
+        });
+
         // ---- outbound test (live config path via socks inbound, 204 + latency) ----
         $("#testOutboundAct").click(function() {
             var $btn = $(this);
@@ -306,7 +325,7 @@
                 <span id="outboundTestResult" style="margin-left: 10px;"></span>
             </div>
             <div class="clearfix"></div>
-            <small class="text-muted">活动节点是未命中路由规则时的默认出站；切换后点底部「应用」生效。也可以点节点行里的 ☆ 直接设为活动。</small>
+            <small class="text-muted">默认出站为“默认节点”时，未命中规则的流量走活动节点；切换后点底部「应用」生效。也可以点节点行里的 ☆ 直接设为活动。</small>
         </div>
         <table id="grid-nodes" class="table table-condensed table-hover table-striped" data-editDialog="DialogNode">
             <thead>
@@ -322,6 +341,7 @@
                     <th data-column-id="sub_id" data-type="string" data-width="6em" data-formatter="sourceFmt">来源</th>
                     <th data-column-id="latency" data-type="string" data-width="7em" data-sortable="false" data-formatter="latencyFmt">延迟</th>
                     <th data-column-id="active" data-type="string" data-width="4em" data-sortable="false" data-formatter="activeFmt">活动</th>
+                    <th data-column-id="ping" data-type="string" data-width="6em" data-sortable="false" data-formatter="pingFmt">测速</th>
                     <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">操作</th>
                 </tr>
             </thead>

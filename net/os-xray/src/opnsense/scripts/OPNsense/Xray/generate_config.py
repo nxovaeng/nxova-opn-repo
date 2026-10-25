@@ -391,10 +391,18 @@ def build_routing(model):
                 continue
             entry['domain'] = [normalize_domain(v) for v in values]
         rules.append(entry)
+    # Catch-all: no rule matched. The outbound is an explicit setting
+    # (general.default_outbound), not a hardcoded proxy: the user must be
+    # able to see and choose whether unmatched traffic goes to the
+    # active node, direct, or block. Unknown/empty values fall back to
+    # the previous behavior (proxy-default).
+    default_out = ((model.get('general') or {}).get('default_outbound') or 'proxy-default')
+    if default_out not in ('proxy-default', 'direct', 'block'):
+        default_out = 'proxy-default'
     rules.append({
         'type': 'field',
         'network': 'tcp,udp',
-        'outboundTag': 'proxy-default',
+        'outboundTag': default_out,
     })
     return {
         'domainStrategy': (model.get('general') or {}).get('domain_strategy') or 'AsIs',

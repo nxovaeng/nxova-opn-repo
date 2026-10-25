@@ -73,7 +73,19 @@ class SettingsController extends ApiMutableModelControllerBase
 
     public function delNodeAction($uuid)
     {
-        return $this->delBase('nodes.node', $uuid);
+        $mdl = $this->getModel();
+        $activeUuid = (string)$mdl->general->active_node;
+        $result = $this->delBase('nodes.node', $uuid);
+        // same dangling-reference class as delSubscription: deleting the
+        // active node must not leave an active_node the generator would
+        // fail closed on at the next Apply
+        if ($result['result'] != 'failed' && $activeUuid !== '' && $activeUuid === $uuid) {
+            $mdl->general->active_node = '';
+            $mdl->serializeToConfig();
+            \OPNsense\Core\Config::getInstance()->save();
+            $result['active_cleared'] = true;
+        }
+        return $result;
     }
 
     public function toggleNodeAction($uuid, $enabled = null)
@@ -184,6 +196,29 @@ class SettingsController extends ApiMutableModelControllerBase
         $mdl->serializeToConfig();
         \OPNsense\Core\Config::getInstance()->save();
         return ['result' => 'saved'];
+    }
+
+    /**
+     * Return the active node (uuid + tag). POST-friendly replacement for
+     * reading settings/get: ApiMutableModelControllerBase::getAction only
+     * returns data for GET, so a POST via ajaxCall returns [] and the
+     * nodes page banner/star could never resolve the active node.
+     */
+    public function getActiveNodeAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['result' => 'failed'];
+        }
+        $mdl = $this->getModel();
+        $uuid = (string)$mdl->general->active_node;
+        $tag = '';
+        if ($uuid !== '') {
+            $node = $this->findByUuid($mdl->nodes->node, $uuid);
+            if ($node != null) {
+                $tag = (string)$node->tag;
+            }
+        }
+        return ['result' => 'ok', 'uuid' => $uuid, 'tag' => $tag];
     }
 
     /**

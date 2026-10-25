@@ -23,4 +23,10 @@
         <type>text</type>
         <help>逗号分隔。如 tcp://1.1.1.1:53,https://1.1.1.1/dns-query。xray 内部 DNS 查询用。</help>
     </field>
+    <field>
+        <id>xray.general.default_outbound</id>
+        <label>默认出站</label>
+        <type>dropdown</type>
+        <help>没有规则命中时的走向：默认节点（活动节点）、直连、拦截。默认走活动节点。</help>
+    </field>
 </form>
