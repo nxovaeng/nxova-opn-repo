@@ -173,13 +173,18 @@
             }
             $sel.empty();
             // fixed inbounds are built into the generator, not the model, so list them explicitly
-            ['tun2socks-in', 'mosdns-in', 'api'].forEach(function(t) {
+            // (mosdns-in is left out on purpose: it is reserved for the
+            // system mosdns-in -> proxy-default rule, so a user rule on
+            // it could never fire)
+            ['tun2socks-in', 'api'].forEach(function(t) {
                 $sel.append($('<option>').val(t).text(t));
             });
             fetchAll('/api/xray/settings/searchInbounds').done(function(rows) {
                 $.each(rows, function(i, r) {
                     // skip tags already listed above (the search also
-                    // returns the built-in rows) to avoid duplicates
+                    // returns the built-in rows) to avoid duplicates,
+                    // and skip mosdns-in: reserved for the system rule
+                    if (r.tag === 'mosdns-in') return;
                     if (r.tag && $sel.find('option').filter(function() { return $(this).val() === r.tag; }).length === 0) {
                         $sel.append($('<option>').val(r.tag).text(r.tag));
                     }
