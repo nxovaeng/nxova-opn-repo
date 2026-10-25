@@ -459,7 +459,7 @@
             <div class="panel-body">
                 <div class="row">
                     <div class="col-md-10">
-                        <textarea id="importLinks" rows="10" class="form-control" style="width: 100%; font-family: monospace;" placeholder="vless://…&#10;vmess://…"></textarea>
+                        <textarea id="importLinks" rows="10" class="form-control" style="width: 100%; max-width: none; font-family: monospace;" placeholder="vless://…&#10;vmess://…"></textarea>
                     </div>
                     <div class="col-md-2">
                         <button class="btn btn-primary btn-sm" id="importNodesAct" type="button">导入</button>
