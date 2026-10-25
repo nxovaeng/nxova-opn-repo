@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
 """Probe the live xray default outbound path and report up/down + latency.
 
-Runs curl through socks5h://127.0.0.1:10808 (the fixed hev-socks-in
+Runs curl through socks5h://127.0.0.1:10808 (the fixed tun2socks-in
 inbound) against a 204 endpoint. The probe walks the live config:
 traffic matching a user rule follows that rule's outbound, otherwise
 it takes proxy-default (the active node). Always exits 0 and prints

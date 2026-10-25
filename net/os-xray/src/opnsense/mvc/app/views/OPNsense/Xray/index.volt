@@ -240,7 +240,7 @@
 </ul>
 <div class="tab-content content-box tab-content">
     <div id="inbounds" class="tab-pane fade in active">
-        <p class="text-muted">内置固定入站：hev-socks-in（127.0.0.1:10808，给 tun2socks 用）、dns-in（127.0.0.1:10853）。下面可加自定义入站，如给局域网开一个带认证的 socks。</p>
+        <p class="text-muted">内置固定入站：tun2socks-in（127.0.0.1:10808，给 tun2socks 用）、mosdns-in（127.0.0.1:10853）。下面可加自定义入站，如给局域网开一个带认证的 socks。</p>
         <table id="grid-inbounds" class="table table-condensed table-hover table-striped" data-editDialog="DialogInbound">
             <thead>
                 <tr>

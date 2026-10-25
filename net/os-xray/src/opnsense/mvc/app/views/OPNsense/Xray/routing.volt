@@ -173,12 +173,16 @@
             }
             $sel.empty();
             // fixed inbounds are built into the generator, not the model, so list them explicitly
-            ['hev-socks-in', 'dns-in', 'api'].forEach(function(t) {
+            ['tun2socks-in', 'mosdns-in', 'api'].forEach(function(t) {
                 $sel.append($('<option>').val(t).text(t));
             });
             fetchAll('/api/xray/settings/searchInbounds').done(function(rows) {
                 $.each(rows, function(i, r) {
-                    if (r.tag) $sel.append($('<option>').val(r.tag).text(r.tag));
+                    // skip tags already listed above (the search also
+                    // returns the built-in rows) to avoid duplicates
+                    if (r.tag && $sel.find('option').filter(function() { return $(this).val() === r.tag; }).length === 0) {
+                        $sel.append($('<option>').val(r.tag).text(r.tag));
+                    }
                 });
                 if (cur && $sel.find('option').filter(function() { return $(this).val() === cur; }).length === 0) {
                     $sel.append($('<option>').val(cur).text(cur + '（入站已不存在）'));

@@ -46,9 +46,9 @@ class SettingsController extends ApiMutableModelControllerBase
         // edit/delete buttons and their toggle switch in the grid;
         // the generator still emits them unchanged.
         $builtins = [
-            ['uuid' => 'builtin-hev-socks-in', 'enabled' => '1', 'tag' => 'hev-socks-in',
+            ['uuid' => 'builtin-tun2socks-in', 'enabled' => '1', 'tag' => 'tun2socks-in',
              'protocol' => 'socks', 'listen' => '127.0.0.1', 'port' => '10808', 'builtin' => '1'],
-            ['uuid' => 'builtin-dns-in', 'enabled' => '1', 'tag' => 'dns-in',
+            ['uuid' => 'builtin-mosdns-in', 'enabled' => '1', 'tag' => 'mosdns-in',
              'protocol' => 'dokodemo-door', 'listen' => '127.0.0.1', 'port' => '10853', 'builtin' => '1'],
         ];
         $phrase = trim($this->request->get('searchPhrase', 'string', ''));

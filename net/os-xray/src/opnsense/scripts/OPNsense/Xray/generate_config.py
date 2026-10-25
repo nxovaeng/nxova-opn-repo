@@ -24,8 +24,8 @@ Fail-closed (P0-3): an active_node uuid that no longer resolves to a
 node is a hard build error, never a silent fallback to freedom/direct.
 
 Fixed infrastructure inbounds (always present):
-  hev-socks-in  127.0.0.1:10808  socks (udp, sniffing http/tls/quic routeOnly)
-  dns-in        127.0.0.1:10853  dokodemo-door -> 1.1.1.1:53
+  tun2socks-in  127.0.0.1:10808  socks (udp, sniffing http/tls/quic routeOnly)
+  mosdns-in     127.0.0.1:10853  dokodemo-door -> 1.1.1.1:53
   api           127.0.0.1:10085  dokodemo-door (xray stats/handler API, loopback only)
 """
 import sys
@@ -87,7 +87,7 @@ def sniffing_obj():
 def build_inbounds(model):
     inbounds = [
         {
-            'tag': 'hev-socks-in',
+            'tag': 'tun2socks-in',
             'protocol': 'socks',
             'listen': '127.0.0.1',
             'port': 10808,
@@ -95,7 +95,7 @@ def build_inbounds(model):
             'sniffing': sniffing_obj(),
         },
         {
-            'tag': 'dns-in',
+            'tag': 'mosdns-in',
             'protocol': 'dokodemo-door',
             'listen': '127.0.0.1',
             'port': 10853,
@@ -314,14 +314,14 @@ def build_routing(model):
         'inboundTag': ['api'],
         'outboundTag': 'api',
     })
-    # dns-in queries must egress via the proxy outbound (the active
-    # node), NOT direct: mosdns points its remote upstream at dns-in
+    # mosdns-in queries must egress via the proxy outbound (the active
+    # node), NOT direct: mosdns points its remote upstream at mosdns-in
     # precisely so proxied-domain DNS resolves from the node's network.
     # This rule must stay before the port-53-direct rule below (which
-    # protects xray's own resolver dialing, not dns-in traffic).
+    # protects xray's own resolver dialing, not mosdns-in traffic).
     rules.append({
         'type': 'field',
-        'inboundTag': ['dns-in'],
+        'inboundTag': ['mosdns-in'],
         'outboundTag': 'proxy-default',
     })
     # System rules, always before user rules (P0-5):

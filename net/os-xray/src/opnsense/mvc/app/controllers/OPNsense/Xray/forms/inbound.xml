@@ -8,7 +8,7 @@
         <id>inbound.tag</id>
         <label>标签</label>
         <type>text</type>
-        <help>入站标签。hev-socks-in（127.0.0.1:10808）是给 tun2socks 用的固定入站，别删。</help>
+        <help>入站标签。tun2socks-in（127.0.0.1:10808）是给 tun2socks 用的固定入站，别删。</help>
     </field>
     <field>
         <id>inbound.protocol</id>
