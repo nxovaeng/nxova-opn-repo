@@ -197,6 +197,38 @@
             if (id === 'type' || id.endsWith('.type')) cascadeRule();
         });
         $(document).on('shown.bs.modal', '#DialogRule', function() { setTimeout(cascadeRule, 60); });
+
+        // ---- rule dialog values textarea (core has no TextAreaField, so
+        // mirror the outbound/inbound select pattern: the original text
+        // input stays hidden and is what gets submitted (comma-separated),
+        // the textarea next to it is the one-per-line editor for
+        // copy-paste of domain/IP lists) ----
+        function buildValuesTextarea() {
+            var $input = ruleField('values');
+            if (!$input.length) return;
+            var cur = $input.val() || '';
+            var $ta = $('#ruleValuesTextarea');
+            if (!$ta.length) {
+                $ta = $('<textarea class="form-control" id="ruleValuesTextarea" rows="6"></textarea>');
+                $input.hide().after($ta);
+                $ta.on('input', function() {
+                    var vals = [];
+                    $.each($ta.val().split(/\r?\n/), function(i, ln) {
+                        ln = $.trim(ln);
+                        if (ln) vals.push(ln);
+                    });
+                    $input.val(vals.join(','));
+                });
+            }
+            // one value per line; split legacy comma-separated values too
+            var parts = [];
+            $.each(cur.split(/[\r\n,]+/), function(i, p) {
+                p = $.trim(p);
+                if (p) parts.push(p);
+            });
+            $ta.val(parts.join('\n'));
+        }
+        $(document).on('shown.bs.modal', '#DialogRule', function() { setTimeout(buildValuesTextarea, 60); });
     });
 </script>
 
