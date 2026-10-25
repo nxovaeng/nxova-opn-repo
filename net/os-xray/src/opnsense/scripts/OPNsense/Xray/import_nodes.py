@@ -29,11 +29,16 @@ def stream_settings(query, default_sni, default_host):
     sec = (query.get('security') or ['none'])[0].lower()
     sni = query.get('sni', query.get('serverName', ['']))[0] or default_sni
     path = query.get('path', [''])[0]
-    # Host header fallback: explicit ?host= wins, else the TLS SNI, else
-    # the address. Fronted deployments route by vhost: the address domain
-    # is often not a valid vhost while the SNI domain is (proven on-box:
-    # xhttp nodes failed with Host=address, worked with Host=SNI).
-    host = query.get('host', [''])[0] or sni or default_host
+    # Host header, transport-aware: explicit ?host= wins everywhere.
+    # xhttp needs no host header (serverName carries the SNI and xray
+    # defaults Host to the TLS serverName), so leave it empty. ws MUST
+    # have a host, so fall back to the SNI, else the address.
+    if (query.get('host') or [''])[0]:
+        host = (query.get('host') or [''])[0]
+    elif net == 'xhttp':
+        host = ''
+    else:
+        host = sni or default_host
 
     ss = {'network': net}
     if net == 'ws':
