@@ -14,6 +14,7 @@ Exits non-zero with error on stderr if nothing parsed.
 import sys
 import json
 import base64
+import html
 import urllib.parse
 
 
@@ -219,7 +220,12 @@ def parse_ss(u, sub_id):
 
 
 def parse_link(link, sub_id):
-    link = link.strip()
+    # The quick-import path passes links through PHP/configd, which
+    # HTML-escapes '&' to '&amp;'; parse_qs would then see keys like
+    # 'amp;security' and drop every param after the first. Undo the
+    # escaping here so both import paths parse identically (the
+    # subscription path pipes via stdin and never sees it).
+    link = html.unescape(link.strip())
     if not link:
         return None
     scheme = link.split('://', 1)[0].lower()
