@@ -21,6 +21,7 @@ load_rc_config $name
 
 : ${pf_aliasd_socket:=/var/run/pf-aliasd.sock}
 : ${pf_aliasd_tables:=}
+: ${pf_aliasd_verbose:=NO}
 
 command_args="-p ${pidfile} -o /var/log/pf-aliasd.log ${procname} -socket ${pf_aliasd_socket}"
 # -o captures pf-aliasd's stdio (Go log package): the UI log
@@ -30,6 +31,11 @@ command_args="-p ${pidfile} -o /var/log/pf-aliasd.log ${procname} -socket ${pf_a
 # a trailing "-tables" with no value as "flag needs an argument" and exits.
 if [ -n "${pf_aliasd_tables}" ]; then
     command_args="${command_args} -tables ${pf_aliasd_tables}"
+fi
+# -verbose is a bool flag: bare "-verbose" means true; omit it entirely
+# for the quiet default (lifecycle + errors only).
+if [ "${pf_aliasd_verbose}" = "YES" ]; then
+    command_args="${command_args} -verbose"
 fi
 
 run_rc_command "$1"

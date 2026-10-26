@@ -17,4 +17,10 @@
         <type>text</type>
         <help>pf-aliasd 启动时要清空的 pf 表，逗号分隔。留空则保留旧记录。</help>
     </field>
+    <field>
+        <id>mosdns.pfaliasd.verbose</id>
+        <label>详细日志</label>
+        <type>checkbox</type>
+        <help>开启后记录每次地址添加、GC 逐出与 GC 统计；默认关闭，日志只剩起停与错误。</help>
+    </field>
 </form>

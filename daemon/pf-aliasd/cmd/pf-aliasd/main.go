@@ -30,6 +30,9 @@ var (
 	// Tables are "persist"ent across filter reloads, and the in-memory TTL heap
 	// is lost on restart, so without this stale entries would leak forever.
 	flushTables = flag.String("tables", "", "Comma-separated pf table names to flush on startup")
+	// Routine operational lines (per-batch adds, GC evictions, GC stats)
+	// are only logged when verbose is set; lifecycle and errors always log.
+	verbose = flag.Bool("verbose", false, "Log routine operations (per-batch adds, GC evictions, GC stats)")
 )
 
 type Daemon struct {
@@ -38,6 +41,7 @@ type Daemon struct {
 	listener net.Listener
 	wg       sync.WaitGroup
 	quit     chan struct{}
+	verbose  bool
 }
 
 func main() {
@@ -102,6 +106,7 @@ func main() {
 		tracker:  ttlcleaner.NewTracker(),
 		listener: listener,
 		quit:     make(chan struct{}),
+		verbose:  *verbose,
 	}
 
 	// 3. Start background GC loop for TTL expiration
@@ -198,7 +203,7 @@ func (d *Daemon) dispatchMessage(conn net.Conn, msg *protocol.Message) {
 				log.Printf("[pf-aliasd] Error adding addresses to table <%s>: %v", msg.Table, err)
 				status = protocol.StatusErr
 				errMsg = err.Error()
-			} else {
+			} else if d.verbose {
 				log.Printf("[pf-aliasd] Table <%s>: added %d new IP(s) (batch requested %d, ttl %s)",
 					msg.Table, nadd, len(newIPs), ttl)
 			}
@@ -267,15 +272,17 @@ func (d *Daemon) runGCLoop(interval time.Duration, maxBatch int) {
 				if err != nil {
 					log.Printf("[pf-aliasd][GC] Error deleting %d expired IP(s) from table <%s>: %v",
 						len(ips), table, err)
-				} else {
+				} else if d.verbose {
 					log.Printf("[pf-aliasd][GC] Successfully evicted %d expired IP(s) from table <%s>",
 						ndel, table)
 				}
 			}
 
 			stats := d.tracker.Stats()
-			log.Printf("[pf-aliasd][GC] Stats: Active=%d, TotalAdded=%d, Renewed=%d, Expired=%d",
-				stats.ActiveEntries, stats.TotalAdded, stats.TotalRenewed, stats.TotalExpired)
+			if d.verbose {
+				log.Printf("[pf-aliasd][GC] Stats: Active=%d, TotalAdded=%d, Renewed=%d, Expired=%d",
+					stats.ActiveEntries, stats.TotalAdded, stats.TotalRenewed, stats.TotalExpired)
+			}
 		}
 	}
 }

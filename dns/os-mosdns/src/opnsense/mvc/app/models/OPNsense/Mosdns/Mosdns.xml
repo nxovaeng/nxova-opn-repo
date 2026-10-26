@@ -98,6 +98,9 @@
             <flush_tables type="TextField">
                 <default></default>
             </flush_tables>
+            <verbose type="BooleanField">
+                <default>0</default>
+            </verbose>
         </pfaliasd>
         <rulegroups>
             <group type="ArrayField">
