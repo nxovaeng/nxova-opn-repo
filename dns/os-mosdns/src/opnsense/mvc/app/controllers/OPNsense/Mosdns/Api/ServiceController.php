@@ -311,6 +311,14 @@ class ServiceController extends ApiMutableServiceControllerBase
         return ['result' => 'ok', 'log' => $raw];
     }
 
+    public function clearLogAction($target = 'mosdns')
+    {
+        $backend = new Backend();
+        $action = $target === 'aliasd' ? 'mosdns clear_aliasd_log' : 'mosdns clear_log';
+        $raw = trim($backend->configdRun($action));
+        return ['result' => 'ok', 'output' => $raw];
+    }
+
     /**
      * pf-aliasd companion daemon controls. configd action names are nested
      * (mosdns -> pfaliasd -> ...), so space-separated invocation is required.

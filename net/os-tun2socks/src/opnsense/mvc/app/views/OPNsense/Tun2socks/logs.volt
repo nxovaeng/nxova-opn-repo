@@ -13,6 +13,11 @@
             });
         }
         $("#refreshLogAct").click(function() { refreshLog(); });
+        $("#clearLogAct").click(function() {
+            ajaxCall(url="/api/tun2socks/service/clearLog", sendData={}, callback=function(data, status) {
+                refreshLog();
+            });
+        });
         refreshLog();
     });
 </script>
@@ -22,6 +27,7 @@
         <button class="btn btn-default btn-sm" id="refreshLogAct" type="button">
             {{ lang._('刷新') }} <i id="refreshLogAct_progress"></i>
         </button>
+        <button class="btn btn-default btn-sm" id="clearLogAct" type="button">清空日志</button>
         <span class="text-muted" style="margin-left:10px;">{{ lang._('守护进程日志最后 100 行') }}</span>
     </div>
     <div class="col-md-12" style="margin-top: 10px;">
